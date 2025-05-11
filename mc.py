@@ -80,15 +80,18 @@ with st.container(height=360, border=None):
             partner_healthcare_start_age = st.number_input("Partner Healthcare Start Age", value=partner_retirement_age)
 
     # Tab 6: Market Returns
+    # Default used based on data from 1926 
+    # US Equity Mean: 10.10, Std Dev: 19.60 
+    # US Bond Mean: 3.90, Std Dev: 1.166
     with tab6:
         col1, col2 = st.columns(2)
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=6.0, step=0.25) / 100  # Convert to decimal
-            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.0, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=10.10, step=0.25) / 100  # Convert to decimal
+            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.9, step=0.25) / 100  # Convert to decimal
             simulations = st.number_input("Number of Simulations", value=1000, step=1000)
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=15.0, step=0.25) / 100  # Convert to decimal
-            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=5.0, step=0.25) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=19.60, step=0.25) / 100  # Convert to decimal
+            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=1.166, step=0.05) / 100  # Convert to decimal
 
     # Tab 7: Downsize
     with tab7:
