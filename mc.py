@@ -384,7 +384,7 @@ range_chart = alt.Chart(df_avg_cashflow).mark_area(opacity=0.5, color='lightblue
 combined_chart = (range_chart + median_chart).properties(width=600, height=400)
 
 # Show the combined chart in Streamlit
-st.altair_chart(combined_chart, use_container_width=True)
+#st.altair_chart(combined_chart, use_container_width=True)
 
 # Plotting individual simulations using Altair
 simulation_data = pd.DataFrame(all_simulations).T
