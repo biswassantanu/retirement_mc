@@ -13,89 +13,6 @@ st.set_page_config(layout="wide")
 st.title("Retirement Cash Flow Analysis")
 st.subheader("Monte Carlo Simulation")
 
-# # Put the tabs inside a container with fixed height
-# with st.container(height=360, border=None):
-#     # Create tabs for different sections
-#     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["Personal Details", "Investment and Savings", "Income and Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize"])
-
-#     # Tab 1: Personal Details
-#     with tab1:
-#         col1, col2, col3 = st.columns(3)
-#         with col1:
-#             current_age = st.number_input("Current Age", value=50)
-#             partner_current_age = st.number_input("Partner's Current Age", value=46)
-#             life_expectancy = st.number_input("Life Expectancy", value=92)
-#         with col2:
-#             retirement_age = st.number_input("Retirement Age", value=60)
-#             partner_retirement_age = st.number_input("Partner's Retirement Age", value=60)
-
-#     # Tab 2: Investment and Savings
-#     with tab2:
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             initial_savings = st.number_input("Current Savings", value=2000000, step=100000)
-#         with col2:
-#             st.write(" \n")  # Placeholder for any additional inputs if needed in the future
-#             st.write(" \n")  # Placeholder for any additional inputs if needed in the future
-#             st.write(" \n")  # Placeholder for any additional inputs if needed in the future
-#             st.write(" \n")  # Placeholder for any additional inputs if needed in the future
-
-#     # Tab 3: Income and Expense
-#     with tab3:
-#         col1, col2, col3 = st.columns(3)
-#         with col1:
-#             earnings = st.number_input("Annual Earnings", value=200000, step=25000)
-#             annual_expense = st.number_input("Annual Expense", value=8000 * 12, step=1000)
-#             mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=1000)
-#         with col2:
-#             partner_earnings = st.number_input("Partner's Annual Earnings", value=50000, step=5000)
-#             annual_expense_decrease = st.number_input("Annual Expense Decrease Rate (%)", value=1.0) / 100  # Convert to decimal
-#             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=15)
-#         with col3:
-#             inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
-#             inflation_std = st.number_input("Inflation Std Dev (%)", value=1.0) / 100  # Convert to decimal
-#             tax_rate = st.number_input("Tax Rate (%)", value=15.0, step=1.0) / 100  # Convert to decimal
-
-#     # Tab 4: Social Security 
-#     with tab4:
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             annual_social_security = st.number_input("Social Security", value=3000 * 12, step=1000)
-#             withdrawal_start_age = st.number_input("Withdrawal Start Age (Self)", value=67)
-#             cola_rate = st.number_input("COLA Rate (%)", value=1.50) / 100  # Convert to decimal
-#         with col2:
-#             partner_social_security = st.number_input("Partner's Social Security", value=1500 * 12, step=1000)
-#             partner_withdrawal_start_age = st.number_input("Partner's Withdrawal Start Age", value=65)
-
-#     # Tab 5: Healthcare Costs
-#     with tab5:
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             self_healthcare_cost = st.number_input("Self Healthcare Cost (Annual)", value=6000, step=1000)
-#             self_healthcare_start_age = st.number_input("Self Healthcare Start Age", value=retirement_age)
-#         with col2:
-#             partner_healthcare_cost = st.number_input("Partner Healthcare Cost (Annual)", value=6000, step=1000)
-#             partner_healthcare_start_age = st.number_input("Partner Healthcare Start Age", value=partner_retirement_age)
-
-#     # Tab 6: Market Returns
-#     with tab6:
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             investment_mean = st.number_input("Investment Return Mean (%)", value=5.0, step=0.25) / 100  # Convert to decimal
-#             simulations = st.number_input("Number of Simulations", value=1000, step=1000)
-#         with col2:
-#             investment_std = st.number_input("Investment Return Std Dev (%)", value=12.0, step=0.25) / 100  # Convert to decimal
-
-#     # Tab 7: Downsize
-#     with tab7:
-#         col1, col2 = st.columns(2)
-#         with col1:
-#             years_until_downsize = st.number_input("After how many years", value=0)
-#         with col2:
-#             residual_amount = st.number_input("Residual Amount", value=0, step=100000)
-
-
-
 # Put the tabs inside a container with fixed height
 with st.container(height=360, border=None):
     # Create tabs for different sections
@@ -105,8 +22,8 @@ with st.container(height=360, border=None):
     with tab1:
         col1, col2, col3 = st.columns(3)
         with col1:
-            current_age = st.number_input("Current Age", value=50)
-            partner_current_age = st.number_input("Partner's Current Age", value=46)
+            current_age = st.number_input("Current Age", value=55)
+            partner_current_age = st.number_input("Partner's Current Age", value=50)
             life_expectancy = st.number_input("Life Expectancy", value=92)
         with col2:
             retirement_age = st.number_input("Retirement Age", value=60)
@@ -129,13 +46,13 @@ with st.container(height=360, border=None):
     with tab3:
         col1, col2, col3 = st.columns(3)
         with col1:
-            earnings = st.number_input("Annual Earnings", value=200000, step=25000)
-            annual_expense = st.number_input("Annual Expense", value=8000 * 12, step=1000)
-            mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=1000)
+            earnings = st.number_input("Annual Earnings", value=200000, step=5000)
+            annual_expense = st.number_input("Annual Expense", value=8000 * 12, step=2000)
+            mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=2000)
         with col2:
-            partner_earnings = st.number_input("Partner's Annual Earnings", value=50000, step=5000)
+            partner_earnings = st.number_input("Partner's Annual Earnings", value=200000, step=5000)
             annual_expense_decrease = st.number_input("Annual Expense Decrease Rate (%)", value=1.0) / 100  # Convert to decimal
-            mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=15)
+            mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=25)
         with col3:
             inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
             inflation_std = st.number_input("Inflation Std Dev (%)", value=1.0) / 100  # Convert to decimal
@@ -156,21 +73,21 @@ with st.container(height=360, border=None):
     with tab5:
         col1, col2 = st.columns(2)
         with col1:
-            self_healthcare_cost = st.number_input("Self Healthcare Cost (Annual)", value=6000, step=1000)
+            self_healthcare_cost = st.number_input("Self Healthcare Cost (Annual)", value=5000, step=1000)
             self_healthcare_start_age = st.number_input("Self Healthcare Start Age", value=retirement_age)
         with col2:
-            partner_healthcare_cost = st.number_input("Partner Healthcare Cost (Annual)", value=6000, step=1000)
+            partner_healthcare_cost = st.number_input("Partner Healthcare Cost (Annual)", value=5000, step=1000)
             partner_healthcare_start_age = st.number_input("Partner Healthcare Start Age", value=partner_retirement_age)
 
     # Tab 6: Market Returns
     with tab6:
         col1, col2 = st.columns(2)
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=7.0, step=0.25) / 100  # Convert to decimal
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=15.0, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=6.0, step=0.25) / 100  # Convert to decimal
+            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.0, step=0.25) / 100  # Convert to decimal
             simulations = st.number_input("Number of Simulations", value=1000, step=1000)
         with col2:
-            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.0, step=0.25) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=15.0, step=0.25) / 100  # Convert to decimal
             bond_return_std = st.number_input("Bond Return Std Dev (%)", value=5.0, step=0.25) / 100  # Convert to decimal
 
     # Tab 7: Downsize
