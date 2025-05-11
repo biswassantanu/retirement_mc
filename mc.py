@@ -404,4 +404,4 @@ individual_simulation_chart = alt.Chart(melted_simulation_data).mark_line(color=
 )
 
 # Show the individual simulations plot in Streamlit
-st.altair_chart(individual_simulation_chart, use_container_width=True)
+#st.altair_chart(individual_simulation_chart, use_container_width=True)
