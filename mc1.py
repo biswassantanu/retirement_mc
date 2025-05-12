@@ -119,8 +119,7 @@ def monte_carlo_simulation():
     aggregated_data = {year: {'Starting Savings': [], 'Annual Expense': [], 'Self Income': [], 'Partner Income': [],
                               'Investment Return': [], 'Tax': [], 'Self Social Security': [],
                               'Partner Social Security': [], 'Mortgage Payment': [], 'Ending Savings': [],
-                              'Healthcare Costs': [], 'Downsize Proceeds': [],
-                              'Portfolio Draw': [], 'Draw Rate': [], 'Total Earnings': [], 'Total Expense': [] }
+                              'Healthcare Costs': [], 'Downsize Proceeds': []}
                        for year in range(years_in_simulation)}
 
     all_simulations = []  # To store all simulation results
@@ -156,7 +155,10 @@ def monte_carlo_simulation():
             if current_age_in_loop >= self_healthcare_start_age and partner_current_age_in_loop < 65:
                 healthcare_costs += partner_healthcare_cost
 
-            # annual_exp_with_mortgage = annual_exp + mortgage + healthcare_costs
+            annual_exp_with_mortgage = annual_exp + mortgage + healthcare_costs
+
+            if current_age_in_loop > partner_retirement_age:
+                annual_exp_with_mortgage *= (1 - annual_expense_decrease)
 
             # Initialize income
             self_income = annual_earnings * (1 - tax_rate) if current_age_in_loop < retirement_age else 0
@@ -174,21 +176,18 @@ def monte_carlo_simulation():
                 partner_ss = partner_social_security * (1 + cola_rate) ** (partner_current_age_in_loop - partner_withdrawal_start_age)  # Adjust for COLA
                 partner_income += partner_ss
 
-
-            # net_cash_flow = self_income + partner_income - annual_exp_with_mortgage
-
-            inflation_rate = np.random.normal(inflation_mean, inflation_std)
-
-            # Adjust inflation rate with retirement smile
-            if current_age_in_loop > retirement_age:
-                inflation_rate -= annual_expense_decrease
-
-            # annual_exp *= (1 + inflation_rate)
-            annual_exp_with_mortgage = annual_exp + mortgage + healthcare_costs
             net_cash_flow = self_income + partner_income - annual_exp_with_mortgage
 
-            # total income before tax 
-            total_annual_earnings = annual_earnings + annual_partner_earnings + self_ss + partner_ss
+            inflation_rate = np.random.normal(inflation_mean, inflation_std)
+            annual_exp *= (1 + inflation_rate)
+
+            # Adjust annual earnings for inflation
+            annual_earnings *= (1 + inflation_rate)
+            annual_partner_earnings *= (1 + inflation_rate)
+
+            # # Investment growth (allowing for negative returns)
+            # investment_return_rate = np.random.normal(investment_mean, investment_std)
+            # investment_return = savings * investment_return_rate  # Can be negative
 
             # Calculate investment returns for stocks and bonds
             stock_investment = savings * (stock_percentage / 100)
@@ -208,9 +207,8 @@ def monte_carlo_simulation():
                 withdrawal = annual_exp_with_mortgage
                 tax = withdrawal * tax_rate
             else:
-                # taxable_income = max(0, net_cash_flow)
-                # tax = taxable_income * tax_rate
-                tax = total_annual_earnings * tax_rate
+                taxable_income = max(0, net_cash_flow)
+                tax = taxable_income * tax_rate
 
             # Add residual amount to savings after specified years, if years_until_downsize > 0
             if years_until_downsize > 0 and year == years_until_downsize:
@@ -219,17 +217,9 @@ def monte_carlo_simulation():
             elif years_until_downsize == 0:
                 aggregated_data[year]['Downsize Proceeds'].append(0)  # No proceeds if downsizing is ignored
 
-            # Portfolio draw - if expense and tax is greater than earnings
-            portfolio_draw = max(annual_exp_with_mortgage + tax - total_annual_earnings, 0)
-            portfolio_draw_rate  = portfolio_draw /savings
+            #savings_end_of_year = (savings + net_cash_flow) * (1 + investment_return_rate)
 
-            # end of year balance is total income - toal expense 
-            savings_end_of_year = savings + total_annual_earnings + investment_return - annual_exp_with_mortgage - tax
-
- 
-            # Adjust annual earnings for inflation
-            annual_earnings *= (1 + inflation_mean) if current_age_in_loop < retirement_age -1 else 0
-            annual_partner_earnings *= (1 + inflation_mean) if year < partner_earning_years -1  else 0           
+            savings_end_of_year = savings + net_cash_flow + investment_return
 
             # Store values for each year
             aggregated_data[year]['Starting Savings'].append(savings)
@@ -243,12 +233,6 @@ def monte_carlo_simulation():
             aggregated_data[year]['Mortgage Payment'].append(mortgage)
             aggregated_data[year]['Healthcare Costs'].append(healthcare_costs)
             aggregated_data[year]['Ending Savings'].append(savings_end_of_year)
-            aggregated_data[year]['Portfolio Draw'].append(portfolio_draw)
-            aggregated_data[year]['Draw Rate'].append(portfolio_draw_rate)        
-            aggregated_data[year]['Total Earnings'].append(total_annual_earnings)   
-            aggregated_data[year]['Total Expense'].append(annual_exp_with_mortgage + tax)  
-
-            annual_exp *= (1 + inflation_rate)
 
             savings = savings_end_of_year
             simulation_results[year] = savings_end_of_year  # Store the ending savings for this year
@@ -257,7 +241,7 @@ def monte_carlo_simulation():
             if savings <= 0:
                 simulation_success = False  # Mark this simulation as a failure
                 earliest_depletion_year = min(earliest_depletion_year, year)  # Update earliest depletion year
-                # break  # Exit the loop if savings go below zero
+                break  # Exit the loop if savings go below zero
 
         # Fill in remaining years with zeros if the simulation failed
         if not simulation_success:
@@ -312,14 +296,10 @@ def monte_carlo_simulation():
             'Investment Return ($)': "{:,}".format(int(np.median(data['Investment Return']))),
             'Tax ($)': "{:,}".format(int(np.median(data['Tax']))),
             'Ending Savings ($)': "{:,}".format(int(np.median(data['Ending Savings']))),
-            'Total Earnings ($)': "{:,}".format(int(np.median(data['Total Earnings']))),
-            'Total Expense ($)': "{:,}".format(int(np.median(data['Total Expense']))),           
-            'Portfolio Draw ($)': "{:,}".format(int(np.median(data['Portfolio Draw']))),
-            'Draw Rate (%)': "{:.1f}%".format(np.median(data['Draw Rate']) * 100),
+            'Downsize Proceeds ($)': "{:,}".format(int(downsize_proceeds)),  # Added Downsize Proceeds
             'Min Ending Savings ($)': "{:,}".format(int(min_ending_savings_value)),  # Use min_depletion_simulation values
             'Max Ending Savings ($)': "{:,}".format(int(max_ending_savings)),  # Maximum Ending Savings
         })
-
 
     df_avg_cashflow = pd.DataFrame(avg_data)
 
