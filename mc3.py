@@ -145,23 +145,12 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
             # Calculate mortgage payment
             mortgage = mortgage_payment if year < mortgage_years_remaining else 0
 
-
             # Calculate healthcare costs
             healthcare_costs = 0
-            if current_age_in_loop >= self_healthcare_start_age:
-                if current_age_in_loop < 65:
-                    current_self_healthcare_cost *= (1 + inflation_mean)  # Adjust for inflation each year
-                else: 
-                    current_self_healthcare_cost = 0 
-                healthcare_costs += current_self_healthcare_cost  # Add to total healthcare costs
-
-            if partner_current_age_in_loop >= partner_healthcare_start_age:
-                if partner_current_age_in_loop < 65:
-                    current_partner_healthcare_cost *= (1 + inflation_mean)  # Adjust for inflation each year
-                else: 
-                    current_partner_healthcare_cost = 0
-                healthcare_costs += current_partner_healthcare_cost  # Add to total healthcare costs
-
+            if current_age_in_loop >= self_healthcare_start_age and current_age_in_loop < 65:
+                healthcare_costs += current_self_healthcare_cost * (1 + inflation_mean)  # Adjust for inflation
+            if partner_current_age_in_loop >= partner_healthcare_start_age and partner_current_age_in_loop < 65:
+                healthcare_costs += current_partner_healthcare_cost * (1 + inflation_mean)  # Adjust for inflation
 
             # Apply COLA to Social Security benefits based on withdrawal start ages
             self_ss = annual_social_security * (1 + cola_rate) ** (current_age_in_loop - withdrawal_start_age) if current_age_in_loop >= withdrawal_start_age else 0
@@ -262,7 +251,7 @@ def format_cashflow_dataframe(df):
         'Total Expense', 'Portfolio Draw', 'Ending Portfolio Value'
     ]
     for col in numeric_columns:
-        df[col] = df[col].apply(lambda x: f"{x:,.0f}")
+        df[col] = df[col].apply(lambda x: f"{x:,.2f}")
     return df
 
 # Format the DataFrames
@@ -280,7 +269,7 @@ st.markdown(f"<p style='font-size: 36px; color: green; display: inline; margin-r
             f"<p style='font-size: 36px; color: red; display: inline;margin-right: 50px;'>Failure Rate: {failure_rate:.0f}%</p>", unsafe_allow_html=True)
 
 # Display the DataFrames for each percentile
-st.write("### Yearly Cash Flow Summary (10th Percentile Simulation)")
+st.write("### Yearly Cash Flow Summary (10th Percentile Simulation ?)")
 st.dataframe(df_cashflow_10th)
 
 st.write("### Yearly Cash Flow Summary (50th Percentile Simulation)")
