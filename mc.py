@@ -51,7 +51,7 @@ with st.container(height=360, border=None):
             mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=2000)
         with col2:
             partner_earnings = st.number_input("Partner's Annual Earnings", value=200000, step=5000)
-            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate (%)", value=1.0) / 100  # Convert to decimal
+            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate (%)", value=1.0, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=25)
         with col3:
             inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
