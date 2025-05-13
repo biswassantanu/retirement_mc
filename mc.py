@@ -129,7 +129,7 @@ def format_cashflow_dataframe(df):
         return df
     numeric_columns = [
         'Beginning Portfolio Value', 'Self Earnings (before tax)', 'Partner Earnings (before tax)',
-        'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)',
+        'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)', 'Combined Social Security',
         'Investment Return', 'Yearly Expense', 'Mortgage', 'Healthcare Expense',
         'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value'
     ]
