@@ -122,14 +122,22 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
 
         # Initialize yearly expenses and earnings
         current_annual_expense = annual_expense
-        current_annual_earnings = annual_earnings
+        current_annual_earnings = annual_earnings 
         current_partner_earnings = partner_earnings
         current_self_healthcare_cost = self_healthcare_cost
         current_partner_healthcare_cost = partner_healthcare_cost
 
+        starting_annual_earnings = annual_earnings 
+        starting_partner_earnings = partner_earnings
+
         for year in range(years_in_simulation):
+           
             current_age_in_loop = current_age + year
             partner_current_age_in_loop = partner_current_age + year
+
+            # Adjust earning for yearly increase 
+            current_annual_earnings = starting_annual_earnings * (1 + inflation_mean) ** year
+            current_partner_earnings = starting_partner_earnings * (1 + inflation_mean) ** year          
 
             # Adjust expenses for inflation
             if year > 0:  # Skip the first year as we want to adjust from the second year onward
@@ -171,7 +179,7 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
             partner_income += partner_ss
 
             # Calculate total earnings before tax
-            total_earnings_before_tax = self_income + partner_income + self_ss + partner_ss
+            total_earnings_before_tax = self_income / (1 - tax_rate) + partner_income / (1 - tax_rate) + self_ss + partner_ss
 
             annual_exp_with_mortgage = current_annual_expense + mortgage + healthcare_costs
             net_cash_flow = self_income + partner_income - annual_exp_with_mortgage
@@ -185,11 +193,18 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
 
             investment_return = (stock_investment * stock_return_rate) + (bond_investment * bond_return_rate)
 
-            # Calculate tax
+            # # Calculate tax
             tax = max(net_cash_flow, 0) * tax_rate
 
             # Portfolio draw
             portfolio_draw = max(annual_exp_with_mortgage + tax - (self_income + partner_income), 0)
+
+            # Calculate income taxes based on earnings before tax
+            self_income_tax = self_income / (1 - tax_rate) * tax_rate if current_age_in_loop < retirement_age else 0
+            partner_income_tax = partner_income / (1 - tax_rate) * tax_rate if partner_current_age_in_loop < partner_retirement_age else 0
+ 
+            # Calculate total tax
+            tax = self_income_tax + partner_income_tax + max(portfolio_draw, 0) * tax_rate
 
             # End of year balance
             savings = savings + investment_return + net_cash_flow - tax
@@ -203,8 +218,8 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
                 'Self Age': current_age_in_loop,
                 'Partner Age': partner_current_age_in_loop,
                 'Beginning Portfolio Value': savings - investment_return - net_cash_flow + tax,
-                'Self Earnings (before tax)': self_income,
-                'Partner Earnings (before tax)': partner_income,
+                'Self Earnings (before tax)': self_income / (1 - tax_rate) ,
+                'Partner Earnings (before tax)': partner_income / (1 - tax_rate),
                 'Self Social Security': self_ss,
                 'Partner Social Security': partner_ss,
                 'Total Earnings (before tax)': total_earnings_before_tax,
@@ -213,6 +228,7 @@ def monte_carlo_simulation(initial_savings, annual_earnings, partner_earnings, a
                 'Mortgage': mortgage,
                 'Healthcare Expense': healthcare_costs,
                 'Total Expense': annual_exp_with_mortgage,
+                'Tax': tax,
                 'Portfolio Draw': portfolio_draw,
                 'Ending Portfolio Value': savings
             }
@@ -259,7 +275,7 @@ def format_cashflow_dataframe(df):
         'Beginning Portfolio Value', 'Self Earnings (before tax)', 'Partner Earnings (before tax)',
         'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)',
         'Investment Return', 'Yearly Expense', 'Mortgage', 'Healthcare Expense',
-        'Total Expense', 'Portfolio Draw', 'Ending Portfolio Value'
+        'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value'
     ]
     for col in numeric_columns:
         df[col] = df[col].apply(lambda x: f"{x:,.0f}")
