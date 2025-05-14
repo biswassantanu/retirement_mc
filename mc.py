@@ -109,7 +109,9 @@ partner_earning_years = partner_retirement_age - partner_current_age
 
 # Run the simulation
 success_count, failure_count, cash_flow_10th, cash_flow_50th, cash_flow_90th = monte_carlo_simulation(
-    current_age, partner_current_age, life_expectancy, initial_savings, annual_earnings, partner_earnings, annual_expense, mortgage_payment,
+    current_age, partner_current_age, life_expectancy, initial_savings, 
+    annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
+    annual_expense, mortgage_payment,
     mortgage_years_remaining, retirement_age, partner_retirement_age, 
     annual_social_security, withdrawal_start_age, partner_social_security, 
     partner_withdrawal_start_age, self_healthcare_cost, self_healthcare_start_age, partner_healthcare_start_age,
