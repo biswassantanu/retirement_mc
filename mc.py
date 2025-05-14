@@ -6,6 +6,9 @@ import math
 import plotly.graph_objs as go
 
 from helpers.linear_indicator import create_linear_indicator
+from helpers.tab_styling import tab_style_css
+from helpers.balance_display import display_balances
+
 from simulations.simulation_mc import monte_carlo_simulation
 
 # Set Streamlit to use full-width layout
@@ -14,10 +17,13 @@ st.set_page_config(layout="wide")
 # Streamlit Display
 st.title("Retirement Analysis - with Monte Carlo Simulation")
 
+
 # Put the tabs inside a container with fixed height
 with st.container(height=380, border=None):
+    st.markdown(tab_style_css, unsafe_allow_html=True)
+
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Personal Details", "Investment and Savings", "Income", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([" Personal Details ", " Investment and Savings ", " Income ", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize"])
 
     # Tab 1: Personal Details
     with tab1:
@@ -100,8 +106,8 @@ with st.container(height=380, border=None):
     with tab8:
         col1, col2 = st.columns(2)
         with col1:
-            years_until_downsize = st.number_input("After how many years", value=0)
-            residual_amount = st.number_input("Amount added to Retirement Portfolio", value=0, step=100000)
+            years_until_downsize = st.number_input("After how many years?", value=0)
+            residual_amount = st.number_input("Net Addition to Retirement Savings", value=0, step=100000)
 
             
 
@@ -183,39 +189,54 @@ end_balance_10th_millions = float(end_balance_10th.replace(',', '')) / 1_000_000
 end_balance_50th_millions = float(end_balance_50th.replace(',', '')) / 1_000_000
 end_balance_90th_millions = float(end_balance_90th.replace(',', '')) / 1_000_000
 
-# Display the end-of-period balances in a formatted way
-st.markdown(
-    f"<span style='color:#000000; font-weight:semi-bold; font-size:20px;'>End of Plan Balances </span> "
-    f"<span style='margin-left:40px; color:#777777; font-size:16px;'>10th Percentile:</span> "
-    f"<span style='margin-left:5px; color:#CC5555; font-size:24px;'>{end_balance_10th_millions:.2f}M</span> "
-    f"<span style='color:#777777; font-size:16px; margin-left:40px;'>50th Percentile:</span> "
-    f"<span style='margin-left:5px; color:#5555CC; font-size:24px;'>{end_balance_50th_millions:.2f}M</span> "
-    f"<span style='color:#777777; font-size:16px; margin-left:40px;'>90th Percentile:</span> "
-    f"<span style='margin-left:5px; color:#33AA33; font-size:24px;'>{end_balance_90th_millions:.2f}M</span>",
-    unsafe_allow_html=True
-)
+# Display the end-of-period balances
+st.markdown(display_balances(end_balance_10th_millions, end_balance_50th_millions, end_balance_90th_millions), unsafe_allow_html=True)
 
 
-# Add some space
+# Function to convert formatted string to numerical value
+def convert_to_numeric(value):
+    return float(value.replace('$', '').replace(',', ''))
+
+# Function to apply conditional styling
+def highlight_columns(s):
+    styles = []
+    for value in s:
+        numeric_value = convert_to_numeric(value)
+        if numeric_value > 0:
+            styles.append('color: green; font-weight: bold;')  # Green for positive values
+        else:
+            styles.append('color: red; font-weight: bold;')    # Red for negative values
+    return styles
+
+# Apply the styling to specific columns
+styled_df = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+# Display the content
 st.markdown("<br>", unsafe_allow_html=True)
 st.write("### Yearly Cash Flow Summary (50th Percentile Simulation)")
-st.dataframe(df_cashflow_50th, hide_index=True, use_container_width=True)
+st.dataframe(styled_df, hide_index=True, use_container_width=True)
+
 
 # Space for 10th and 90th percentil 
 st.markdown("<br>", unsafe_allow_html=True)
 
+# Apply the styling to specific columns
+styled_df = df_cashflow_10th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+# Display the content
+st.markdown("<br>", unsafe_allow_html=True)
 st.write("### Yearly Cash Flow Summary (10th Percentile Simulation)")
-st.dataframe(df_cashflow_10th)
+st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
+# Apply the styling to specific columns
+styled_df = df_cashflow_90th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+# Display the content
+st.markdown("<br>", unsafe_allow_html=True)
 st.write("### Yearly Cash Flow Summary (90th Percentile Simulation)")
-st.dataframe(df_cashflow_90th)
+st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
 # Create a container for the charts
 st.markdown("<br><br><br>", unsafe_allow_html=True)
 with st.container():
-    st.header("Retirement Ending Savings Over Time")
-    
+    st.header("Portfolio Balance Over Time")
     # Plotting the results using Streamlit's line chart for the 50th percentile
     st.line_chart(df_cashflow_50th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
-
 
