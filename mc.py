@@ -13,7 +13,7 @@ st.set_page_config(layout="wide")
 st.title("Retirement Analysis - with Monte Carlo Simulation")
 
 # Put the tabs inside a container with fixed height
-with st.container(height=360, border=None):
+with st.container(height=380, border=None):
     # Create tabs for different sections
     tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs(["Personal Details", "Investment and Savings", "Income", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize"])
 
@@ -32,7 +32,7 @@ with st.container(height=360, border=None):
     with tab2:
         col1, col2 = st.columns(2)
         with col1:
-            initial_savings = st.number_input("Current Savings", value=2000000, step=100000)
+            initial_savings = st.number_input("Current Total Portfolio", value=2000000, step=100000)
             stock_percentage = st.slider("Percentage of Stock Investment (%)", min_value=0, max_value=100, value=60)
             bond_percentage = 100 - stock_percentage  # Calculate bond percentage
 
@@ -56,9 +56,10 @@ with st.container(height=360, border=None):
             inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
 
         with col2:
-            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate in Retirement (%)", value=0.5, step=0.05) / 100  # Convert to decimal
+            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate in Retirement (Smile *) (%)", value=0.5, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=25)
             inflation_std = st.number_input("Inflation Std Dev (%)", value=1.0) / 100  # Convert to decimal
+        st.write ('###### * Smile : Research shows household expenses decrease about 1% year over year in retirement and then can increase towards end of life due to healthcare cost')
 
     # Tab 5: Social Security 
     with tab5:
@@ -78,8 +79,9 @@ with st.container(height=360, border=None):
             self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)", value=5000, step=1000)
             self_healthcare_start_age = st.number_input("Self Healthcare Bridge Start Age", value=retirement_age)
         with col2:
-            partner_healthcare_cost = st.number_input("Partner Healthcare Cost (Annual)", value=5000, step=1000)
+            partner_healthcare_cost = st.number_input("Partner Bridge Healthcare Cost (Annual)", value=5000, step=1000)
             partner_healthcare_start_age = st.number_input("Partner Healthcare Bridge Start Age", value=partner_retirement_age)
+        st.write ('###### Bridge cost is amount needed to self fund medical insurance after retirement before Medicare starts at 65')
 
     # Tab 7: Market Returns
     with tab7:
@@ -91,14 +93,15 @@ with st.container(height=360, border=None):
         with col2:
             stock_return_std = st.number_input("Stock Return Std Dev (%)", value=19.00, step=0.25) / 100  # Convert to decimal
             bond_return_std = st.number_input("Bond Return Std Dev (%)", value=1.2, step=0.05) / 100  # Convert to decimal
-
+        st.write ('###### Market Return Parameters are based on actual values of US equity (S&P 500) and Bond markets (Bloomberg) for last 100 years - similar to what Fiedilty uses')
     # Tab 8: Downsize
     with tab8:
         col1, col2 = st.columns(2)
         with col1:
             years_until_downsize = st.number_input("After how many years", value=0)
-        with col2:
-            residual_amount = st.number_input("Residual Amount", value=0, step=100000)
+            residual_amount = st.number_input("Amount added to Retirement Portfolio", value=0, step=100000)
+
+            
 
 
 # Calculate earning years
@@ -128,6 +131,8 @@ df_cashflow_90th = pd.DataFrame(cash_flow_90th)
 def format_cashflow_dataframe(df):
     if df.empty:
         return df
+
+    # Format Amount Columns
     numeric_columns = [
         'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
         'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)', 'Combined Social Security',
@@ -137,6 +142,16 @@ def format_cashflow_dataframe(df):
 
     for col in numeric_columns:
         df[col] = df[col].apply(lambda x: f"{x:,.0f}")
+
+    # Format % Columns 
+    percent_columns = [
+        'Investment Return %', 
+        'Drawdown %' 
+    ]
+    for col in percent_columns:
+        df[col] = df[col].apply(lambda x: f"{x * 100:.2f}%")  # Multiply by 100 and format to 2 decimal places
+
+
     return df
 
 # Format the DataFrames

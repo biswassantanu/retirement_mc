@@ -60,9 +60,13 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
 
             # Calculate investment returns
             investment_return = calculate_investment_return(savings, stock_percentage, bond_percentage, stock_return_mean, stock_return_std, bond_return_mean, bond_return_std)
+            return_rate = investment_return / savings
 
             # End of year balance
             ending_portfolio_value = savings + investment_return + gross_income - total_expense - total_tax
+
+            # Draw down rate 
+            draw_rate = portfolio_draw / ending_portfolio_value
 
             # Create cash flow entry
             cash_flow_entry = create_cash_flow_entry(
@@ -76,7 +80,9 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                 total_expense,
                 total_tax,
                 portfolio_draw,
+                draw_rate, 
                 investment_return,
+                return_rate, 
                 self_ss,
                 partner_ss,
                 mortgage,
@@ -170,8 +176,8 @@ def calculate_investment_return(savings, stock_percentage, bond_percentage, stoc
     return (stock_investment * stock_return_rate) + (bond_investment * bond_return_rate)
 
 def create_cash_flow_entry(current_year, year, current_age, partner_current_age, savings, ending_portfolio_value,
-                            gross_income, total_expense, total_tax, portfolio_draw, 
-                            investment_return, self_ss, partner_ss, mortgage, healthcare_costs, 
+                            gross_income, total_expense, total_tax, portfolio_draw, draw_rate, 
+                            investment_return, return_rate, self_ss, partner_ss, mortgage, healthcare_costs, 
                             self_gross_earning, partner_gross_earning, self_health_expense, partner_health_expense):
 
     return {
@@ -185,13 +191,15 @@ def create_cash_flow_entry(current_year, year, current_age, partner_current_age,
         'Portfolio Draw': portfolio_draw,
         'Investment Return': investment_return,
         'Ending Portfolio Value': ending_portfolio_value,
+        'Investment Return %' : return_rate, 
+        'Drawdown %' : draw_rate, 
+        'Self Gross Earning': self_gross_earning,
+        'Partner Gross Earning': partner_gross_earning,
         'Self Social Security': self_ss,
         'Partner Social Security': partner_ss,
         'Combined Social Security': self_ss + partner_ss, 
         'Mortgage': mortgage,
         'Healthcare Expense': healthcare_costs,
-        'Self Gross Earning': self_gross_earning,
-        'Partner Gross Earning': partner_gross_earning,
         'Self Health Expense': self_health_expense,
         'Partner Health Expense': partner_health_expense
     }
