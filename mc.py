@@ -26,7 +26,7 @@ with st.container(height=360, border=None):
             life_expectancy = st.number_input("Life Expectancy", value=92)
         with col2:
             retirement_age = st.number_input("Retirement Age", value=60)
-            partner_retirement_age = st.number_input("Partner's Retirement Age", value=60)
+            partner_retirement_age = st.number_input("Partner's Retirement Age", value=58)
 
     # Tab 2: Investment and Savings
     with tab2:
@@ -41,24 +41,23 @@ with st.container(height=360, border=None):
         col1, col2 = st.columns(2)
         with col1:
             annual_earnings = st.number_input("Annual Earnings", value=200000, step=5000)
-            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=3.0, step=0.5) / 100  # Convert to decimal
-            tax_rate = st.number_input("Tax Rate (%)", value=15.0, step=1.0) / 100  # Convert to decimal
+            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=5.0, step=0.5) / 100  # Convert to decimal
+            tax_rate = st.number_input("Tax Rate (%)", value=10.0, step=1.0) / 100  # Convert to decimal
         with col2:
             partner_earnings = st.number_input("Partner's Annual Earnings", value=200000, step=5000)
-            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=3.0, step=0.5) / 100  # Convert to decimal
+            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=5.0, step=0.5) / 100  # Convert to decimal
 
     # Tab 4: Expense
     with tab4:
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         with col1:
-            annual_expense = st.number_input("Annual Expense", value=8000 * 12, step=2000)
+            annual_expense = st.number_input("Annual Expense", value=10000 * 12, step=2000)
             mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=2000)
+            inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
 
         with col2:
-            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate (%)", value=0.5, step=0.05) / 100  # Convert to decimal
+            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate in Retirement (%)", value=0.5, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=25)
-        with col3:
-            inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
             inflation_std = st.number_input("Inflation Std Dev (%)", value=1.0) / 100  # Convert to decimal
 
     # Tab 5: Social Security 
@@ -76,22 +75,22 @@ with st.container(height=360, border=None):
     with tab6:
         col1, col2 = st.columns(2)
         with col1:
-            self_healthcare_cost = st.number_input("Self Healthcare Cost (Annual)", value=5000, step=1000)
-            self_healthcare_start_age = st.number_input("Self Healthcare Start Age", value=retirement_age)
+            self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)", value=5000, step=1000)
+            self_healthcare_start_age = st.number_input("Self Healthcare Bridge Start Age", value=retirement_age)
         with col2:
             partner_healthcare_cost = st.number_input("Partner Healthcare Cost (Annual)", value=5000, step=1000)
-            partner_healthcare_start_age = st.number_input("Partner Healthcare Start Age", value=partner_retirement_age)
+            partner_healthcare_start_age = st.number_input("Partner Healthcare Bridge Start Age", value=partner_retirement_age)
 
     # Tab 7: Market Returns
     with tab7:
         col1, col2 = st.columns(2)
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=10.10, step=0.25) / 100  # Convert to decimal
-            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.9, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=10.00, step=0.25) / 100  # Convert to decimal
+            bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.75, step=0.25) / 100  # Convert to decimal
             simulations = st.number_input("Number of Simulations", value=1000, step=1000)
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=19.60, step=0.25) / 100  # Convert to decimal
-            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=1.166, step=0.05) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=19.00, step=0.25) / 100  # Convert to decimal
+            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=1.2, step=0.05) / 100  # Convert to decimal
 
     # Tab 8: Downsize
     with tab8:
@@ -130,11 +129,12 @@ def format_cashflow_dataframe(df):
     if df.empty:
         return df
     numeric_columns = [
-        'Beginning Portfolio Value', 'Self Earnings (before tax)', 'Partner Earnings (before tax)',
+        'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
         'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)', 'Combined Social Security',
-        'Investment Return', 'Yearly Expense', 'Mortgage', 'Healthcare Expense',
+        'Investment Return', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
         'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value'
     ]
+
     for col in numeric_columns:
         df[col] = df[col].apply(lambda x: f"{x:,.0f}")
     return df
