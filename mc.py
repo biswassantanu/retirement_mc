@@ -203,10 +203,11 @@ def highlight_columns(s):
     for value in s:
         numeric_value = convert_to_numeric(value)
         if numeric_value > 0:
-            styles.append('color: green; font-weight: bold;')  # Green for positive values
+            styles.append('background-color: #ECFBEC; font-weight: bold;')  # Green background for positive values
         else:
-            styles.append('color: red; font-weight: bold;')    # Red for negative values
+            styles.append('background-color: #F9DFDF; font-weight: bold;')    # Red background for negative values
     return styles
+
 
 # Apply the styling to specific columns
 styled_df = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
