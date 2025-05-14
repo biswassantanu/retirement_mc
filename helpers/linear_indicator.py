@@ -27,7 +27,7 @@ def create_linear_indicator(score, label="Success Rate"):
             position: absolute;
             width: 5px;
             height: 30px; /* Shortened height of the indicator */
-            background: black;
+            background: blue;
             left: {normalized_score * 3}px; /* Scale to match the width of the container */
             transform: translateX(-50%);
             z-index: 2;
@@ -42,9 +42,11 @@ def create_linear_indicator(score, label="Success Rate"):
         }}
         .label {{
             font-size: 24px; /* Increased font size for the label */
-            font-weight: bold; /* Made the label bold */
-            color: black; /* black color for the label */
-            margin-right: 10px; /* Space between label and indicator */
+            font-weight: semi-bold; /* Made the label bold */
+            color: #333333; /* black color for the label */
+            margin-right: 10px; /* Space between label and indicator */ 
+
+
         }}
         .label-container {{
             display: flex;

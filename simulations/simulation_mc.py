@@ -12,7 +12,7 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                             partner_healthcare_start_age, partner_healthcare_cost, stock_percentage, 
                             bond_percentage, stock_return_mean, bond_return_mean, stock_return_std, 
                             bond_return_std, simulations, tax_rate, cola_rate, inflation_mean, 
-                            inflation_std, annual_expense_decrease):
+                            inflation_std, annual_expense_decrease, years_until_downsize, residual_amount ):
 
     # Get the current year
     current_year = datetime.now().year
@@ -20,7 +20,11 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
     success_count = 0
     failure_count = 0
 
+
+
     # Prepare lists to store cash flow data for each percentile simulation
+    cash_flows = []
+    all_cash_flows = []  
     cash_flow_10th = []
     cash_flow_50th = []
     cash_flow_90th = []
@@ -68,6 +72,12 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
             # Draw down rate 
             draw_rate = portfolio_draw / ending_portfolio_value
 
+            # Check if it's time to downsize
+            if year == years_until_downsize:
+                downsize_proceeds = residual_amount  # Add the residual amount to the savings
+            else: 
+                downsize_proceeds = 0
+
             # Create cash flow entry
             cash_flow_entry = create_cash_flow_entry(
                 current_year,
@@ -85,6 +95,7 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                 return_rate, 
                 self_ss,
                 partner_ss,
+                downsize_proceeds, 
                 mortgage,
                 healthcare_costs,
                 current_annual_earnings,  # Self Gross Earning
@@ -93,15 +104,19 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                 partner_health_expense     # Partner Health Expense
             )
 
-            savings = ending_portfolio_value
+            # Set the next period's opening balance
+            savings = ending_portfolio_value + downsize_proceeds
 
-            # Append to the appropriate cash flow list based on the simulation index
-            if sim == int(0.1 * simulations):  # 10th percentile
-                cash_flow_10th.append(cash_flow_entry)
-            elif sim == int(0.5 * simulations):  # 50th percentile
-                cash_flow_50th.append(cash_flow_entry)
-            elif sim == int(0.9 * simulations):  # 90th percentile
-                cash_flow_90th.append(cash_flow_entry)
+            # Add the simulation ID to the cash flow entry
+            cash_flow_entry['Simulation ID'] = sim  # Add the simulation ID
+
+            # Check if the cash flow entry is valid (not empty)
+            if cash_flow_entry:  # Ensure the entry is not empty
+                cash_flows.append(cash_flow_entry)
+
+        # Append the cash flow entry to the list of all cash flows
+        if cash_flows:
+            all_cash_flows.append(cash_flows)
 
         # Check if the simulation is successful (savings do not run out before the end)
         if savings >= 0:
@@ -109,8 +124,26 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
         else:
             failure_count += 1
 
+    # After all simulations, sort the cash flows based on the ending portfolio value of the last year
+    sorted_cash_flows = sorted(all_cash_flows, key=lambda x: x[-1]['Ending Portfolio Value'])
 
-    return (success_count, failure_count, cash_flow_10th, cash_flow_50th, cash_flow_90th)
+    # Calculate the indices for the percentiles
+    n = len(sorted_cash_flows)
+    tenth_index = int(0.1 * n)
+    fiftieth_index = int(0.5 * n)
+    ninetieth_index = int(0.9 * n)
+
+    # Get the simulation IDs for the 10th, 50th, and 90th percentiles
+    simulation_id_10th = sorted_cash_flows[tenth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
+    simulation_id_50th = sorted_cash_flows[fiftieth_index - 1][-1]['Simulation ID']  # Last simulation in the 50th percentile
+    simulation_id_90th = sorted_cash_flows[ninetieth_index - 1][-1]['Simulation ID']  # Last simulation in the 90th percentile
+
+    # Filter all cash flows based on the identified simulation IDs
+    df_cashflow_10th = pd.DataFrame([entry for simulation in all_cash_flows if simulation[0]['Simulation ID'] == simulation_id_10th for entry in simulation])
+    df_cashflow_50th = pd.DataFrame([entry for simulation in all_cash_flows if simulation[0]['Simulation ID'] == simulation_id_50th for entry in simulation])
+    df_cashflow_90th = pd.DataFrame([entry for simulation in all_cash_flows if simulation[0]['Simulation ID'] == simulation_id_90th for entry in simulation])
+
+    return (success_count, failure_count, df_cashflow_10th, df_cashflow_50th, df_cashflow_90th)
 
 def calculate_earnings(starting_earnings, yearly_increment, year, retirement_age, current_age):
     if current_age < retirement_age:
@@ -177,7 +210,7 @@ def calculate_investment_return(savings, stock_percentage, bond_percentage, stoc
 
 def create_cash_flow_entry(current_year, year, current_age, partner_current_age, savings, ending_portfolio_value,
                             gross_income, total_expense, total_tax, portfolio_draw, draw_rate, 
-                            investment_return, return_rate, self_ss, partner_ss, mortgage, healthcare_costs, 
+                            investment_return, return_rate, self_ss, partner_ss, downsize_proceeds, mortgage, healthcare_costs, 
                             self_gross_earning, partner_gross_earning, self_health_expense, partner_health_expense):
 
     return {
@@ -191,6 +224,7 @@ def create_cash_flow_entry(current_year, year, current_age, partner_current_age,
         'Portfolio Draw': portfolio_draw,
         'Investment Return': investment_return,
         'Ending Portfolio Value': ending_portfolio_value,
+        'Downsize Proceeds' : downsize_proceeds, 
         'Investment Return %' : return_rate, 
         'Drawdown %' : draw_rate, 
         'Self Gross Earning': self_gross_earning,
@@ -203,17 +237,3 @@ def create_cash_flow_entry(current_year, year, current_age, partner_current_age,
         'Self Health Expense': self_health_expense,
         'Partner Health Expense': partner_health_expense
     }
-
-# Example usage (you can replace these parameters with actual values)
-# Run the simulation
-# success_count, failure_count, cash_flow_10th, cash_flow_50th, cash_flow_90th = monte_carlo_simulation(
-#     current_age, partner_current_age, life_expectancy, initial_savings, 
-#     annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
-#     annual_expense, mortgage_payment,
-#     mortgage_years_remaining, retirement_age, partner_retirement_age, 
-#     annual_social_security, withdrawal_start_age, partner_social_security, 
-#     partner_withdrawal_start_age, self_healthcare_cost, self_healthcare_start_age, partner_healthcare_start_age,
-#     partner_healthcare_cost, stock_percentage, bond_percentage, 
-#     stock_return_mean, bond_return_mean, stock_return_std, bond_return_std, 
-#     simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease
-# )

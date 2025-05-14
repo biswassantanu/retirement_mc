@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 import math 
+import plotly.graph_objs as go
+
 from helpers.linear_indicator import create_linear_indicator
 from simulations.simulation_mc import monte_carlo_simulation
 
@@ -103,7 +105,6 @@ with st.container(height=380, border=None):
 
             
 
-
 # Calculate earning years
 earning_years = retirement_age - current_age
 partner_earning_years = partner_retirement_age - partner_current_age
@@ -119,7 +120,8 @@ success_count, failure_count, cash_flow_10th, cash_flow_50th, cash_flow_90th = m
     partner_withdrawal_start_age, self_healthcare_cost, self_healthcare_start_age, partner_healthcare_start_age,
     partner_healthcare_cost, stock_percentage, bond_percentage, 
     stock_return_mean, bond_return_mean, stock_return_std, bond_return_std, 
-    simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease
+    simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease, 
+    years_until_downsize, residual_amount
 )
 
 # Prepare data for display for each percentile
@@ -136,7 +138,7 @@ def format_cashflow_dataframe(df):
     numeric_columns = [
         'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
         'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)', 'Combined Social Security',
-        'Investment Return', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
+        'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
         'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value'
     ]
 
@@ -170,17 +172,43 @@ st.write("# Simulation Results")
 
 st.markdown(create_linear_indicator(math.floor(success_rate), "Success Probablity: "), unsafe_allow_html=True)
 
-# Display the DataFrames for each percentile
-# st.write("### Yearly Cash Flow Summary (10th Percentile Simulation)")
-# st.dataframe(df_cashflow_10th)
+# Extract the end-of-period balances for the 10th, 50th, and 90th percentiles
+end_balance_10th = df_cashflow_10th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
+end_balance_50th = df_cashflow_50th['Ending Portfolio Value'].iloc[-1]  # Last entry for 50th percentile
+end_balance_90th = df_cashflow_90th['Ending Portfolio Value'].iloc[-1]  # Last entry for 90th percentile
+
+
+# Convert balances to millions and format to 2 decimal places
+end_balance_10th_millions = float(end_balance_10th.replace(',', '')) / 1_000_000
+end_balance_50th_millions = float(end_balance_50th.replace(',', '')) / 1_000_000
+end_balance_90th_millions = float(end_balance_90th.replace(',', '')) / 1_000_000
+
+# Display the end-of-period balances in a formatted way
+st.markdown(
+    f"<span style='color:#000000; font-weight:semi-bold; font-size:20px;'>End of Plan Balances </span> "
+    f"<span style='margin-left:40px; color:#777777; font-size:16px;'>10th Percentile:</span> "
+    f"<span style='margin-left:5px; color:#CC5555; font-size:24px;'>{end_balance_10th_millions:.2f}M</span> "
+    f"<span style='color:#777777; font-size:16px; margin-left:40px;'>50th Percentile:</span> "
+    f"<span style='margin-left:5px; color:#5555CC; font-size:24px;'>{end_balance_50th_millions:.2f}M</span> "
+    f"<span style='color:#777777; font-size:16px; margin-left:40px;'>90th Percentile:</span> "
+    f"<span style='margin-left:5px; color:#33AA33; font-size:24px;'>{end_balance_90th_millions:.2f}M</span>",
+    unsafe_allow_html=True
+)
+
 
 # Add some space
 st.markdown("<br>", unsafe_allow_html=True)
 st.write("### Yearly Cash Flow Summary (50th Percentile Simulation)")
 st.dataframe(df_cashflow_50th, hide_index=True, use_container_width=True)
 
-# st.write("### Yearly Cash Flow Summary (90th Percentile Simulation)")
-# st.dataframe(df_cashflow_90th)
+# Space for 10th and 90th percentil 
+st.markdown("<br>", unsafe_allow_html=True)
+
+st.write("### Yearly Cash Flow Summary (10th Percentile Simulation)")
+st.dataframe(df_cashflow_10th)
+
+st.write("### Yearly Cash Flow Summary (90th Percentile Simulation)")
+st.dataframe(df_cashflow_90th)
 
 # Create a container for the charts
 st.markdown("<br><br><br>", unsafe_allow_html=True)
@@ -189,3 +217,5 @@ with st.container():
     
     # Plotting the results using Streamlit's line chart for the 50th percentile
     st.line_chart(df_cashflow_50th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
+
+
