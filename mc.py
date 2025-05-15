@@ -23,7 +23,7 @@ st.title("Retirement Analysis - with Monte Carlo Simulation")
 
 
 # Put the tabs inside a container with fixed height
-with st.container(height=460, border=None):
+with st.container(height=420, border=None):
 
     # set the tab styles 
     st.markdown(tab_style_css, unsafe_allow_html=True)
@@ -320,35 +320,47 @@ def highlight_columns(s):
     return styles
 
 
-# Apply the styling to specific columns
-styled_df = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-# Display the content
 st.markdown("<br>", unsafe_allow_html=True)
-st.write("### Yearly Cash Flow Summary (50th Percentile Simulation)")
-st.dataframe(styled_df, hide_index=True, use_container_width=True)
-
-
-# Space for 10th and 90th percentil 
+st.write("### Yearly Cash Flow Summary ")
 st.markdown("<br>", unsafe_allow_html=True)
+# Create tabs for the cash flow summaries
+tab_50th, tab_10th, tab_90th = st.tabs(["50th Percentile", "10th Percentile", "90th Percentile"])
 
-# Apply the styling to specific columns
-styled_df = df_cashflow_10th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-# Display the content
-st.markdown("<br>", unsafe_allow_html=True)
-st.write("### Yearly Cash Flow Summary (10th Percentile Simulation)")
-st.dataframe(styled_df, hide_index=True, use_container_width=True)
+# Tab for 50th Percentile
+with tab_50th:
+    # Apply the styling to specific columns
+    styled_df_50th = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    
+    # Display the content
+    st.write("##### 50th Percentile Simulation")
+    st.dataframe(styled_df_50th, hide_index=True, use_container_width=True)
 
-# Apply the styling to specific columns
-styled_df = df_cashflow_90th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-# Display the content
-st.markdown("<br>", unsafe_allow_html=True)
-st.write("### Yearly Cash Flow Summary (90th Percentile Simulation)")
-st.dataframe(styled_df, hide_index=True, use_container_width=True)
-
-# Create a container for the charts
-st.markdown("<br><br><br>", unsafe_allow_html=True)
-with st.container():
-    st.header("Portfolio Balance Over Time")
+    # Create a container for the charts
+    st.subheader("Portfolio Balance Over Time")
     # Plotting the results using Streamlit's line chart for the 50th percentile
     st.line_chart(df_cashflow_50th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
 
+# Tab for 10th Percentile
+with tab_10th:
+    # Apply the styling to specific columns
+    styled_df_10th = df_cashflow_10th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    
+    # Display the content
+    st.write("##### 10th Percentile Simulation")
+    st.dataframe(styled_df_10th, hide_index=True, use_container_width=True)
+    st.subheader("Portfolio Balance Over Time")
+    # Plotting the results using Streamlit's line chart for the 50th percentile
+    st.line_chart(df_cashflow_10th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
+
+
+# Tab for 90th Percentile
+with tab_90th:
+    # Apply the styling to specific columns
+    styled_df_90th = df_cashflow_90th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    
+    # Display the content
+    st.write("##### 90th Percentile Simulation")
+    st.dataframe(styled_df_90th, hide_index=True, use_container_width=True)
+    st.subheader("Portfolio Balance Over Time")
+    # Plotting the results using Streamlit's line chart for the 50th percentile
+    st.line_chart(df_cashflow_90th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
