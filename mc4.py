@@ -19,7 +19,231 @@ st.set_page_config(layout="wide")
 current_year = datetime.now().year
 
 # Streamlit Display
-st.write("# Retirement Analysis with Monte Carlo Simulation")
+st.title("Retirement Analysis - with Monte Carlo Simulation")
+
+# Function to save parameters to a name value pair text file
+def save_parameters_to_text_file():
+    with open('retirement_parameters.txt', 'w') as f:
+        f.write(f"current_age={current_age}\n")
+        f.write(f"partner_current_age={partner_current_age}\n")
+        f.write(f"life_expectancy={life_expectancy}\n")
+        f.write(f"retirement_age={retirement_age}\n")
+        f.write(f"partner_retirement_age={partner_retirement_age}\n")
+        f.write(f"initial_savings={initial_savings}\n")
+        f.write(f"stock_percentage={stock_percentage}\n")
+        f.write(f"bond_percentage={bond_percentage}\n")
+        f.write(f"annual_earnings={annual_earnings}\n")
+        f.write(f"self_yearly_increase={self_yearly_increase}\n")
+        f.write(f"tax_rate={tax_rate}\n")
+        f.write(f"partner_earnings={partner_earnings}\n")
+        f.write(f"partner_yearly_increase={partner_yearly_increase}\n")
+        f.write(f"annual_expense={annual_expense}\n")
+        f.write(f"mortgage_payment={mortgage_payment}\n")
+        f.write(f"inflation_mean={inflation_mean}\n")
+        f.write(f"annual_expense_decrease={annual_expense_decrease}\n")
+        f.write(f"mortgage_years_remaining={mortgage_years_remaining}\n")
+        f.write(f"inflation_std={inflation_std}\n")
+        f.write(f"annual_social_security={annual_social_security}\n")
+        f.write(f"withdrawal_start_age={withdrawal_start_age}\n")
+        f.write(f"cola_rate={cola_rate}\n")
+        f.write(f"partner_social_security={partner_social_security}\n")
+        f.write(f"partner_withdrawal_start_age={partner_withdrawal_start_age}\n")
+        f.write(f"self_healthcare_cost={self_healthcare_cost}\n")
+        f.write(f"self_healthcare_start_age={self_healthcare_start_age}\n")
+        f.write(f"partner_healthcare_cost={partner_healthcare_cost}\n")
+        f.write(f"partner_healthcare_start_age={partner_healthcare_start_age}\n")
+        f.write(f"stock_return_mean={stock_return_mean}\n")
+        f.write(f"bond_return_mean={bond_return_mean}\n")
+        f.write(f"simulations={simulations}\n")
+        f.write(f"stock_return_std={stock_return_std}\n")
+        f.write(f"bond_return_std={bond_return_std}\n")
+        f.write(f"years_until_downsize={years_until_downsize}\n")
+        f.write(f"residual_amount={residual_amount}\n")
+        f.write(f"adjust_expense_year_1={adjust_expense_year_1}\n")
+        f.write(f"adjust_expense_amount_1={adjust_expense_amount_1}\n")
+        f.write(f"adjust_expense_year_2={adjust_expense_year_2}\n")
+        f.write(f"adjust_expense_amount_2={adjust_expense_amount_2}\n")
+        f.write(f"adjust_expense_year_3={adjust_expense_year_3}\n")
+        f.write(f"adjust_expense_amount_3={adjust_expense_amount_3}\n")
+        f.write(f"one_time_year_1={one_time_year_1}\n")
+        f.write(f"one_time_amount_1={one_time_amount_1}\n")
+        f.write(f"one_time_year_2={one_time_year_2}\n")
+        f.write(f"one_time_amount_2={one_time_amount_2}\n")
+        f.write(f"one_time_year_3={one_time_year_3}\n")
+        f.write(f"one_time_amount_3={one_time_amount_3}\n")
+        f.write(f"windfall_year_1={windfall_year_1}\n")
+        f.write(f"windfall_amount_1={windfall_amount_1}\n")
+        f.write(f"windfall_year_2={windfall_year_2}\n")
+        f.write(f"windfall_amount_2={windfall_amount_2}\n")
+        f.write(f"windfall_year_3={windfall_year_3}\n")
+        f.write(f"windfall_amount_3={windfall_amount_3}\n")
+
+# Function to load parameters from a name value text file
+def load_parameters_from_text_file(file):
+    with open(file, 'r') as f:
+        for line in f:
+            name, value = line.strip().split('=')
+            if name == "current_age":
+                global current_age
+                current_age = int(value)
+            elif name == "partner_current_age":
+                global partner_current_age
+                partner_current_age = int(value)
+            elif name == "life_expectancy":
+                global life_expectancy
+                life_expectancy = int(value)
+            elif name == "retirement_age":
+                global retirement_age
+                retirement_age = int(value)
+            elif name == "partner_retirement_age":
+                global partner_retirement_age
+                partner_retirement_age = int(value)
+            elif name == "initial_savings":
+                global initial_savings
+                initial_savings = float(value)
+            elif name == "stock_percentage":
+                global stock_percentage
+                stock_percentage = float(value)
+            elif name == "bond_percentage":
+                global bond_percentage
+                bond_percentage = float(value)
+            elif name == "annual_earnings":
+                global annual_earnings
+                annual_earnings = float(value)
+            elif name == "self_yearly_increase":
+                global self_yearly_increase
+                self_yearly_increase = float(value)
+            elif name == "tax_rate":
+                global tax_rate
+                tax_rate = float(value)
+            elif name == "partner_earnings":
+                global partner_earnings
+                partner_earnings = float(value)
+            elif name == "partner_yearly_increase":
+                global partner_yearly_increase
+                partner_yearly_increase = float(value)
+            elif name == "annual_expense":
+                global annual_expense
+                annual_expense = float(value)
+            elif name == "mortgage_payment":
+                global mortgage_payment
+                mortgage_payment = float(value)
+            elif name == "inflation_mean":
+                global inflation_mean
+                inflation_mean = float(value)
+            elif name == "annual_expense_decrease":
+                global annual_expense_decrease
+                annual_expense_decrease = float(value)
+            elif name == "mortgage_years_remaining":
+                global mortgage_years_remaining
+                mortgage_years_remaining = int(value)
+            elif name == "inflation_std":
+                global inflation_std
+                inflation_std = float(value)
+            elif name == "annual_social_security":
+                global annual_social_security
+                annual_social_security = float(value)
+            elif name == "withdrawal_start_age":
+                global withdrawal_start_age
+                withdrawal_start_age = int(value)
+            elif name == "cola_rate":
+                global cola_rate
+                cola_rate = float(value)
+            elif name == "partner_social_security":
+                global partner_social_security
+                partner_social_security = float(value)
+            elif name == "partner_withdrawal_start_age":
+                global partner_withdrawal_start_age
+                partner_withdrawal_start_age = int(value)
+            elif name == "self_healthcare_cost":
+                global self_healthcare_cost
+                self_healthcare_cost = float(value)
+            elif name == "self_healthcare_start_age":
+                global self_healthcare_start_age
+                self_healthcare_start_age = int(value)
+            elif name == "partner_healthcare_cost":
+                global partner_healthcare_cost
+                partner_healthcare_cost = float(value)
+            elif name == "partner_healthcare_start_age":
+                global partner_healthcare_start_age
+                partner_healthcare_start_age = int(value)
+            elif name == "stock_return_mean":
+                global stock_return_mean
+                stock_return_mean = float(value)
+            elif name == "bond_return_mean":
+                global bond_return_mean
+                bond_return_mean = float(value)
+            elif name == "simulations":
+                global simulations
+                simulations = int(value)
+            elif name == "stock_return_std":
+                global stock_return_std
+                stock_return_std = float(value)
+            elif name == "bond_return_std":
+                global bond_return_std
+                bond_return_std = float(value)
+            elif name == "years_until_downsize":
+                global years_until_downsize
+                years_until_downsize = int(value)
+            elif name == "residual_amount":
+                global residual_amount
+                residual_amount = float(value)
+            elif name == "adjust_expense_year_1":
+                global adjust_expense_year_1
+                adjust_expense_year_1 = int(value)
+            elif name == "adjust_expense_amount_1":
+                global adjust_expense_amount_1
+                adjust_expense_amount_1 = float(value)
+            elif name == "adjust_expense_year_2":
+                global adjust_expense_year_2
+                adjust_expense_year_2 = int(value)
+            elif name == "adjust_expense_amount_2":
+                global adjust_expense_amount_2
+                adjust_expense_amount_2 = float(value)
+            elif name == "adjust_expense_year_3":
+                global adjust_expense_year_3
+                adjust_expense_year_3 = int(value)
+            elif name == "adjust_expense_amount_3":
+                global adjust_expense_amount_3
+                adjust_expense_amount_3 = float(value)
+            elif name == "one_time_year_1":
+                global one_time_year_1
+                one_time_year_1 = int(value)
+            elif name == "one_time_amount_1":
+                global one_time_amount_1
+                one_time_amount_1 = float(value)
+            elif name == "one_time_year_2":
+                global one_time_year_2
+                one_time_year_2 = int(value)
+            elif name == "one_time_amount_2":
+                global one_time_amount_2
+                one_time_amount_2 = float(value)
+            elif name == "one_time_year_3":
+                global one_time_year_3
+                one_time_year_3 = int(value)
+            elif name == "one_time_amount_3":
+                global one_time_amount_3
+                one_time_amount_3 = float(value)
+            elif name == "windfall_year_1":
+                global windfall_year_1
+                windfall_year_1 = int(value)
+            elif name == "windfall_amount_1":
+                global windfall_amount_1
+                windfall_amount_1 = float(value)
+            elif name == "windfall_year_2":
+                global windfall_year_2
+                windfall_year_2 = int(value)
+            elif name == "windfall_amount_2":
+                global windfall_amount_2
+                windfall_amount_2 = float(value)
+            elif name == "windfall_year_3":
+                global windfall_year_3
+                windfall_year_3 = int(value)
+            elif name == "windfall_amount_3":
+                global windfall_amount_3
+                windfall_amount_3 = float(value)
+
+
 
 # Put the tabs inside a container with fixed height
 with st.container(height=420, border=None):
@@ -36,7 +260,6 @@ with st.container(height=420, border=None):
         with col1:
             current_age = st.number_input("Current Age", value=55)
             partner_current_age = st.number_input("Partner's Current Age", value=50)
-            st.markdown("<br>", unsafe_allow_html=True)
             life_expectancy = st.number_input("Life Expectancy", value=92)
         with col2:
             retirement_age = st.number_input("Retirement Age", value=60)
@@ -207,6 +430,30 @@ with st.container(height=420, border=None):
             windfall_amount_3 = st.number_input("Windfall Amount 3 ", value=0, step=5000, key="windfall_amount_3")
 
 
+# Add download button
+params_text = save_parameters_to_text_file()  # Call the function to get the parameters
+
+# Debugging: Print the params_text to check its value
+print("Params Text:", params_text)  # This will show in the terminal where you run Streamlit
+
+# Ensure params_text is not None
+if params_text is not None:
+    st.download_button(
+        label="Download Parameters",
+        data=params_text,
+        file_name='retirement_parameters.txt',
+        mime='text/plain'
+    )
+else:
+    st.error("Failed to generate parameters for download.")
+
+# Add upload button
+uploaded_file = st.file_uploader("Upload your parameters text file", type=["txt"])
+if uploaded_file is not None:
+    load_parameters_from_text_file(uploaded_file)
+    st.success("Parameters loaded successfully")
+
+
 # Calculate earning years
 earning_years = retirement_age - current_age
 partner_earning_years = partner_retirement_age - partner_current_age
@@ -284,8 +531,9 @@ total_simulations = success_count + failure_count
 success_rate = (success_count / total_simulations) * 100 if total_simulations > 0 else 0
 failure_rate = (failure_count / total_simulations) * 100 if total_simulations > 0 else 0
 
-
-st.write("## Simulation Results")
+st.write("# Simulation Results")
+# st.markdown(f"<p style='font-size: 36px; color: green; display: inline; margin-right: 50px;'>Success Rate: {success_rate:.0f}%</p>"
+#             f"<p style='font-size: 36px; color: red; display: inline;margin-right: 50px;'>Failure Rate: {failure_rate:.0f}%</p>", unsafe_allow_html=True)
 
 st.markdown(create_linear_indicator(math.floor(success_rate), "Success Probablity: "), unsafe_allow_html=True)
 
@@ -324,7 +572,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.write("### Yearly Cash Flow Summary ")
 st.markdown("<br>", unsafe_allow_html=True)
 # Create tabs for the cash flow summaries
-tab_50th, tab_10th, tab_90th = st.tabs(["Most Likely", "Worst Case", "Best Case"])
+tab_50th, tab_10th, tab_90th = st.tabs(["50th Percentile", "10th Percentile", "90th Percentile"])
 
 # Tab for 50th Percentile
 with tab_50th:
