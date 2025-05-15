@@ -12,7 +12,10 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                             partner_healthcare_start_age, partner_healthcare_cost, stock_percentage, 
                             bond_percentage, stock_return_mean, bond_return_mean, stock_return_std, 
                             bond_return_std, simulations, tax_rate, cola_rate, inflation_mean, 
-                            inflation_std, annual_expense_decrease, years_until_downsize, residual_amount ):
+                            inflation_std, annual_expense_decrease, years_until_downsize, residual_amount,  
+                            adjust_expense_years, adjust_expense_amounts, 
+                            one_time_years, one_time_amounts,            
+                            windfall_years, windfall_amounts): 
 
     # Get the current year
     current_year = datetime.now().year
@@ -28,6 +31,20 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
     cash_flow_10th = []
     cash_flow_50th = []
     cash_flow_90th = []
+
+
+    # Unpack adjustments
+    adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3 = adjust_expense_years
+    adjust_expense_amount_1, adjust_expense_amount_2, adjust_expense_amount_3 = adjust_expense_amounts
+
+    # Unpack one-time expenses
+    one_time_year_1, one_time_year_2, one_time_year_3 = one_time_years
+    one_time_amount_1, one_time_amount_2, one_time_amount_3 = one_time_amounts
+
+    # Unpack windfalls
+    windfall_year_1, windfall_year_2, windfall_year_3 = windfall_years
+    windfall_amount_1, windfall_amount_2, windfall_amount_3 = windfall_amounts
+
 
     for sim in range(simulations):
         savings = initial_savings
@@ -51,12 +68,38 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
             # Calculate expenses
             mortgage = calculate_mortgage(mortgage_payment, year, mortgage_years_remaining)
             healthcare_costs, self_health_expense, partner_health_expense = calculate_healthcare_costs(current_age_in_loop, self_healthcare_cost, self_healthcare_start_age, partner_current_age_in_loop, partner_healthcare_cost, partner_healthcare_start_age, inflation_mean)
+
+
+            # Adjusting expenses based on hardcoded variables
+            yearly_expense_adjustment = 0
+            if year + current_year == adjust_expense_year_1:
+                yearly_expense_adjustment = adjust_expense_amount_1
+
+            if year + current_year == adjust_expense_year_2:
+                yearly_expense_adjustment = adjust_expense_amount_2
+
+            if year + current_year == adjust_expense_year_3:
+                yearly_expense_adjustment = adjust_expense_amount_3
+
+            previous_annual_expense += yearly_expense_adjustment
             current_annual_expense = adjust_expenses(previous_annual_expense, inflation_mean, inflation_std, annual_expense_decrease, year, current_age_in_loop, retirement_age, partner_current_age_in_loop, partner_retirement_age)
             previous_annual_expense = current_annual_expense
 
+            # Incorporate one-time expenses 
+            one_time_expense = 0
+            if year + current_year == one_time_year_1:
+                one_time_expense += one_time_amount_1
+            
+            if year + current_year == one_time_year_2:
+                one_time_expense += one_time_amount_2
+
+            if year + current_year == one_time_year_3:
+                    one_time_expense += one_time_amount_3
+
+
             # Calculate total income and expenses
             gross_income = current_annual_earnings + current_partner_earnings + self_ss + partner_ss
-            total_expense = current_annual_expense + mortgage + healthcare_costs
+            total_expense = current_annual_expense + mortgage + healthcare_costs + one_time_expense
             estimated_tax = gross_income * tax_rate
 
             # Determine portfolio draw
@@ -78,6 +121,18 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
             else: 
                 downsize_proceeds = 0
 
+            # Incorporate windfalls
+            windfall_amount = 0 
+            if year + current_year == windfall_year_1:
+                windfall_amount += windfall_amount_1
+
+            if year + current_year == windfall_year_2:
+                windfall_amount += windfall_amount_2
+
+            if year + current_year == windfall_year_3:
+                windfall_amount += windfall_amount_3
+
+
             # Create cash flow entry
             cash_flow_entry = create_cash_flow_entry(
                 current_year,
@@ -98,14 +153,17 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                 downsize_proceeds, 
                 mortgage,
                 healthcare_costs,
-                current_annual_earnings,  # Self Gross Earning
-                current_partner_earnings,  # Partner Gross Earning
-                self_health_expense,      # Self Health Expense  
-                partner_health_expense     # Partner Health Expense
+                current_annual_earnings,  
+                current_partner_earnings,  
+                self_health_expense,     
+                partner_health_expense, 
+                yearly_expense_adjustment, 
+                one_time_expense, 
+                windfall_amount
             )
 
-            # Set the next period's opening balance
-            savings = ending_portfolio_value + downsize_proceeds
+            # Set the next period's opening balance - incorporating downsizing and windfall 
+            savings = ending_portfolio_value + downsize_proceeds + windfall_amount
 
             # Add the simulation ID to the cash flow entry
             cash_flow_entry['Simulation ID'] = sim  # Add the simulation ID
@@ -211,14 +269,16 @@ def calculate_investment_return(savings, stock_percentage, bond_percentage, stoc
 def create_cash_flow_entry(current_year, year, current_age, partner_current_age, savings, ending_portfolio_value,
                             gross_income, total_expense, total_tax, portfolio_draw, draw_rate, 
                             investment_return, return_rate, self_ss, partner_ss, downsize_proceeds, mortgage, healthcare_costs, 
-                            self_gross_earning, partner_gross_earning, self_health_expense, partner_health_expense):
+                            self_gross_earning, partner_gross_earning, self_health_expense, partner_health_expense, 
+                            yearly_expense_adjustment, one_time_expense, windfall_amount
+                            ):
 
     return {
         'Year': current_year + year,
         'Self Age': current_age,
         'Partner Age': partner_current_age,
         'Beginning Portfolio Value': savings,
-        'Total Earnings (before tax)': gross_income,
+        'Gross Earnings': gross_income,
         'Total Expense': total_expense,
         'Tax': total_tax,
         'Portfolio Draw': portfolio_draw,
@@ -235,5 +295,8 @@ def create_cash_flow_entry(current_year, year, current_age, partner_current_age,
         'Mortgage': mortgage,
         'Healthcare Expense': healthcare_costs,
         'Self Health Expense': self_health_expense,
-        'Partner Health Expense': partner_health_expense
+        'Partner Health Expense': partner_health_expense, 
+        'Yearly Expense Adj' : yearly_expense_adjustment, 
+        'One Time Expense' : one_time_expense,  
+        'Windfall Amt' : windfall_amount
     }

@@ -6,28 +6,34 @@ import math
 import plotly.graph_objs as go
 
 from helpers.linear_indicator import create_linear_indicator
-from helpers.tab_styling import tab_style_css
 from helpers.balance_display import display_balances
+
+from helpers.styling import tab_style_css
+from helpers.styling import button_style_css
 
 from simulations.simulation_mc import monte_carlo_simulation
 
 # Set Streamlit to use full-width layout
 st.set_page_config(layout="wide")
 
+current_year = datetime.now().year
+
 # Streamlit Display
 st.title("Retirement Analysis - with Monte Carlo Simulation")
 
 
 # Put the tabs inside a container with fixed height
-with st.container(height=380, border=None):
+with st.container(height=460, border=None):
+
+    # set the tab styles 
     st.markdown(tab_style_css, unsafe_allow_html=True)
 
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([" Personal Details ", " Investment and Savings ", " Income ", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([" Personal Details ", " Investments and Savings ", " Income & Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
 
     # Tab 1: Personal Details
     with tab1:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             current_age = st.number_input("Current Age", value=55)
             partner_current_age = st.number_input("Partner's Current Age", value=50)
@@ -36,20 +42,30 @@ with st.container(height=380, border=None):
             retirement_age = st.number_input("Retirement Age", value=60)
             partner_retirement_age = st.number_input("Partner's Retirement Age", value=58)
 
+        # Calculate the range of valid years based on current age and life expectancy
+        start_year = current_year 
+        end_year = current_year + (life_expectancy - current_age)
+        # Create a list of years for drops downs 
+        years = list(range(start_year, end_year + 1))
+
+
     # Tab 2: Investment and Savings
     with tab2:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             initial_savings = st.number_input("Current Total Portfolio", value=2000000, step=100000)
+            st.markdown("<br>", unsafe_allow_html=True)
             stock_percentage = st.slider("Percentage of Stock Investment (%)", min_value=0, max_value=100, value=60)
             bond_percentage = 100 - stock_percentage  # Calculate bond percentage
 
     # Tab 3: Income
     with tab3:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             annual_earnings = st.number_input("Annual Earnings", value=200000, step=5000)
             self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=5.0, step=0.5) / 100  # Convert to decimal
+
+            st.markdown("<br>", unsafe_allow_html=True)
             tax_rate = st.number_input("Tax Rate (%)", value=10.0, step=1.0) / 100  # Convert to decimal
         with col2:
             partner_earnings = st.number_input("Partner's Annual Earnings", value=200000, step=5000)
@@ -57,21 +73,22 @@ with st.container(height=380, border=None):
 
     # Tab 4: Expense
     with tab4:
-        col1, col2 = st.columns(2)
+        col1, col2 , col3 = st.columns([1,1,2])
         with col1:
             annual_expense = st.number_input("Annual Expense", value=10000 * 12, step=2000)
             mortgage_payment = st.number_input("Yearly Mortgage", value=36000, step=2000)
             inflation_mean = st.number_input("Inflation Mean (%)", value=2.5) / 100  # Convert to decimal
 
         with col2:
-            annual_expense_decrease = st.number_input("Annual Expense Decrease Rate in Retirement (Smile *) (%)", value=0.5, step=0.05) / 100  # Convert to decimal
+            annual_expense_decrease = st.number_input("Annual Decrease post Retirement (Smile *) (%)", value=0.5, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=25)
             inflation_std = st.number_input("Inflation Std Dev (%)", value=1.0) / 100  # Convert to decimal
+        st.markdown("<br>", unsafe_allow_html=True)
         st.write ('###### * Smile : Research shows household expenses decrease about 1% year over year in retirement and then can increase towards end of life due to healthcare cost')
 
     # Tab 5: Social Security 
     with tab5:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             annual_social_security = st.number_input("Social Security", value=3000 * 12, step=1000)
             withdrawal_start_age = st.number_input("Withdrawal Start Age (Self)", value=67)
@@ -82,38 +99,129 @@ with st.container(height=380, border=None):
 
     # Tab 6: Healthcare Costs
     with tab6:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)", value=5000, step=1000)
             self_healthcare_start_age = st.number_input("Self Healthcare Bridge Start Age", value=retirement_age)
         with col2:
             partner_healthcare_cost = st.number_input("Partner Bridge Healthcare Cost (Annual)", value=5000, step=1000)
             partner_healthcare_start_age = st.number_input("Partner Healthcare Bridge Start Age", value=partner_retirement_age)
+        st.markdown("<br>", unsafe_allow_html=True)
         st.write ('###### Bridge cost is amount needed to self fund medical insurance after retirement before Medicare starts at 65')
 
     # Tab 7: Market Returns
     with tab7:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             stock_return_mean = st.number_input("Stock Return Mean (%)", value=10.00, step=0.25) / 100  # Convert to decimal
             bond_return_mean = st.number_input("Bond Return Mean (%)", value=3.75, step=0.25) / 100  # Convert to decimal
+            st.markdown("<br>", unsafe_allow_html=True)
             simulations = st.number_input("Number of Simulations", value=1000, step=1000)
         with col2:
             stock_return_std = st.number_input("Stock Return Std Dev (%)", value=19.00, step=0.25) / 100  # Convert to decimal
             bond_return_std = st.number_input("Bond Return Std Dev (%)", value=1.2, step=0.05) / 100  # Convert to decimal
+        st.markdown("<br>", unsafe_allow_html=True)
         st.write ('###### Market Return Parameters are based on actual values of US equity (S&P 500) and Bond markets (Bloomberg) for last 100 years - similar to what Fiedilty uses')
+ 
     # Tab 8: Downsize
     with tab8:
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns([1,1,2])
         with col1:
             years_until_downsize = st.number_input("After how many years?", value=0)
             residual_amount = st.number_input("Net Addition to Retirement Savings", value=0, step=100000)
 
-            
+    # Tab 9: Adjust Recurring Expenses
+    with tab9:
+        st.write("##### Yearly Expense Adjustments")
+        
+        # Entry 1
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            adjust_expense_year_1 = st.selectbox("Year of Adjustment 1", years, key="year_adjustment_1")
+        with col2:
+            adjust_expense_amount_1 = st.number_input("Adjustment Amount 1 ", value=0, step=2000, key="amount_adjustment_1")
+        
+        # Entry 2
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            adjust_expense_year_2 = st.selectbox("Year of Adjustment 2", years, key="year_adjustment_2")
+        with col2:
+            adjust_expense_amount_2 = st.number_input("Adjustment Amount 2 ", value=0, step=2000, key="amount_adjustment_2")
+        
+        # Entry 3
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            adjust_expense_year_3 = st.selectbox("Year of Adjustment 3", years, key="year_adjustment_3")
+        with col2:
+            adjust_expense_amount_3 = st.number_input("Adjustment Amount 3 ", value=0, step=2000, key="amount_adjustment_3")
+
+
+    # Tab 10: One-Time Expenses
+    with tab10:
+        st.write("##### One-Time Expenses")
+        
+        # Entry 1
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            one_time_year_1 = st.selectbox("Year of One-Time Expense 1", years, key="one_time_year_1")
+        with col2:
+            one_time_amount_1 = st.number_input("One-Time Expense Amount 1 ", value=0, step=5000, key="one_time_amount_1")
+        
+        # Entry 2
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            one_time_year_2 = st.selectbox("Year of One-Time Expense 2", years, key="one_time_year_2")
+        with col2:
+            one_time_amount_2 = st.number_input("One-Time Expense Amount 2 ", value=0, step=5000, key="one_time_amount_2")
+        
+        # Entry 3
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            one_time_year_3 = st.selectbox("Year of One-Time Expense 3", years, key="one_time_year_3")
+        with col2:
+            one_time_amount_3 = st.number_input("One-Time Expense Amount 3 ", value=0, step=5000, key="one_time_amount_3")
+
+    # Tab 11: Windfalls
+    with tab11:
+        st.write("##### Windfalls")
+        
+        # Entry 1
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            windfall_year_1 = st.selectbox("Year of Windfall 1", years, key="windfall_year_1")
+        with col2:
+            windfall_amount_1 = st.number_input("Windfall Amount 1 ", value=0, step=5000, key="windfall_amount_1")
+        
+        # Entry 2
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            windfall_year_2 = st.selectbox("Year of Windfall 2", years, key="windfall_year_2")
+        with col2:
+            windfall_amount_2 = st.number_input("Windfall Amount 2 ", value=0, step=5000, key="windfall_amount_2")
+        
+        # Entry 3
+        col1, col2, col3 = st.columns([1, 1, 2])  # Adjust column widths as needed
+        with col1:
+            windfall_year_3 = st.selectbox("Year of Windfall 3", years, key="windfall_year_3")
+        with col2:
+            windfall_amount_3 = st.number_input("Windfall Amount 3 ", value=0, step=5000, key="windfall_amount_3")
 
 # Calculate earning years
 earning_years = retirement_age - current_age
 partner_earning_years = partner_retirement_age - partner_current_age
+
+# packe Adjustments
+adjust_expense_years = [adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3]
+adjust_expense_amounts = [adjust_expense_amount_1, adjust_expense_amount_2, adjust_expense_amount_3]
+
+# Pack One-Time Expenses
+one_time_years = [one_time_year_1, one_time_year_2, one_time_year_3]
+one_time_amounts = [one_time_amount_1, one_time_amount_2, one_time_amount_3]
+
+# Pack Windfalls
+windfall_years = [windfall_year_1, windfall_year_2, windfall_year_3]
+windfall_amounts = [windfall_amount_1, windfall_amount_2, windfall_amount_3]
+
 
 
 # Run the simulation
@@ -127,7 +235,10 @@ success_count, failure_count, cash_flow_10th, cash_flow_50th, cash_flow_90th = m
     partner_healthcare_cost, stock_percentage, bond_percentage, 
     stock_return_mean, bond_return_mean, stock_return_std, bond_return_std, 
     simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease, 
-    years_until_downsize, residual_amount
+    years_until_downsize, residual_amount, 
+    adjust_expense_years, adjust_expense_amounts,  
+    one_time_years, one_time_amounts,             
+    windfall_years, windfall_amounts        
 )
 
 # Prepare data for display for each percentile
@@ -143,9 +254,9 @@ def format_cashflow_dataframe(df):
     # Format Amount Columns
     numeric_columns = [
         'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
-        'Self Social Security', 'Partner Social Security', 'Total Earnings (before tax)', 'Combined Social Security',
+        'Self Social Security', 'Partner Social Security', 'Gross Earnings', 'Combined Social Security',
         'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
-        'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value'
+        'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value', 'Yearly Expense Adj', 'One Time Expense', 'Windfall Amt'
     ]
 
     for col in numeric_columns:

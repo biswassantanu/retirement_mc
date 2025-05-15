@@ -30,3 +30,20 @@ tab_style_css ="""
             }
         </style>
     """
+
+button_style_css = """
+        <style>
+            .stButton > button {
+                background-color: #F0F2F6;  /* Light grey background */
+                color: black;                /* Text color */
+                border: none;                /* Remove border */
+                border-radius: 5px;         /* Rounded corners */
+                padding: 5px 10px;         /* Padding */
+                font-size: 10px;            /* Font size */
+                cursor: pointer;             /* Pointer cursor on hover */
+            }
+            .stButton > button:hover {
+                background-color: #A9A9A9;  /* Darker grey on hover */
+            }
+        </style>
+    """
