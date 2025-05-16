@@ -43,8 +43,8 @@ def create_linear_indicator(score, label="Success Rate"):
         }}
         .label {{
             font-size: 24px; /* Reduced font size for the label */
-            font-weight: semi-bold; /* Made the label bold */
-            color: #000000; /* black color for the label */
+            font-weight: bold; /* Made the label bold */
+            color: #333333; /* black color for the label */
             margin-right: 20px; /* Space between label and indicator */ 
         }}
         .label-container {{
