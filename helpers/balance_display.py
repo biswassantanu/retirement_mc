@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def display_balances(end_balance_10th, end_balance_50th, end_balance_90th):
     # Function to convert to numeric if necessary
     def convert_to_numeric(value):
@@ -20,11 +17,11 @@ def display_balances(end_balance_10th, end_balance_50th, end_balance_90th):
 
     balance_display = (
         f"<span style='color:#000000; font-weight:semi-bold; font-size:24px;'>End of Plan Balances: </span> "
-        f"<span style='margin-left:40px; color:#555555; font-size:18px;'>Worst Case:</span> "
-        f"<span style='margin-left:5px; color:{color_10th}; font-size:24px;'>{end_balance_10th_millions:.2f}M</span> "
-        f"<span style='color:#555555; font-size:18px; margin-left:40px;'>Most Likely:</span> "
-        f"<span style='margin-left:5px; color:{color_50th}; font-size:24px;'>{end_balance_50th_millions:.2f}M</span> "
-        f"<span style='color:#555555; font-size:18px; margin-left:40px;'>Best Case:</span> "
-        f"<span style='margin-left:5px; color:{color_90th}; font-size:24px;'>{end_balance_90th_millions:.2f}M</span>"
+        f"<span style='margin-left:10px; color:#555555; font-size:16px;'>Worst Case:</span> "
+        f"<span style='margin-left:5px; color:{color_10th}; font-size:20px;'>{end_balance_10th_millions:.2f}M</span> "
+        f"<span style='color:#555555; font-size:16px; margin-left:20px;'>Most Likely:</span> "
+        f"<span style='margin-left:5px; color:{color_50th}; font-size:20px;'>{end_balance_50th_millions:.2f}M</span> "
+        f"<span style='color:#555555; font-size:16px; margin-left:20px;'>Best Case:</span> "
+        f"<span style='margin-left:5px; color:{color_90th}; font-size:20px;'>{end_balance_90th_millions:.2f}M</span>"
     )
     return balance_display

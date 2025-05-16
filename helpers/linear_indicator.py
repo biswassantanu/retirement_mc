@@ -1,15 +1,16 @@
-
 # Function to create a linear speed dial
 def create_linear_indicator(score, label="Success Rate"):
     # Normalize the score to a range of 0 to 100
-    normalized_score = min(max(score, 0), 100)
+
+    normalized_score = round(min(max(score, 0), 100))
+    #normalized_score = min(max(score, 0), 100)
 
     # Create HTML for the linear indicator
     indicator_html = f"""
     <style>
         .container {{
-            width: 300px;
-            height: 30px;
+            width: 240px;  /* Reduced width for 20% smaller size */
+            height: 24px;  /* Reduced height for 20% smaller size */
             position: relative;
             background: darkgrey; /* Dark grey background for the dial */
             border-radius: 5px;
@@ -26,27 +27,25 @@ def create_linear_indicator(score, label="Success Rate"):
         .indicator {{
             position: absolute;
             width: 5px;
-            height: 30px; /* Shortened height of the indicator */
+            height: 24px; /* Shortened height of the indicator */
             background: blue;
-            left: {normalized_score * 3}px; /* Scale to match the width of the container */
+            left: {normalized_score * 2.4}px; /* Scale to match the width of the container */
             transform: translateX(-50%);
             z-index: 2;
         }}
         .score {{
             position: absolute;
             top: -20px; /* Position the score above the bar */
-            left: {normalized_score * 3}px; /* Center the score above the indicator */
+            left: {normalized_score * 2.4}px; /* Center the score above the indicator */
             transform: translateX(-50%);
-            font-size: 14px;
+            font-size: 12px; /* Reduced font size */
             color: black; /* Grey color for the score */
         }}
         .label {{
-            font-size: 24px; /* Increased font size for the label */
+            font-size: 24px; /* Reduced font size for the label */
             font-weight: semi-bold; /* Made the label bold */
             color: #000000; /* black color for the label */
-            margin-right: 60px; /* Space between label and indicator */ 
-
-
+            margin-right: 20px; /* Space between label and indicator */ 
         }}
         .label-container {{
             display: flex;
