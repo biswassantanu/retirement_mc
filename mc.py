@@ -522,7 +522,7 @@ def display_combined_indicator_and_balances(success_rate, end_balance_10th, end_
 st.markdown(create_linear_indicator(math.floor(success_rate), "Success Rate: "), unsafe_allow_html=True)
 
 # Calculate the length of the plan
-years = life_expectancy - current_age
+years = life_expectancy - current_age + 1
 
 # Prepare the data for the grid
 data = {
