@@ -60,7 +60,8 @@ def load_parameters_from_csv(uploaded_file):
             "one_time_year_3", "one_time_amount_3",
             "windfall_year_1", "windfall_amount_1",
             "windfall_year_2", "windfall_amount_2",
-            "windfall_year_3", "windfall_amount_3"
+            "windfall_year_3", "windfall_amount_3", 
+            "simulation_type"
         ]
 
         # Check if all required columns are present
@@ -122,6 +123,7 @@ def load_parameters_from_csv(uploaded_file):
         windfall_amount_2 = params_df["windfall_amount_2"].iloc[0]
         windfall_year_3 = params_df["windfall_year_3"].iloc[0]
         windfall_amount_3 = params_df["windfall_amount_3"].iloc[0]
+        simulation_type = params_df["simulation_type"].iloc[0]
 
         # Set the values in the form fields directly
         return {
@@ -178,6 +180,7 @@ def load_parameters_from_csv(uploaded_file):
             "windfall_amount_2": windfall_amount_2,
             "windfall_year_3": windfall_year_3,
             "windfall_amount_3": windfall_amount_3,
+            "simulation_type" : simulation_type
         }
 
     except Exception as e:
@@ -291,9 +294,23 @@ with st.container(height=260, border=None):
         with col3: 
             simulations = st.number_input("Number of Simulations", value=parameters["simulations"] if parameters else 1000, step=1000)
         with col4: 
-            st.markdown("<br>", unsafe_allow_html=True)
-            st.write ('###### Market Return Parameters are based on actual values of US equity (S&P 500) and Bond markets (Bloomberg) for last 100 years - similar to what Fiedilty uses')
- 
+            # Check if parameters is None and set default simulation type
+            if parameters is None:
+                default_simulation_type = "Normal Distribution"
+            else:
+                default_simulation_type = parameters.get("simulation_type", "Normal Distribution")  # Default to "Normal Distribution" if not found
+                
+                # Ensure the default is valid
+                if default_simulation_type not in ["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"]:
+                    default_simulation_type = "Normal Distribution"
+            
+            # Add radio buttons for Simulation Type
+            simulation_type = st.radio(
+                "Simulation Type", 
+                options=["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"], 
+                index=["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"].index(default_simulation_type)
+            )
+
     # Tab 8: Downsize
     with tab8:
         col1, col2, col3 = st.columns([1,1,2])
@@ -371,7 +388,8 @@ params_df = create_parameters_dataframe(
     one_time_year_3, one_time_amount_3,
     windfall_year_1, windfall_amount_1,
     windfall_year_2, windfall_amount_2,
-    windfall_year_3, windfall_amount_3
+    windfall_year_3, windfall_amount_3,
+    simulation_type
 )
 
 # Convert DataFrame to CSV format
@@ -419,7 +437,8 @@ success_count, failure_count, sorted_cash_flows = monte_carlo_simulation(
     years_until_downsize, residual_amount, 
     adjust_expense_years, adjust_expense_amounts,  
     one_time_years, one_time_amounts,             
-    windfall_years, windfall_amounts        
+    windfall_years, windfall_amounts, 
+    simulation_type        
 )
 
 # Calculate the indices for the percentiles
@@ -531,7 +550,9 @@ def color_negative_red(val):
     return f'color: {color}; font-weight: bold;'
 
 # Apply conditional formatting to the DataFrame
-styled_df = df.style.applymap(color_negative_red, subset=["Worst Case", "Most Likely", "Best Case"])
+styled_df = df.style.map(color_negative_red, subset=["Worst Case", "Most Likely", "Best Case"])
+
+
 # Increase font size using HTML
 styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
 # Hide the index

@@ -20,7 +20,8 @@ def create_parameters_dataframe(
     one_time_year_3, one_time_amount_3,
     windfall_year_1, windfall_amount_1,
     windfall_year_2, windfall_amount_2,
-    windfall_year_3, windfall_amount_3
+    windfall_year_3, windfall_amount_3,
+    simulation_type
 ):
     # Create a DataFrame with all input fields
     params_df = pd.DataFrame({
@@ -77,6 +78,7 @@ def create_parameters_dataframe(
         "windfall_amount_2": [windfall_amount_2],
         "windfall_year_3": [windfall_year_3],
         "windfall_amount_3": [windfall_amount_3],
+        "simulation_type" : [simulation_type]
     })
     
     return params_df
