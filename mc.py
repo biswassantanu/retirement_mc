@@ -444,16 +444,21 @@ success_count, failure_count, sorted_cash_flows = monte_carlo_simulation(
 # Calculate the indices for the percentiles
 n = len(sorted_cash_flows)
 tenth_index = int(0.1 * n)
+twentyfifth_index = int(0.25 * n)
 fiftieth_index = int(0.5 * n)
 seventyfifth_index = int(0.75 * n)
 
 # Get the simulation IDs for the 10th, 50th, and 90th percentiles
 simulation_id_10th = sorted_cash_flows[tenth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
+simulation_id_25th = sorted_cash_flows[twentyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
 simulation_id_50th = sorted_cash_flows[fiftieth_index - 1][-1]['Simulation ID']  # Last simulation in the 50th percentile
 simulation_id_75th = sorted_cash_flows[seventyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 90th percentile
 
+
+
 # Filter all cash flows based on the identified simulation IDs
 df_cashflow_10th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_10th for entry in simulation])
+df_cashflow_25th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_25th for entry in simulation])
 df_cashflow_50th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_50th for entry in simulation])
 df_cashflow_75th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_75th for entry in simulation])
 
@@ -486,6 +491,7 @@ def format_cashflow_dataframe(df):
 
 # Format the DataFrames
 df_cashflow_10th = format_cashflow_dataframe(df_cashflow_10th)
+df_cashflow_25th = format_cashflow_dataframe(df_cashflow_25th)
 df_cashflow_50th = format_cashflow_dataframe(df_cashflow_50th)
 df_cashflow_75th = format_cashflow_dataframe(df_cashflow_75th)
 
@@ -496,27 +502,16 @@ failure_rate = (failure_count / total_simulations) * 100 if total_simulations > 
 
 # Extract the end-of-period balances for the 10th, 50th, and 90th percentiles
 end_balance_10th = df_cashflow_10th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
+end_balance_25th = df_cashflow_25th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
 end_balance_50th = df_cashflow_50th['Ending Portfolio Value'].iloc[-1]  # Last entry for 50th percentile
 end_balance_75th = df_cashflow_75th['Ending Portfolio Value'].iloc[-1]  # Last entry for 90th percentile
 
 # Convert balances to millions and format to 2 decimal places
 end_balance_10th_millions = float(end_balance_10th.replace(',', '')) / 1_000_000
+end_balance_25th_millions = float(end_balance_25th.replace(',', '')) / 1_000_000
 end_balance_50th_millions = float(end_balance_50th.replace(',', '')) / 1_000_000
 end_balance_75th_millions = float(end_balance_75th.replace(',', '')) / 1_000_000
 
-
-# Function to create a combined display for the linear indicator and balances
-def display_combined_indicator_and_balances(success_rate, end_balance_10th, end_balance_50th, end_balance_75th):
-    indicator_html = create_linear_indicator(success_rate, "Success Rate:")
-    balance_html = display_balances(end_balance_10th, end_balance_50th, end_balance_75th)
-
-    combined_display = f"""
-    <div style="display: flex; align-items: center;">
-        <div style="margin-right: 80px;">{indicator_html}</div>
-        <div>{balance_html}</div>
-    </div>
-    """
-    return combined_display
 
 # Display linear metrics indicator
 st.markdown(create_linear_indicator(math.floor(success_rate), "Success Rate: "), unsafe_allow_html=True)
@@ -530,6 +525,10 @@ data = {
     "Worst Case": [
         f"{end_balance_10th_millions:,.2f}M",
         f"{end_balance_10th_millions / ((1 + inflation_mean) ** years):,.2f}M"
+    ],
+    "Below Market": [  # New label for 25th percentile
+        f"{end_balance_25th_millions:,.2f}M",  # Assuming you have this variable defined
+        f"{end_balance_25th_millions / ((1 + inflation_mean) ** years):,.2f}M"
     ],
     "Most Likely": [
         f"{end_balance_50th_millions:,.2f}M",
@@ -550,8 +549,7 @@ def color_negative_red(val):
     return f'color: {color}; font-weight: bold;'
 
 # Apply conditional formatting to the DataFrame
-styled_df = df.style.map(color_negative_red, subset=["Worst Case", "Most Likely", "Best Case"])
-
+styled_df = df.style.map(color_negative_red, subset=["Worst Case", "Below Market", "Most Likely", "Best Case"])
 
 # Increase font size using HTML
 styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
@@ -559,7 +557,6 @@ styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
 styled_df = styled_df.hide(axis="index")
 # Display the DataFrame in a grid format without index
 st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
-
 
 # Function to convert formatted string to numerical value
 def convert_to_numeric(value):
@@ -576,21 +573,12 @@ def highlight_columns(s):
             styles.append('background-color: #F9DFDF; font-weight: bold;')    # Red background for negative values
     return styles
 
-
 st.markdown("<br>", unsafe_allow_html=True)
 st.write("##### Yearly Cash Flow Summary ")
 
 # Create tabs for the cash flow summaries
-tab_50th, tab_10th, tab_75th = st.tabs(["Most Likely - 50th Percentile ", "Worst Case - 10th Percentile ", "Best Case - 75th Percentile "])
+tab_10th, tab_25th, tab_50th, tab_75th = st.tabs(["Worst Case - 10th Percentile ", "Below Market - 25th Percentile", "Most Likely - 50th Percentile ", "Best Case - 75th Percentile "])
 
-# Tab for 50th Percentile
-with tab_50th:
-    # Apply the styling to specific columns
-    styled_df_50th = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    st.dataframe(styled_df_50th, hide_index=True, use_container_width=True)
-    st.subheader("Portfolio Balance Over Time")
-    # Plotting the results using Streamlit's line chart for the 50th percentile
-    st.line_chart(df_cashflow_50th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
 
 # Tab for 10th Percentile
 with tab_10th:
@@ -601,8 +589,25 @@ with tab_10th:
     # Plotting the results using Streamlit's line chart for the 10th percentile
     st.line_chart(df_cashflow_10th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
 
+# Tab for 25th Percentile
+with tab_25th:
+    # Apply the styling to specific columns
+    styled_df_25th = df_cashflow_25th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    st.dataframe(styled_df_25th, hide_index=True, use_container_width=True)
+    st.subheader("Portfolio Balance Over Time")
+    # Plotting the results using Streamlit's line chart for the 25th percentile
+    st.line_chart(df_cashflow_25th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
 
-# Tab for 90th Percentile
+# Tab for 50th Percentile
+with tab_50th:
+    # Apply the styling to specific columns
+    styled_df_50th = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    st.dataframe(styled_df_50th, hide_index=True, use_container_width=True)
+    st.subheader("Portfolio Balance Over Time")
+    # Plotting the results using Streamlit's line chart for the 50th percentile
+    st.line_chart(df_cashflow_50th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
+
+# Tab for 75th Percentile
 with tab_75th:
     # Apply the styling to specific columns
     styled_df_75th = df_cashflow_75th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
@@ -610,3 +615,4 @@ with tab_75th:
     st.subheader("Portfolio Balance Over Time")
     # Plotting the results using Streamlit's line chart for the 75th percentile
     st.line_chart(df_cashflow_75th.set_index('Year')['Ending Portfolio Value'].str.replace(',', '').astype(float))
+
