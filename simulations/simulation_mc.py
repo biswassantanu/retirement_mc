@@ -9,6 +9,8 @@ from simulations.historical_returns import historical_equity_returns, historical
 
 def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, initial_savings, 
                             annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
+                            annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
+                            rental_start, rental_end, rental_amt, rental_yearly_increase, 
                             annual_expense, mortgage_payment,
                             mortgage_years_remaining, retirement_age, partner_retirement_age, 
                             annual_social_security, withdrawal_start_age, partner_social_security, 
@@ -29,7 +31,6 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
 
     # Prepare lists to store cash flow data 
     all_cash_flows = []  
-
 
     # Unpack adjustments
     adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3 = adjust_expense_years
@@ -94,6 +95,16 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
             self_ss = calculate_social_security(annual_social_security, cola_rate, withdrawal_start_age, current_age_in_loop)
             partner_ss = calculate_social_security(partner_social_security, cola_rate, partner_withdrawal_start_age, partner_current_age_in_loop)
 
+            # Calculate pension 
+            self_pension_amt = calculate_pension (annual_pension, self_pension_yearly_increase, year, retirement_age, current_age_in_loop)
+            partner_pension_amt = calculate_pension (partner_pension, partner_pension_yearly_increase, year, partner_retirement_age, partner_current_age_in_loop)
+
+            # Calculate Rental Income 
+            if rental_start <= current_year + year <= rental_end:
+                rental_income = rental_amt * ( (1 + rental_yearly_increase ) ** (current_year + year - rental_start) ) 
+            else: 
+                rental_income = 0
+
             # Calculate expenses
             mortgage = calculate_mortgage(mortgage_payment, year, mortgage_years_remaining)
             healthcare_costs, self_health_expense, partner_health_expense = calculate_healthcare_costs(current_age_in_loop, self_healthcare_cost, self_healthcare_start_age, partner_current_age_in_loop, partner_healthcare_cost, partner_healthcare_start_age, inflation_mean)
@@ -126,7 +137,7 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                     one_time_expense += one_time_amount_3
 
             # Calculate total income and expenses
-            gross_income = current_annual_earnings + current_partner_earnings + self_ss + partner_ss
+            gross_income = current_annual_earnings + current_partner_earnings + self_ss + partner_ss + self_pension_amt + partner_pension_amt + rental_income
             total_expense = current_annual_expense + mortgage + healthcare_costs + one_time_expense
             estimated_tax = gross_income * tax_rate
 
@@ -185,6 +196,7 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
                 ending_portfolio_value,
                 end_value_at_current_currency, 
                 gross_income,
+                self_pension_amt, partner_pension_amt, rental_income, 
                 total_expense,
                 total_tax,
                 portfolio_draw,
@@ -233,6 +245,11 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
 def calculate_earnings(starting_earnings, yearly_increment, year, retirement_age, current_age):
     if current_age < retirement_age:
         return starting_earnings * (1 + yearly_increment) ** year
+    return 0
+
+def calculate_pension(annual_pension, pension_yearly_increase, year, retirement_age, current_age): 
+    if current_age >= retirement_age:
+        return annual_pension * (1 + pension_yearly_increase) ** (current_age - retirement_age)
     return 0
 
 def calculate_social_security(annual_ss, cola_rate, withdrawal_start_age, current_age):
@@ -328,7 +345,8 @@ def calculate_investment_return(savings, stock_percentage, bond_percentage, stoc
 
 
 def create_cash_flow_entry(current_year, year, current_age, partner_current_age, savings, ending_portfolio_value,end_value_at_current_currency,
-                            gross_income, total_expense, total_tax, portfolio_draw, draw_rate, 
+                            gross_income, self_pension_amt, partner_pension_amt, rental_income,  
+                            total_expense, total_tax, portfolio_draw, draw_rate, 
                             investment_return, return_rate, self_ss, partner_ss, downsize_proceeds, mortgage, healthcare_costs, 
                             self_gross_earning, partner_gross_earning, self_health_expense, partner_health_expense, 
                             yearly_expense_adjustment, one_time_expense, windfall_amount
@@ -354,6 +372,9 @@ def create_cash_flow_entry(current_year, year, current_age, partner_current_age,
         'Self Social Security': self_ss,
         'Partner Social Security': partner_ss,
         'Combined Social Security': self_ss + partner_ss, 
+        'Self Pension': self_pension_amt, 
+        'Partner Pension': partner_pension_amt, 
+        'Rental Income': rental_income,
         'Mortgage': mortgage,
         'Healthcare Expense': healthcare_costs,
         'Self Health Expense': self_health_expense,

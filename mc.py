@@ -43,8 +43,10 @@ def load_parameters_from_csv(uploaded_file):
         required_columns = [
             "current_age", "partner_current_age", "life_expectancy", "retirement_age",
             "partner_retirement_age", "initial_savings", "stock_percentage", "bond_percentage",
-            "annual_earnings", "self_yearly_increase", "tax_rate", "partner_earnings",
-            "partner_yearly_increase", "annual_expense", "mortgage_payment", "inflation_mean",
+            "annual_earnings", "self_yearly_increase", "tax_rate", "partner_earnings", "partner_yearly_increase", 
+            "annual_pension", "partner_pension", "self_pension_yearly_increase","partner_pension_yearly_increase", 
+            "rental_start", "rental_end", "rental_amt", "rental_yearly_increase",           
+            "annual_expense", "mortgage_payment", "inflation_mean",
             "annual_expense_decrease", "mortgage_years_remaining", "inflation_std",
             "annual_social_security", "withdrawal_start_age", "cola_rate",
             "partner_social_security", "partner_withdrawal_start_age",
@@ -83,6 +85,16 @@ def load_parameters_from_csv(uploaded_file):
         tax_rate = params_df["tax_rate"].iloc[0]
         partner_earnings = params_df["partner_earnings"].iloc[0]
         partner_yearly_increase = params_df["partner_yearly_increase"].iloc[0]
+# Pension and Rental 
+        annual_pension = params_df["annual_pension"].iloc[0]
+        partner_pension = params_df["partner_pension"].iloc[0]
+        self_pension_yearly_increase = params_df["self_pension_yearly_increase"].iloc[0]
+        partner_pension_yearly_increase = params_df["partner_pension_yearly_increase"].iloc[0]
+        rental_start = params_df["rental_start"].iloc[0]
+        rental_end = params_df["rental_end"].iloc[0]
+        rental_amt = params_df["rental_amt"].iloc[0]
+        rental_yearly_increase = params_df["rental_yearly_increase"].iloc[0]
+# Pension and Rental 
         annual_expense = params_df["annual_expense"].iloc[0]
         mortgage_payment = params_df["mortgage_payment"].iloc[0]
         inflation_mean = params_df["inflation_mean"].iloc[0]
@@ -140,6 +152,20 @@ def load_parameters_from_csv(uploaded_file):
             "tax_rate": tax_rate,
             "partner_earnings": partner_earnings,
             "partner_yearly_increase": partner_yearly_increase,
+# annual_pension, partner_pension, 
+# self_pension_yearly_increase, partner_pension_yearly_increase,
+# rental_start, rental_end, 
+# rental_amt, rental_yearly_increase, 
+# Pension and Rental Incomes
+            "annual_pension": annual_pension,
+            "partner_pension": partner_pension,
+            "self_pension_yearly_increase": self_pension_yearly_increase,
+            "partner_pension_yearly_increase": partner_pension_yearly_increase,
+            "rental_start": rental_start,
+            "rental_end": rental_end,
+            "rental_amt": rental_amt,
+            "rental_yearly_increase": rental_yearly_increase,
+# End Pension and Rental 
             "annual_expense": annual_expense,
             "mortgage_payment": mortgage_payment,
             "inflation_mean": inflation_mean,
@@ -232,14 +258,31 @@ with st.container(height=260, border=None):
 
     # Tab 3: Income
     with tab3:
-        col1, col2, col3, col4 = st.columns([1,1,1,1])
+        col1, col2, col3, col4, col5, col6, col7 = st.columns([1,1,1,1,1,1,1])
         with col1:
             annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 200000, step=5000)
             partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 200000, step=5000)
+
         with col2:
             self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
             partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
-        with col3:
+
+        with col3: 
+            annual_pension = st.number_input("Annual Pension", value=parameters["annual_pension"] if parameters else 000, step=1000)
+            partner_pension = st.number_input("Partner's Annual Pension", value=parameters["partner_pension"] if parameters else 000, step=1000)
+
+        with col4: 
+            self_pension_yearly_increase = st.number_input("Pension Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 0.0, step=0.5) / 100  # Convert to decimal
+            partner_pension_yearly_increase = st.number_input("Partner Pension Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 0.0, step=0.5) / 100  # Convert to decimal
+
+        with col5: 
+            rental_start = st.selectbox("Rental Starts", years, index=0 if parameters is None else years.index(parameters["rental_start"]))
+            rental_end = st.selectbox("Rental Ends", years, index=0 if parameters is None else years.index(parameters["rental_end"]))
+
+        with col6: 
+            rental_amt = st.number_input("Annual Rental Amount", value=parameters["rental_amt"] if parameters else 000, step=1000)
+            rental_yearly_increase = st.number_input("Rental Yearly Increase (%)", value=parameters["rental_yearly_increase"] * 100 if parameters else 4.0, step=0.5) / 100  # Convert to decimal
+        with col7:
             tax_rate = st.number_input("Tax Rate (%)", value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100  # Convert to decimal
  
     # Tab 4: Expense
@@ -286,10 +329,10 @@ with st.container(height=260, border=None):
     with tab7:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.50, step=0.25) / 100  # Convert to decimal
             bond_return_mean = st.number_input("Bond Return Mean (%)", value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100  # Convert to decimal
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 18.00, step=0.25) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 19.00, step=0.25) / 100  # Convert to decimal
             bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 1.15, step=0.05) / 100  # Convert to decimal
         with col3: 
             simulations = st.number_input("Number of Simulations", value=parameters["simulations"] if parameters else 1000, step=1000)
@@ -371,8 +414,10 @@ with st.container(height=260, border=None):
 params_df = create_parameters_dataframe(
     current_age, partner_current_age, life_expectancy, retirement_age,
     partner_retirement_age, initial_savings, stock_percentage, bond_percentage,
-    annual_earnings, self_yearly_increase, tax_rate, partner_earnings,
-    partner_yearly_increase, annual_expense, mortgage_payment, inflation_mean,
+    annual_earnings, self_yearly_increase, tax_rate, partner_earnings, partner_yearly_increase, 
+    annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
+    rental_start, rental_end, rental_amt, rental_yearly_increase, 
+    annual_expense, mortgage_payment, inflation_mean,
     annual_expense_decrease, mortgage_years_remaining, inflation_std,
     annual_social_security, withdrawal_start_age, cola_rate,
     partner_social_security, partner_withdrawal_start_age,
@@ -427,6 +472,8 @@ windfall_amounts = [windfall_amount_1, windfall_amount_2, windfall_amount_3]
 success_count, failure_count, sorted_cash_flows = monte_carlo_simulation(
     current_age, partner_current_age, life_expectancy, initial_savings, 
     annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
+    annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
+    rental_start, rental_end, rental_amt, rental_yearly_increase, 
     annual_expense, mortgage_payment,
     mortgage_years_remaining, retirement_age, partner_retirement_age, 
     annual_social_security, withdrawal_start_age, partner_social_security, 
@@ -472,6 +519,7 @@ def format_cashflow_dataframe(df):
         'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
         'Self Social Security', 'Partner Social Security', 'Gross Earnings', 'Combined Social Security',
         'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
+        'Self Pension', 'Partner Pension', 'Rental Income',
         'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value', 'At Constant Currency', 'Yearly Expense Adj', 'One Time Expense', 'Windfall Amt'
     ]
 
