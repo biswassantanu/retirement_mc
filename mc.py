@@ -286,11 +286,11 @@ with st.container(height=260, border=None):
     with tab7:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 10.00, step=0.25) / 100  # Convert to decimal
-            bond_return_mean = st.number_input("Bond Return Mean (%)", value=parameters["bond_return_mean"] * 100 if parameters else 3.75, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100  # Convert to decimal
+            bond_return_mean = st.number_input("Bond Return Mean (%)", value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100  # Convert to decimal
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 19.00, step=0.25) / 100  # Convert to decimal
-            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 1.2, step=0.05) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 18.00, step=0.25) / 100  # Convert to decimal
+            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 1.15, step=0.05) / 100  # Convert to decimal
         with col3: 
             simulations = st.number_input("Number of Simulations", value=parameters["simulations"] if parameters else 1000, step=1000)
         with col4: 
@@ -301,14 +301,14 @@ with st.container(height=260, border=None):
                 default_simulation_type = parameters.get("simulation_type", "Normal Distribution")  # Default to "Normal Distribution" if not found
                 
                 # Ensure the default is valid
-                if default_simulation_type not in ["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"]:
+                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution"]:
                     default_simulation_type = "Normal Distribution"
             
             # Add radio buttons for Simulation Type
             simulation_type = st.radio(
                 "Simulation Type", 
-                options=["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"], 
-                index=["Normal Distribution", "Empirical Distribution", "Empirical With Replacement"].index(default_simulation_type)
+                options=["Normal Distribution", "Students-T Distribution", "Empirical Distribution"], 
+                index=["Normal Distribution", "Students-T Distribution",  "Empirical Distribution"].index(default_simulation_type)
             )
 
     # Tab 8: Downsize

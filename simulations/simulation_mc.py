@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from datetime import datetime
+from scipy.stats import t
 
 from simulations.historical_returns import historical_equity_returns, historical_bond_returns
 
@@ -55,17 +56,32 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
         selected_years = np.random.choice(list(historical_equity_returns.keys()), size=years_in_simulation, replace=False)
 
         # Preselect unique equity and bond returns for the simulation based on years in simulation
-        replace_option = True if simulation_type == "Empirical With Replacement" else False
+        replace_option = True if simulation_type == "Empirical Distribution" else False
         selected_years = np.random.choice(list(historical_equity_returns.keys()), size=years_in_simulation, replace=replace_option)  # Allow or disallow replacement
-        print(f"Selected years ({'with' if replace_option else 'without'} replacement):", selected_years)  # Debugging statement
 
         # Convert to int and retrieve returns
-        selected_equity_returns = [historical_equity_returns[int(year)] for year in selected_years]  # Convert to int
-        selected_bond_returns = [historical_bond_returns[int(year)] for year in selected_years]  # Convert to int
+        empirical_equity_returns = [historical_equity_returns[int(year)] /100 for year in selected_years]  # Convert to int
+        empirical_bond_returns = [historical_bond_returns[int(year)] / 100 for year in selected_years]  # Convert to int
 
         # Shuffle the returns to ensure randomness
-        np.random.shuffle(selected_equity_returns)
-        np.random.shuffle(selected_bond_returns)
+        np.random.shuffle(empirical_equity_returns)
+        np.random.shuffle(empirical_bond_returns)
+
+        # Preselect the set of invest returns - the set will be normally distributed 
+        preset_stock_returns = np.random.normal(stock_return_mean, stock_return_std, years_in_simulation)
+        preset_bond_returns = np.random.normal(bond_return_mean, bond_return_std, years_in_simulation)
+
+        # Preset  lognormal returns
+        preset_lognormal_stock_returns = np.random.lognormal(mean=np.log(stock_return_mean), sigma=stock_return_std, size=years_in_simulation)
+        preset_lognormal_bond_returns = np.random.lognormal(mean=np.log(bond_return_mean), sigma=bond_return_std, size=years_in_simulation)
+
+
+        # Parameters for the  Student-t distribution
+        df = 5  # degrees of freedom
+        preset_tdist_stock_returns = t.rvs(df, loc=stock_return_mean, scale=stock_return_std, size=years_in_simulation)
+        preset_tdist_bond_returns = t.rvs(df, loc=bond_return_mean, scale=bond_return_std, size=years_in_simulation)
+
+ 
 
         for year in range(years_in_simulation):
             current_age_in_loop = current_age + year
@@ -118,14 +134,16 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
             portfolio_draw, total_tax = calculate_portfolio_draw(total_expense, gross_income, estimated_tax, tax_rate)
 
             # Use the returns for the current year based on the index
-            empirical_equity_return = selected_equity_returns[year] / 100 
-            empirical_bond_return = selected_bond_returns[year] / 100
+            # empirical_equity_return = selected_equity_returns[year] / 100 
+            # empirical_bond_return = selected_bond_returns[year] / 100
 
             # Calculate investment returns using the selected returns
             investment_return = calculate_investment_return(savings, stock_percentage, bond_percentage, 
                                                             stock_return_mean, stock_return_std, 
                                                             bond_return_mean, bond_return_std, 
-                                                            empirical_equity_return, empirical_bond_return, 
+                                                            empirical_equity_returns[year], empirical_bond_returns[year], 
+                                                            preset_stock_returns[year], preset_bond_returns[year],
+                                                            preset_tdist_stock_returns[year], preset_tdist_bond_returns[year],
                                                             simulation_type)
             # Calculate investment returns
             # investment_return = calculate_investment_return(savings, stock_percentage, bond_percentage, stock_return_mean, stock_return_std, bond_return_mean, bond_return_std)
@@ -266,25 +284,44 @@ def calculate_portfolio_draw(total_expense, gross_income, estimated_tax, tax_rat
         total_tax = portfolio_tax + estimated_tax
         return portfolio_draw + portfolio_tax, total_tax
 
-def calculate_investment_return(savings, stock_percentage, bond_percentage, stock_return_mean, stock_return_std, bond_return_mean, bond_return_std, empirical_equity_return, empirical_bond_return, simulation_type):
+def calculate_investment_return(savings, stock_percentage, bond_percentage, stock_return_mean, 
+                                stock_return_std, bond_return_mean, bond_return_std, 
+                                empirical_equity_return, empirical_bond_return, 
+                                preset_stock_return, preset_bond_return, 
+                                preset_tdist_stock_return, preset_tdist_bond_return, 
+                                simulation_type):
     stock_investment = savings * (stock_percentage / 100)
     bond_investment = savings * (bond_percentage / 100)
 
     if simulation_type == "Normal Distribution":
         # Calculate returns using normal distribution
-        stock_return_rate = np.random.normal(stock_return_mean, stock_return_std)
-        bond_return_rate = np.random.normal(bond_return_mean, bond_return_std)
+        # stock_return_rate = np.random.normal(stock_return_mean, stock_return_std)
+        # bond_return_rate = np.random.normal(bond_return_mean, bond_return_std)
+
+        stock_return_rate = preset_stock_return
+        bond_return_rate = preset_stock_return
         
+        return (stock_investment * stock_return_rate) + (bond_investment * bond_return_rate)
+
+    elif simulation_type == "Lognormal Distribution":
+        # Use preset lognormal distribution return 
+
+        stock_return_rate = preset_lognormal_stock_return
+        bond_return_rate = preset_lognormal_stock_return
+
+        return (stock_investment * stock_return_rate) + (bond_investment * bond_return_rate)
+    
+    elif simulation_type == "Students-T Distribution":
+        # Use preset lognormal distribution return 
+
+        stock_return_rate = preset_tdist_stock_return
+        bond_return_rate = preset_tdist_stock_return
+
         return (stock_investment * stock_return_rate) + (bond_investment * bond_return_rate)
 
     elif simulation_type == "Empirical Distribution":
         # Use randomly selected historical returns (Empirical Distribution)
         return (stock_investment * empirical_equity_return) + (bond_investment * empirical_bond_return)
-
-
-    elif simulation_type == "Empirical With Replacement":  # New simulation type
-        return (stock_investment * (empirical_equity_return)) + (bond_investment * (empirical_bond_return))
-
 
     else:
         raise ValueError("Invalid simulation type. Choose 'Normal Distribution' or 'Empirical Distribution'.")
