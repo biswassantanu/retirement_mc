@@ -226,7 +226,7 @@ with st.container(height=260, border=None):
     with tab1:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            current_age = st.number_input("Current Age", value=parameters["current_age"] if parameters else 55)
+            current_age = st.number_input("Current Age", value=parameters["current_age"] if parameters else 50)
             partner_current_age = st.number_input("Partner's Current Age", value=parameters["partner_current_age"] if parameters else 50)
         with col2:
             retirement_age = st.number_input("Retirement Age", value=parameters["retirement_age"] if parameters else 60)
@@ -244,7 +244,7 @@ with st.container(height=260, border=None):
     with tab2:
         col1, col2, col3, col4 = st.columns([3,1,3,4])
         with col1:
-            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 2000000, step=100000)
+            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 1000000, step=100000)
         with col3:
             stock_percentage = st.slider("Percentage of Stock Investment (%)", min_value=0, max_value=100, value=parameters["stock_percentage"] if parameters else 60)
             bond_percentage = 100 - stock_percentage  # Calculate bond percentage
@@ -253,12 +253,12 @@ with st.container(height=260, border=None):
     with tab3:
         col1, col2, col3, col4, col5, col6, col7 = st.columns([1,1,1,1,1,1,1])
         with col1:
-            annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 200000, step=5000)
-            partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 200000, step=5000)
+            annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 100000, step=5000)
+            partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 100000, step=5000)
 
         with col2:
-            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
-            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
+            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100  # Convert to decimal
+            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100  # Convert to decimal
 
         with col3: 
             annual_pension = st.number_input("Annual Pension", value=parameters["annual_pension"] if parameters else 000, step=1000)
@@ -282,8 +282,8 @@ with st.container(height=260, border=None):
     with tab4:
         col1, col2 , col3, col4 = st.columns([1,1,1, 1])
         with col1:
-            annual_expense = st.number_input("Annual Expense", value=parameters["annual_expense"] if parameters else 10000 * 12, step=2000)
-            mortgage_payment = st.number_input("Yearly Mortgage", value=parameters["mortgage_payment"] if parameters else 36000, step=2000)
+            annual_expense = st.number_input("Annual Expense", value=parameters["annual_expense"] if parameters else 5000 * 12, step=2000)
+            mortgage_payment = st.number_input("Yearly Mortgage", value=parameters["mortgage_payment"] if parameters else 24000, step=2000)
         with col2:
             annual_expense_decrease = st.number_input("Annual Decrease post Retirement (Smile *) (%)", value=parameters["annual_expense_decrease"] * 100 if parameters else 0.5, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=parameters["mortgage_years_remaining"] if parameters else 25)
@@ -298,8 +298,8 @@ with st.container(height=260, border=None):
     with tab5:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            annual_social_security = st.number_input("Social Security", value=parameters["annual_social_security"] if parameters else 3000 * 12, step=1000)
-            partner_social_security = st.number_input("Partner's Social Security", value=parameters["partner_social_security"] if parameters else 1500 * 12, step=1000)
+            annual_social_security = st.number_input("Social Security", value=parameters["annual_social_security"] if parameters else 2000 * 12, step=1000)
+            partner_social_security = st.number_input("Partner's Social Security", value=parameters["partner_social_security"] if parameters else 2000 * 12, step=1000)
         with col2:
             withdrawal_start_age = st.number_input("Withdrawal Start Age (Self)", value=parameters["withdrawal_start_age"] if parameters else 67)
             partner_withdrawal_start_age = st.number_input("Partner's Withdrawal Start Age", value=parameters["partner_withdrawal_start_age"] if parameters else 65)
@@ -322,11 +322,11 @@ with st.container(height=260, border=None):
     with tab7:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.50, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100  # Convert to decimal
             bond_return_mean = st.number_input("Bond Return Mean (%)", value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100  # Convert to decimal
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 19.00, step=0.25) / 100  # Convert to decimal
-            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 1.15, step=0.05) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 16.00, step=0.25) / 100  # Convert to decimal
+            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 4.5, step=0.05) / 100  # Convert to decimal
         with col3: 
             simulations = st.number_input("Number of Simulations", value=parameters["simulations"] if parameters else 1000, step=1000)
         with col4: 
