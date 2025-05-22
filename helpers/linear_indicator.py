@@ -20,7 +20,7 @@ def create_linear_indicator(score, label="Success Rate"):
             position: absolute;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to right, rgba(255, 100, 100, 0.8), rgba(255, 255, 100, 0.8), rgba(100, 255, 100, 0.8)); /* Less washed out gradient */
+            background: linear-gradient(to right, rgba(255, 100, 100, 0.8), rgba(255, 255, 100, 0.8), rgba(100, 200, 100, 0.8)); /* Less washed out gradient */
             border-radius: 5px;
             z-index: 1;
         }}
