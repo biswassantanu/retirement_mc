@@ -220,7 +220,7 @@ with st.container(height=260, border=None):
     st.markdown(tab_style_css, unsafe_allow_html=True)
 
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([" Personal Details ", " Investments and Savings ", " Income & Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([" Personal Details ", " Investments and Savings ", " Income", "Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
 
     # Tab 1: Personal Details
     with tab1:
@@ -251,7 +251,7 @@ with st.container(height=260, border=None):
 
     # Tab 3: Income
     with tab3:
-        col1, col2, col3, col4, col5, col6, col7 = st.columns([1,1,1,1,1,1,1])
+        col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1,1,1])
         with col1:
             annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 100000, step=5000)
             partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 100000, step=5000)
@@ -275,11 +275,15 @@ with st.container(height=260, border=None):
         with col6: 
             rental_amt = st.number_input("Annual Rental Amount", value=parameters["rental_amt"] if parameters else 000, step=1000)
             rental_yearly_increase = st.number_input("Rental Yearly Increase (%)", value=parameters["rental_yearly_increase"] * 100 if parameters else 4.0, step=0.5) / 100  # Convert to decimal
-        with col7:
+
+    # Tab 4: Taxes
+    with tab4:
+        col1, col2, col3, col4 = st.columns([3,1,3,4])
+        with col1:
             tax_rate = st.number_input("Tax Rate (%)", value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100  # Convert to decimal
  
-    # Tab 4: Expense
-    with tab4:
+    # Tab 5: Expense
+    with tab5:
         col1, col2 , col3, col4 = st.columns([1,1,1, 1])
         with col1:
             annual_expense = st.number_input("Annual Expense", value=parameters["annual_expense"] if parameters else 5000 * 12, step=2000)
@@ -294,8 +298,8 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### * Smile : Research shows household expenses decrease about 1% year over year in retirement and then can increase towards end of life due to healthcare cost')
 
-    # Tab 5: Social Security 
-    with tab5:
+    # Tab 6: Social Security 
+    with tab6:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
             annual_social_security = st.number_input("Social Security", value=parameters["annual_social_security"] if parameters else 2000 * 12, step=1000)
@@ -306,8 +310,8 @@ with st.container(height=260, border=None):
         with col3:
             cola_rate = st.number_input("COLA Rate (%)", value=parameters["cola_rate"] * 100 if parameters else 1.50) / 100  # Convert to decimal
 
-    # Tab 6: Healthcare Costs
-    with tab6:
+    # Tab 7: Healthcare Costs
+    with tab7:
         col1, col2, col3, col4 = st.columns([1,1,1, 1])
         with col1:
             self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)", value=parameters["self_healthcare_cost"] if parameters else 5000, step=1000)
@@ -318,8 +322,8 @@ with st.container(height=260, border=None):
         with col4:
             st.write ('###### Bridge cost is amount needed to self fund medical insurance after retirement before Medicare starts at 65')
 
-    # Tab 7: Market Returns
-    with tab7:
+    # Tab 8: Market Returns
+    with tab8:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
             stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100  # Convert to decimal
@@ -347,16 +351,16 @@ with st.container(height=260, border=None):
                 index=["Normal Distribution", "Students-T Distribution",  "Empirical Distribution"].index(default_simulation_type)
             )
 
-    # Tab 8: Downsize
-    with tab8:
+    # Tab 9: Downsize
+    with tab9:
         col1, col2, col3 = st.columns([1,1,2])
         with col1:
             years_until_downsize = st.number_input("After how many years?", value=parameters["years_until_downsize"] if parameters else 0)
         with col2: 
             residual_amount = st.number_input("Net Addition to Retirement Savings", value=parameters["residual_amount"] if parameters else 0, step=100000)
 
-    # Tab 9: Adjust Recurring Expenses
-    with tab9:      
+    # Tab 10: Adjust Recurring Expenses
+    with tab10:      
         # Entry 1
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
@@ -372,8 +376,8 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### These adjustments get carried forward. You can enter negative amount')
  
-    # Tab 10: One-Time Expenses
-    with tab10:        
+    # Tab 11: One-Time Expenses
+    with tab11:        
         # Entry 1
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
@@ -389,8 +393,8 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### You can enter negative amount')
 
-    # Tab 11: Windfalls
-    with tab11:
+    # Tab 12: Windfalls
+    with tab12:
         col1, col2, col3, col4  = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
             windfall_year_1 = st.selectbox("Year of Windfall 1", years, index=0 if parameters is None else years.index(parameters["windfall_year_1"]))
