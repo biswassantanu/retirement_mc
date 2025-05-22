@@ -220,7 +220,19 @@ with st.container(height=260, border=None):
     st.markdown(tab_style_css, unsafe_allow_html=True)
 
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([" Personal Details ", " Investments and Savings ", " Income", "Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([
+            ":material/group: Profile", 
+            ":material/savings: Savings", 
+            ":material/paid: Income", 
+            ":material/account_balance: Taxes", 
+            ":material/shopping_cart: Expense", 
+            ":material/verified_user: Social Security", 
+            ":material/local_hospital: Healthcare", 
+            ":material/finance_mode: Market Returns", 
+            ":material/house: Downsize", 
+            ":material/tune: Adjust Exp.", 
+            ":material/checkbook: One Time", 
+            ":material/money_bag: Windfall"])  
 
     # Tab 1: Personal Details
     with tab1:
@@ -686,7 +698,10 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
     st.markdown("##### " + title + " details")
 
     styled_df = df_cashflow.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    tab1, tab2, tab3 = st.tabs(["Portfolio Balance", "Market Returns", "Withdrawal Rate"])
+    tab1, tab2, tab3 = st.tabs([
+            ":material/attach_money: Portfolio Balance", 
+            ":material/bar_chart: Market Returns", 
+            ":material/mintmark: Withdrawal Rate"])
 
     positive_color = "#55AA55"
     negative_color = "#DD5050"
@@ -803,7 +818,11 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
 
 
 # Create tabs for the cash flow summaries
-tab_10th, tab_25th, tab_50th, tab_75th = st.tabs(["Worst Case - 10th Percentile ", "Below Market - 25th Percentile", "Most Likely - 50th Percentile ", "Best Case - 75th Percentile "])
+tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
+            ":material/sentiment_dissatisfied: Worst Case ", 
+            ":material/avg_pace: Below Average", 
+            ":material/speed: Most Likely ", 
+            ":material/diamond: Best Case "])
 
 # Tab for 10th Percentile
 with tab_10th:
