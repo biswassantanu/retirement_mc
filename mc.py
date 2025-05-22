@@ -244,7 +244,7 @@ with st.container(height=260, border=None):
     with tab2:
         col1, col2, col3, col4 = st.columns([3,1,3,4])
         with col1:
-            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 1000000, step=100000)
+            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 500000, step=100000)
         with col3:
             stock_percentage = st.slider("Percentage of Stock Investment (%)", min_value=0, max_value=100, value=parameters["stock_percentage"] if parameters else 60)
             bond_percentage = 100 - stock_percentage  # Calculate bond percentage
