@@ -437,347 +437,369 @@ params_df = create_parameters_dataframe(
 # Convert DataFrame to CSV format
 csv = params_df.to_csv(index=False)  # Convert DataFrame to CSV format
 
-# Add download button for the CSV file
-st.download_button(
-    label="Download Simulation Parameters",
-    data=csv,
-    type='primary',
-    file_name='retirement_parameters.csv',
-    mime='text/csv',
-    icon=":material/download:",
-)
+# # Add download button for the CSV file
+# st.download_button(
+#     label="Download Simulation Parameters",
+#     data=csv,
+#     type='primary',
+#     file_name='retirement_parameters.csv',
+#     mime='text/csv',
+#     icon=":material/download:",
+# )
+
+# Create two columns for the buttons
+col1, col2, col3, col4 = st.columns([3,1,3,4])
+
+# Add download button for the CSV file in the first column
+with col1:
+    st.download_button(
+        label="Download Simulation Parameters",
+        data=csv,
+        type='primary',
+        file_name='retirement_parameters.csv',
+        mime='text/csv',
+        icon=":material/download:",
+    )
+# Create a button to run the simulation in the second column
+with col3:
+    run_simulation = st.button("Run Simulation", type='primary', icon=":material/sprint:")
+
+with col4: 
+    auto_run_simulation = st.checkbox("Run Automatically", value=True)
+
+if auto_run_simulation or run_simulation:
+    # Run the simulation only when the button is pressed
+
+    # Calculate earning years
+    earning_years = retirement_age - current_age
+    partner_earning_years = partner_retirement_age - partner_current_age
+
+    # packe Adjustments
+    adjust_expense_years = [adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3]
+    adjust_expense_amounts = [adjust_expense_amount_1, adjust_expense_amount_2, adjust_expense_amount_3]
+
+    # Pack One-Time Expenses
+    one_time_years = [one_time_year_1, one_time_year_2, one_time_year_3]
+    one_time_amounts = [one_time_amount_1, one_time_amount_2, one_time_amount_3]
+
+    # Pack Windfalls
+    windfall_years = [windfall_year_1, windfall_year_2, windfall_year_3]
+    windfall_amounts = [windfall_amount_1, windfall_amount_2, windfall_amount_3]
 
 
-# Calculate earning years
-earning_years = retirement_age - current_age
-partner_earning_years = partner_retirement_age - partner_current_age
+    # Run the simulation
+    success_count, failure_count, sorted_cash_flows = monte_carlo_simulation(
+        current_age, partner_current_age, life_expectancy, initial_savings, 
+        annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
+        annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
+        rental_start, rental_end, rental_amt, rental_yearly_increase, 
+        annual_expense, mortgage_payment,
+        mortgage_years_remaining, retirement_age, partner_retirement_age, 
+        annual_social_security, withdrawal_start_age, partner_social_security, 
+        partner_withdrawal_start_age, self_healthcare_cost, self_healthcare_start_age, partner_healthcare_start_age,
+        partner_healthcare_cost, stock_percentage, bond_percentage, 
+        stock_return_mean, bond_return_mean, stock_return_std, bond_return_std, 
+        simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease, 
+        years_until_downsize, residual_amount, 
+        adjust_expense_years, adjust_expense_amounts,  
+        one_time_years, one_time_amounts,             
+        windfall_years, windfall_amounts, 
+        simulation_type        
+    )
 
-# packe Adjustments
-adjust_expense_years = [adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3]
-adjust_expense_amounts = [adjust_expense_amount_1, adjust_expense_amount_2, adjust_expense_amount_3]
+    # Calculate the indices for the percentiles
+    n = len(sorted_cash_flows)
+    tenth_index = int(0.1 * n)
+    twentyfifth_index = int(0.25 * n)
+    fiftieth_index = int(0.5 * n)
+    seventyfifth_index = int(0.75 * n)
 
-# Pack One-Time Expenses
-one_time_years = [one_time_year_1, one_time_year_2, one_time_year_3]
-one_time_amounts = [one_time_amount_1, one_time_amount_2, one_time_amount_3]
-
-# Pack Windfalls
-windfall_years = [windfall_year_1, windfall_year_2, windfall_year_3]
-windfall_amounts = [windfall_amount_1, windfall_amount_2, windfall_amount_3]
-
-
-# Run the simulation
-success_count, failure_count, sorted_cash_flows = monte_carlo_simulation(
-    current_age, partner_current_age, life_expectancy, initial_savings, 
-    annual_earnings, partner_earnings, self_yearly_increase, partner_yearly_increase,
-    annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
-    rental_start, rental_end, rental_amt, rental_yearly_increase, 
-    annual_expense, mortgage_payment,
-    mortgage_years_remaining, retirement_age, partner_retirement_age, 
-    annual_social_security, withdrawal_start_age, partner_social_security, 
-    partner_withdrawal_start_age, self_healthcare_cost, self_healthcare_start_age, partner_healthcare_start_age,
-    partner_healthcare_cost, stock_percentage, bond_percentage, 
-    stock_return_mean, bond_return_mean, stock_return_std, bond_return_std, 
-    simulations, tax_rate, cola_rate, inflation_mean, inflation_std, annual_expense_decrease, 
-    years_until_downsize, residual_amount, 
-    adjust_expense_years, adjust_expense_amounts,  
-    one_time_years, one_time_amounts,             
-    windfall_years, windfall_amounts, 
-    simulation_type        
-)
-
-# Calculate the indices for the percentiles
-n = len(sorted_cash_flows)
-tenth_index = int(0.1 * n)
-twentyfifth_index = int(0.25 * n)
-fiftieth_index = int(0.5 * n)
-seventyfifth_index = int(0.75 * n)
-
-# Get the simulation IDs for the 10th, 50th, and 90th percentiles
-simulation_id_10th = sorted_cash_flows[tenth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
-simulation_id_25th = sorted_cash_flows[twentyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
-simulation_id_50th = sorted_cash_flows[fiftieth_index - 1][-1]['Simulation ID']  # Last simulation in the 50th percentile
-simulation_id_75th = sorted_cash_flows[seventyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 90th percentile
+    # Get the simulation IDs for the 10th, 50th, and 90th percentiles
+    simulation_id_10th = sorted_cash_flows[tenth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
+    simulation_id_25th = sorted_cash_flows[twentyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 10th percentile
+    simulation_id_50th = sorted_cash_flows[fiftieth_index - 1][-1]['Simulation ID']  # Last simulation in the 50th percentile
+    simulation_id_75th = sorted_cash_flows[seventyfifth_index - 1][-1]['Simulation ID']  # Last simulation in the 90th percentile
 
 
 
-# Filter all cash flows based on the identified simulation IDs
-df_cashflow_10th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_10th for entry in simulation])
-df_cashflow_25th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_25th for entry in simulation])
-df_cashflow_50th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_50th for entry in simulation])
-df_cashflow_75th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_75th for entry in simulation])
+    # Filter all cash flows based on the identified simulation IDs
+    df_cashflow_10th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_10th for entry in simulation])
+    df_cashflow_25th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_25th for entry in simulation])
+    df_cashflow_50th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_50th for entry in simulation])
+    df_cashflow_75th = pd.DataFrame([entry for simulation in sorted_cash_flows if simulation[0]['Simulation ID'] == simulation_id_75th for entry in simulation])
 
-# Function to format the DataFrame
-def format_cashflow_dataframe(df):
-    if df.empty:
+    # Function to format the DataFrame
+    def format_cashflow_dataframe(df):
+        if df.empty:
+            return df
+
+        # Format Amount Columns
+        numeric_columns = [
+            'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
+            'Self Social Security', 'Partner Social Security', 'Gross Earnings', 'Combined Social Security',
+            'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
+            'Self Pension', 'Partner Pension', 'Rental Income',
+            'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value', 'At Constant Currency', 'Yearly Expense Adj', 'One Time Expense', 'Windfall Amt'
+        ]
+
+        for col in numeric_columns:
+            df[col] = df[col].apply(lambda x: f"{x:,.0f}")
+
+        # Format % Columns 
+        percent_columns = [
+            'Investment Return %', 
+            'Drawdown %' 
+        ]
+        for col in percent_columns:
+            df[col] = df[col].apply(lambda x: f"{x * 100:.2f}%")  # Multiply by 100 and format to 2 decimal places
+
+
         return df
 
-    # Format Amount Columns
-    numeric_columns = [
-        'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
-        'Self Social Security', 'Partner Social Security', 'Gross Earnings', 'Combined Social Security',
-        'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  'Partner Health Expense',
-        'Self Pension', 'Partner Pension', 'Rental Income',
-        'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value', 'At Constant Currency', 'Yearly Expense Adj', 'One Time Expense', 'Windfall Amt'
-    ]
+    # store the unformatted dfs 
+    df_cashflow_10th_value = df_cashflow_10th.copy()
+    df_cashflow_25th_value = df_cashflow_25th.copy()
+    df_cashflow_50th_value = df_cashflow_50th.copy()
+    df_cashflow_75th_value = df_cashflow_75th.copy()
 
-    for col in numeric_columns:
-        df[col] = df[col].apply(lambda x: f"{x:,.0f}")
+    # Format the DataFrames
+    df_cashflow_10th = format_cashflow_dataframe(df_cashflow_10th)
+    df_cashflow_25th = format_cashflow_dataframe(df_cashflow_25th)
+    df_cashflow_50th = format_cashflow_dataframe(df_cashflow_50th)
+    df_cashflow_75th = format_cashflow_dataframe(df_cashflow_75th)
 
-    # Format % Columns 
-    percent_columns = [
-        'Investment Return %', 
-        'Drawdown %' 
-    ]
-    for col in percent_columns:
-        df[col] = df[col].apply(lambda x: f"{x * 100:.2f}%")  # Multiply by 100 and format to 2 decimal places
+    # Display success and failure rates
+    total_simulations = success_count + failure_count
+    success_rate = (success_count / total_simulations) * 100 if total_simulations > 0 else 0
+    failure_rate = (failure_count / total_simulations) * 100 if total_simulations > 0 else 0
 
+    # Extract the end-of-period balances for the 10th, 50th, and 90th percentiles
+    end_balance_10th = df_cashflow_10th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
+    end_balance_25th = df_cashflow_25th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
+    end_balance_50th = df_cashflow_50th['Ending Portfolio Value'].iloc[-1]  # Last entry for 50th percentile
+    end_balance_75th = df_cashflow_75th['Ending Portfolio Value'].iloc[-1]  # Last entry for 90th percentile
 
-    return df
-
-# store the unformatted dfs 
-df_cashflow_10th_value = df_cashflow_10th.copy()
-df_cashflow_25th_value = df_cashflow_25th.copy()
-df_cashflow_50th_value = df_cashflow_50th.copy()
-df_cashflow_75th_value = df_cashflow_75th.copy()
-
-# Format the DataFrames
-df_cashflow_10th = format_cashflow_dataframe(df_cashflow_10th)
-df_cashflow_25th = format_cashflow_dataframe(df_cashflow_25th)
-df_cashflow_50th = format_cashflow_dataframe(df_cashflow_50th)
-df_cashflow_75th = format_cashflow_dataframe(df_cashflow_75th)
-
-# Display success and failure rates
-total_simulations = success_count + failure_count
-success_rate = (success_count / total_simulations) * 100 if total_simulations > 0 else 0
-failure_rate = (failure_count / total_simulations) * 100 if total_simulations > 0 else 0
-
-# Extract the end-of-period balances for the 10th, 50th, and 90th percentiles
-end_balance_10th = df_cashflow_10th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
-end_balance_25th = df_cashflow_25th['Ending Portfolio Value'].iloc[-1]  # Last entry for 10th percentile
-end_balance_50th = df_cashflow_50th['Ending Portfolio Value'].iloc[-1]  # Last entry for 50th percentile
-end_balance_75th = df_cashflow_75th['Ending Portfolio Value'].iloc[-1]  # Last entry for 90th percentile
-
-# Convert balances to millions and format to 2 decimal places
-end_balance_10th_millions = float(end_balance_10th.replace(',', '')) / 1_000_000
-end_balance_25th_millions = float(end_balance_25th.replace(',', '')) / 1_000_000
-end_balance_50th_millions = float(end_balance_50th.replace(',', '')) / 1_000_000
-end_balance_75th_millions = float(end_balance_75th.replace(',', '')) / 1_000_000
+    # Convert balances to millions and format to 2 decimal places
+    end_balance_10th_millions = float(end_balance_10th.replace(',', '')) / 1_000_000
+    end_balance_25th_millions = float(end_balance_25th.replace(',', '')) / 1_000_000
+    end_balance_50th_millions = float(end_balance_50th.replace(',', '')) / 1_000_000
+    end_balance_75th_millions = float(end_balance_75th.replace(',', '')) / 1_000_000
 
 
-# Display linear metrics indicator
-st.markdown(create_linear_indicator(math.floor(success_rate), "Success Rate: "), unsafe_allow_html=True)
+    # Display linear metrics indicator
+    st.markdown(create_linear_indicator(math.floor(success_rate), "Success Rate: "), unsafe_allow_html=True)
 
-# Calculate the length of the plan
-years = life_expectancy - current_age + 1
+    # Calculate the length of the plan
+    years = life_expectancy - current_age + 1
 
-# Prepare the data for the grid
-data = {
-    "Ending Balance": ["Future Currency Value", "Today's Currency Value"],
-    "Worst Case": [
-        f"{end_balance_10th_millions:,.2f}M",
-        f"{end_balance_10th_millions / ((1 + inflation_mean) ** years):,.2f}M"
-    ],
-    "Below Market": [  # New label for 25th percentile
-        f"{end_balance_25th_millions:,.2f}M",  # Assuming you have this variable defined
-        f"{end_balance_25th_millions / ((1 + inflation_mean) ** years):,.2f}M"
-    ],
-    "Most Likely": [
-        f"{end_balance_50th_millions:,.2f}M",
-        f"{end_balance_50th_millions / ((1 + inflation_mean) ** years):,.2f}M"
-    ],
-    "Best Case": [
-        f"{end_balance_75th_millions:,.2f}M",
-        f"{end_balance_75th_millions / ((1 + inflation_mean) ** years):,.2f}M"
-    ]
-}
+    # Prepare the data for the grid
+    data = {
+        "Ending Balance": ["Future Currency Value", "Today's Currency Value"],
+        "Worst Case": [
+            f"{end_balance_10th_millions:,.2f}M",
+            f"{end_balance_10th_millions / ((1 + inflation_mean) ** years):,.2f}M"
+        ],
+        "Below Market": [  # New label for 25th percentile
+            f"{end_balance_25th_millions:,.2f}M",  # Assuming you have this variable defined
+            f"{end_balance_25th_millions / ((1 + inflation_mean) ** years):,.2f}M"
+        ],
+        "Most Likely": [
+            f"{end_balance_50th_millions:,.2f}M",
+            f"{end_balance_50th_millions / ((1 + inflation_mean) ** years):,.2f}M"
+        ],
+        "Best Case": [
+            f"{end_balance_75th_millions:,.2f}M",
+            f"{end_balance_75th_millions / ((1 + inflation_mean) ** years):,.2f}M"
+        ]
+    }
 
-# Create a DataFrame
-df = pd.DataFrame(data)
+    # Create a DataFrame
+    df = pd.DataFrame(data)
 
-# Function to apply conditional formatting
-def color_negative_red(val):
-    color = 'red' if float(val[:-1]) < 0 else 'green'  # Convert to float for comparison
-    return f'color: {color}; font-weight: bold;'
+    # Function to apply conditional formatting
+    def color_negative_red(val):
+        color = 'red' if float(val[:-1]) < 0 else 'green'  # Convert to float for comparison
+        return f'color: {color}; font-weight: bold;'
 
-# Apply conditional formatting to the DataFrame
-styled_df = df.style.map(color_negative_red, subset=["Worst Case", "Below Market", "Most Likely", "Best Case"])
+    # Apply conditional formatting to the DataFrame
+    styled_df = df.style.map(color_negative_red, subset=["Worst Case", "Below Market", "Most Likely", "Best Case"])
 
-# Increase font size using HTML
-styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
-# Hide the index
-styled_df = styled_df.hide(axis="index")
-# Display the DataFrame in a grid format without index
-st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+    # Increase font size using HTML
+    styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
+    # Hide the index
+    styled_df = styled_df.hide(axis="index")
+    # Display the DataFrame in a grid format without index
+    st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
 
-# Function to convert formatted string to numerical value
-def convert_to_numeric(value):
-    return float(value.replace('$', '').replace(',', ''))
+    # Function to convert formatted string to numerical value
+    def convert_to_numeric(value):
+        return float(value.replace('$', '').replace(',', ''))
 
-# Function to apply conditional styling
-def highlight_columns(s):
-    styles = []
-    for value in s:
-        numeric_value = convert_to_numeric(value)
-        if numeric_value > 0:
-            styles.append('background-color: #ECFBEC; font-weight: bold;')  # Green background for positive values
-        else:
-            styles.append('background-color: #F9DFDF; font-weight: bold;')    # Red background for negative values
-    return styles
+    # Function to apply conditional styling
+    def highlight_columns(s):
+        styles = []
+        for value in s:
+            numeric_value = convert_to_numeric(value)
+            if numeric_value > 0:
+                styles.append('background-color: #ECFBEC; font-weight: bold;')  # Green background for positive values
+            else:
+                styles.append('background-color: #F9DFDF; font-weight: bold;')    # Red background for negative values
+        return styles
 
-st.markdown("<br>", unsafe_allow_html=True)
-
-
-st.write("#### Analysis Details ")
-st.markdown("<br>", unsafe_allow_html=True)
-
-####################################
-
-
-def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
-    # Apply the styling to specific columns
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("##### " + title + " details")
-
-    styled_df = df_cashflow.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    tab1, tab2, tab3 = st.tabs(["Portfolio Balance", "Market Returns", "Withdrawal Rate"])
-
-    positive_color = "#55AA55"
-    negative_color = "#DD5050"
 
 
+    st.write("#### Analysis Details ")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    with tab1: 
-        # Portfolio Balance
-        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
-            x='Year:O',
-            y='Ending Portfolio Value:Q',
-            color=alt.condition(
-                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
-                alt.value(negative_color),                   # Color for negative values
-                alt.value(positive_color)                   # Color for positive values
+    ####################################
+
+
+    def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
+        # Apply the styling to specific columns
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("##### " + title + " details")
+
+        styled_df = df_cashflow.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+        tab1, tab2, tab3 = st.tabs(["Portfolio Balance", "Market Returns", "Withdrawal Rate"])
+
+        positive_color = "#55AA55"
+        negative_color = "#DD5050"
+
+
+
+        with tab1: 
+            # Portfolio Balance
+            chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+                x='Year:O',
+                y='Ending Portfolio Value:Q',
+                color=alt.condition(
+                    alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
+                    alt.value(negative_color),                   # Color for negative values
+                    alt.value(positive_color)                   # Color for positive values
+                )
+            ).properties(
+                title='Portfolio Balance Over Time'
             )
-        ).properties(
-            title='Portfolio Balance Over Time'
-        )
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
+            # Display the chart in Streamlit
+            st.altair_chart(chart, use_container_width=True)
 
-    with tab2: 
-        # Chart for portfolio return
-        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Investment Return %:Q', title='Portfolio Return %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Investment Return %'] < 0,  # Condition for negative values
-                alt.value(negative_color),              # Color for negative values
-                alt.value(positive_color)              # Color for positive values
+        with tab2: 
+            # Chart for portfolio return
+            chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+                x='Year:O',
+                y=alt.Y('Investment Return %:Q', title='Portfolio Return %', axis=alt.Axis(format='%')),
+                color=alt.condition(
+                    alt.datum['Investment Return %'] < 0,  # Condition for negative values
+                    alt.value(negative_color),              # Color for negative values
+                    alt.value(positive_color)              # Color for positive values
+                )
+            ).properties(
+                title='Portfolio Return % by Year'
+            ).transform_calculate(
+                'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
             )
-        ).properties(
-            title='Portfolio Return % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
-        )
 
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle'
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        textAbove = text.transform_filter( alt.datum['Investment Return %'] > 0).mark_text(
-            align='center',
-            baseline='middle',
-            fontSize=10,
-            dy=-10
-        )
-
-        textBelow = text.transform_filter( alt.datum['Investment Return %'] <= 0).mark_text(
-            align='center',
-            baseline='middle',
-            fontSize=10,
-            dy=10
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + textAbove + textBelow
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-
-    with tab3: 
-        # Create the chart with inline transformation to scale values by 100
-        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Drawdown %'] < 0,  # Condition for negative values
-                alt.value(negative_color),              # Color for negative values
-                alt.value(positive_color)              # Color for positive values
+            # Create text labels for the bars, using the transformed field
+            text = chart.mark_text(
+                align='center',
+                baseline='middle'
+            ).encode(
+                text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
             )
-        ).properties(
-            title='Withdrawal Rate % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
-        )
 
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle'
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
+            textAbove = text.transform_filter( alt.datum['Investment Return %'] > 0).mark_text(
+                align='center',
+                baseline='middle',
+                fontSize=10,
+                dy=-10
+            )
 
-        textAbove = text.transform_filter( alt.datum['Drawdown %'] > 0).mark_text(
-            align='center',
-            baseline='middle',
-            fontSize=10,
-            dy=-10
-        )
+            textBelow = text.transform_filter( alt.datum['Investment Return %'] <= 0).mark_text(
+                align='center',
+                baseline='middle',
+                fontSize=10,
+                dy=10
+            )
 
-        textBelow = text.transform_filter( alt.datum['Drawdown %'] <= 0).mark_text(
-            align='center',
-            baseline='middle',
-            fontSize=10,
-            dy=10
-        )
+            # Combine the bar chart and text labels
+            final_chart = chart + textAbove + textBelow
 
-        # Combine the bar chart and text labels
-        final_chart = chart + textAbove + textBelow
+            # Display the chart in Streamlit
+            st.altair_chart(final_chart, use_container_width=True)
 
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
+        with tab3: 
+            # Create the chart with inline transformation to scale values by 100
+            chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+                x='Year:O',
+                y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
+                color=alt.condition(
+                    alt.datum['Drawdown %'] < 0,  # Condition for negative values
+                    alt.value(negative_color),              # Color for negative values
+                    alt.value(positive_color)              # Color for positive values
+                )
+            ).properties(
+                title='Withdrawal Rate % by Year'
+            ).transform_calculate(
+                'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
+            )
 
-    # Display detailed cashflow 
-    st.markdown("###### Cashflow ")   
-    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+            # Create text labels for the bars, using the transformed field
+            text = chart.mark_text(
+                align='center',
+                baseline='middle'
+            ).encode(
+                text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
+            )
+
+            textAbove = text.transform_filter( alt.datum['Drawdown %'] > 0).mark_text(
+                align='center',
+                baseline='middle',
+                fontSize=10,
+                dy=-10
+            )
+
+            textBelow = text.transform_filter( alt.datum['Drawdown %'] <= 0).mark_text(
+                align='center',
+                baseline='middle',
+                fontSize=10,
+                dy=10
+            )
+
+            # Combine the bar chart and text labels
+            final_chart = chart + textAbove + textBelow
+
+            # Display the chart in Streamlit
+            st.altair_chart(final_chart, use_container_width=True)
+
+        # Display detailed cashflow 
+        st.markdown("###### Cashflow ")   
+        st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
 
-# Create tabs for the cash flow summaries
-tab_10th, tab_25th, tab_50th, tab_75th = st.tabs(["Worst Case - 10th Percentile ", "Below Market - 25th Percentile", "Most Likely - 50th Percentile ", "Best Case - 75th Percentile "])
+    # Create tabs for the cash flow summaries
+    tab_10th, tab_25th, tab_50th, tab_75th = st.tabs(["Worst Case - 10th Percentile ", "Below Market - 25th Percentile", "Most Likely - 50th Percentile ", "Best Case - 75th Percentile "])
 
-# Tab for 10th Percentile
-with tab_10th:
-    create_cash_flow_tab(df_cashflow_10th, df_cashflow_10th_value, "10th Percentile")
+    # Tab for 10th Percentile
+    with tab_10th:
+        create_cash_flow_tab(df_cashflow_10th, df_cashflow_10th_value, "10th Percentile")
 
-# Tab for 25th Percentile
-with tab_25th:
-    create_cash_flow_tab(df_cashflow_25th, df_cashflow_25th_value, "25th Percentile")
+    # Tab for 25th Percentile
+    with tab_25th:
+        create_cash_flow_tab(df_cashflow_25th, df_cashflow_25th_value, "25th Percentile")
 
-# Tab for 50th Percentile
-with tab_50th:
-    create_cash_flow_tab(df_cashflow_50th, df_cashflow_50th_value, "50th Percentile")
+    # Tab for 50th Percentile
+    with tab_50th:
+        create_cash_flow_tab(df_cashflow_50th, df_cashflow_50th_value, "50th Percentile")
 
-# Tab for 75th Percentile
-with tab_75th:
-    create_cash_flow_tab(df_cashflow_75th, df_cashflow_75th_value, "75th Percentile")
-
-
+    # Tab for 75th Percentile
+    with tab_75th:
+        create_cash_flow_tab(df_cashflow_75th, df_cashflow_75th_value, "75th Percentile")
 
 
 
 
-######################################
+
+
+    ######################################
 

@@ -86,7 +86,6 @@ def load_parameters_from_csv(uploaded_file):
         tax_rate = params_df["tax_rate"].iloc[0]
         partner_earnings = params_df["partner_earnings"].iloc[0]
         partner_yearly_increase = params_df["partner_yearly_increase"].iloc[0]
-# Pension and Rental 
         annual_pension = params_df["annual_pension"].iloc[0]
         partner_pension = params_df["partner_pension"].iloc[0]
         self_pension_yearly_increase = params_df["self_pension_yearly_increase"].iloc[0]
@@ -95,7 +94,6 @@ def load_parameters_from_csv(uploaded_file):
         rental_end = params_df["rental_end"].iloc[0]
         rental_amt = params_df["rental_amt"].iloc[0]
         rental_yearly_increase = params_df["rental_yearly_increase"].iloc[0]
-# Pension and Rental 
         annual_expense = params_df["annual_expense"].iloc[0]
         mortgage_payment = params_df["mortgage_payment"].iloc[0]
         inflation_mean = params_df["inflation_mean"].iloc[0]
@@ -153,11 +151,6 @@ def load_parameters_from_csv(uploaded_file):
             "tax_rate": tax_rate,
             "partner_earnings": partner_earnings,
             "partner_yearly_increase": partner_yearly_increase,
-# annual_pension, partner_pension, 
-# self_pension_yearly_increase, partner_pension_yearly_increase,
-# rental_start, rental_end, 
-# rental_amt, rental_yearly_increase, 
-# Pension and Rental Incomes
             "annual_pension": annual_pension,
             "partner_pension": partner_pension,
             "self_pension_yearly_increase": self_pension_yearly_increase,
@@ -166,7 +159,6 @@ def load_parameters_from_csv(uploaded_file):
             "rental_end": rental_end,
             "rental_amt": rental_amt,
             "rental_yearly_increase": rental_yearly_increase,
-# End Pension and Rental 
             "annual_expense": annual_expense,
             "mortgage_payment": mortgage_payment,
             "inflation_mean": inflation_mean,
@@ -228,13 +220,13 @@ with st.container(height=260, border=None):
     st.markdown(tab_style_css, unsafe_allow_html=True)
 
     # Create tabs for different sections
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11 = st.tabs([" Personal Details ", " Investments and Savings ", " Income & Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12 = st.tabs([" Personal Details ", " Investments and Savings ", " Income", "Taxes", "Expense", "Social Security", "Healthcare Costs", "Market Returns", "Downsize", "Adjust Yearly Expense", "One Time Expense", "Windfall"])
 
     # Tab 1: Personal Details
     with tab1:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            current_age = st.number_input("Current Age", value=parameters["current_age"] if parameters else 55)
+            current_age = st.number_input("Current Age", value=parameters["current_age"] if parameters else 50)
             partner_current_age = st.number_input("Partner's Current Age", value=parameters["partner_current_age"] if parameters else 50)
         with col2:
             retirement_age = st.number_input("Retirement Age", value=parameters["retirement_age"] if parameters else 60)
@@ -252,21 +244,21 @@ with st.container(height=260, border=None):
     with tab2:
         col1, col2, col3, col4 = st.columns([3,1,3,4])
         with col1:
-            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 2000000, step=100000)
+            initial_savings = st.number_input("Current Total Portfolio", value=parameters["initial_savings"] if parameters else 1000000, step=100000)
         with col3:
             stock_percentage = st.slider("Percentage of Stock Investment (%)", min_value=0, max_value=100, value=parameters["stock_percentage"] if parameters else 60)
             bond_percentage = 100 - stock_percentage  # Calculate bond percentage
 
     # Tab 3: Income
     with tab3:
-        col1, col2, col3, col4, col5, col6, col7 = st.columns([1,1,1,1,1,1,1])
+        col1, col2, col3, col4, col5, col6 = st.columns([1,1,1,1,1,1])
         with col1:
-            annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 200000, step=5000)
-            partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 200000, step=5000)
+            annual_earnings = st.number_input("Annual Earnings", value=parameters["annual_earnings"] if parameters else 100000, step=5000)
+            partner_earnings = st.number_input("Partner's Annual Earnings", value=parameters["partner_earnings"] if parameters else 100000, step=5000)
 
         with col2:
-            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
-            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 5.0, step=0.5) / 100  # Convert to decimal
+            self_yearly_increase = st.number_input("Self Yearly Increase (%)", value=parameters["self_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100  # Convert to decimal
+            partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", value=parameters["partner_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100  # Convert to decimal
 
         with col3: 
             annual_pension = st.number_input("Annual Pension", value=parameters["annual_pension"] if parameters else 000, step=1000)
@@ -283,15 +275,19 @@ with st.container(height=260, border=None):
         with col6: 
             rental_amt = st.number_input("Annual Rental Amount", value=parameters["rental_amt"] if parameters else 000, step=1000)
             rental_yearly_increase = st.number_input("Rental Yearly Increase (%)", value=parameters["rental_yearly_increase"] * 100 if parameters else 4.0, step=0.5) / 100  # Convert to decimal
-        with col7:
+
+    # Tab 4: Taxes
+    with tab4:
+        col1, col2, col3, col4 = st.columns([3,1,3,4])
+        with col1:
             tax_rate = st.number_input("Tax Rate (%)", value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100  # Convert to decimal
  
-    # Tab 4: Expense
-    with tab4:
+    # Tab 5: Expense
+    with tab5:
         col1, col2 , col3, col4 = st.columns([1,1,1, 1])
         with col1:
-            annual_expense = st.number_input("Annual Expense", value=parameters["annual_expense"] if parameters else 10000 * 12, step=2000)
-            mortgage_payment = st.number_input("Yearly Mortgage", value=parameters["mortgage_payment"] if parameters else 36000, step=2000)
+            annual_expense = st.number_input("Annual Expense", value=parameters["annual_expense"] if parameters else 5000 * 12, step=2000)
+            mortgage_payment = st.number_input("Yearly Mortgage", value=parameters["mortgage_payment"] if parameters else 24000, step=2000)
         with col2:
             annual_expense_decrease = st.number_input("Annual Decrease post Retirement (Smile *) (%)", value=parameters["annual_expense_decrease"] * 100 if parameters else 0.5, step=0.05) / 100  # Convert to decimal
             mortgage_years_remaining = st.number_input("Mortgage Years Remaining", value=parameters["mortgage_years_remaining"] if parameters else 25)
@@ -302,20 +298,20 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### * Smile : Research shows household expenses decrease about 1% year over year in retirement and then can increase towards end of life due to healthcare cost')
 
-    # Tab 5: Social Security 
-    with tab5:
+    # Tab 6: Social Security 
+    with tab6:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            annual_social_security = st.number_input("Social Security", value=parameters["annual_social_security"] if parameters else 3000 * 12, step=1000)
-            partner_social_security = st.number_input("Partner's Social Security", value=parameters["partner_social_security"] if parameters else 1500 * 12, step=1000)
+            annual_social_security = st.number_input("Social Security", value=parameters["annual_social_security"] if parameters else 2000 * 12, step=1000)
+            partner_social_security = st.number_input("Partner's Social Security", value=parameters["partner_social_security"] if parameters else 2000 * 12, step=1000)
         with col2:
             withdrawal_start_age = st.number_input("Withdrawal Start Age (Self)", value=parameters["withdrawal_start_age"] if parameters else 67)
             partner_withdrawal_start_age = st.number_input("Partner's Withdrawal Start Age", value=parameters["partner_withdrawal_start_age"] if parameters else 65)
         with col3:
             cola_rate = st.number_input("COLA Rate (%)", value=parameters["cola_rate"] * 100 if parameters else 1.50) / 100  # Convert to decimal
 
-    # Tab 6: Healthcare Costs
-    with tab6:
+    # Tab 7: Healthcare Costs
+    with tab7:
         col1, col2, col3, col4 = st.columns([1,1,1, 1])
         with col1:
             self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)", value=parameters["self_healthcare_cost"] if parameters else 5000, step=1000)
@@ -326,15 +322,15 @@ with st.container(height=260, border=None):
         with col4:
             st.write ('###### Bridge cost is amount needed to self fund medical insurance after retirement before Medicare starts at 65')
 
-    # Tab 7: Market Returns
-    with tab7:
+    # Tab 8: Market Returns
+    with tab8:
         col1, col2, col3, col4 = st.columns([1,1,1,1])
         with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.50, step=0.25) / 100  # Convert to decimal
+            stock_return_mean = st.number_input("Stock Return Mean (%)", value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100  # Convert to decimal
             bond_return_mean = st.number_input("Bond Return Mean (%)", value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100  # Convert to decimal
         with col2:
-            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 19.00, step=0.25) / 100  # Convert to decimal
-            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 1.15, step=0.05) / 100  # Convert to decimal
+            stock_return_std = st.number_input("Stock Return Std Dev (%)", value=parameters["stock_return_std"] * 100 if parameters else 16.00, step=0.25) / 100  # Convert to decimal
+            bond_return_std = st.number_input("Bond Return Std Dev (%)", value=parameters["bond_return_std"] * 100 if parameters else 4.5, step=0.05) / 100  # Convert to decimal
         with col3: 
             simulations = st.number_input("Number of Simulations", value=parameters["simulations"] if parameters else 1000, step=1000)
         with col4: 
@@ -355,16 +351,16 @@ with st.container(height=260, border=None):
                 index=["Normal Distribution", "Students-T Distribution",  "Empirical Distribution"].index(default_simulation_type)
             )
 
-    # Tab 8: Downsize
-    with tab8:
+    # Tab 9: Downsize
+    with tab9:
         col1, col2, col3 = st.columns([1,1,2])
         with col1:
             years_until_downsize = st.number_input("After how many years?", value=parameters["years_until_downsize"] if parameters else 0)
         with col2: 
             residual_amount = st.number_input("Net Addition to Retirement Savings", value=parameters["residual_amount"] if parameters else 0, step=100000)
 
-    # Tab 9: Adjust Recurring Expenses
-    with tab9:      
+    # Tab 10: Adjust Recurring Expenses
+    with tab10:      
         # Entry 1
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
@@ -380,8 +376,8 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### These adjustments get carried forward. You can enter negative amount')
  
-    # Tab 10: One-Time Expenses
-    with tab10:        
+    # Tab 11: One-Time Expenses
+    with tab11:        
         # Entry 1
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
@@ -397,8 +393,8 @@ with st.container(height=260, border=None):
             st.markdown("<br>", unsafe_allow_html=True)
             st.write ('###### You can enter negative amount')
 
-    # Tab 11: Windfalls
-    with tab11:
+    # Tab 12: Windfalls
+    with tab12:
         col1, col2, col3, col4  = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
             windfall_year_1 = st.selectbox("Year of Windfall 1", years, index=0 if parameters is None else years.index(parameters["windfall_year_1"]))
@@ -629,364 +625,159 @@ def highlight_columns(s):
     return styles
 
 st.markdown("<br>", unsafe_allow_html=True)
-st.write("##### Yearly Cash Flow Summary ")
+
+
+st.write("#### Analysis Details ")
+st.markdown("<br>", unsafe_allow_html=True)
+
+####################################
+
+
+def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
+    # Apply the styling to specific columns
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("##### " + title + " details")
+
+    styled_df = df_cashflow.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
+    tab1, tab2, tab3 = st.tabs(["Portfolio Balance", "Market Returns", "Withdrawal Rate"])
+
+    positive_color = "#55AA55"
+    negative_color = "#DD5050"
+
+
+
+    with tab1: 
+        # Portfolio Balance
+        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+            x='Year:O',
+            y='Ending Portfolio Value:Q',
+            color=alt.condition(
+                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
+                alt.value(negative_color),                   # Color for negative values
+                alt.value(positive_color)                   # Color for positive values
+            )
+        ).properties(
+            title='Portfolio Balance Over Time'
+        )
+        # Display the chart in Streamlit
+        st.altair_chart(chart, use_container_width=True)
+
+    with tab2: 
+        # Chart for portfolio return
+        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+            x='Year:O',
+            y=alt.Y('Investment Return %:Q', title='Portfolio Return %', axis=alt.Axis(format='%')),
+            color=alt.condition(
+                alt.datum['Investment Return %'] < 0,  # Condition for negative values
+                alt.value(negative_color),              # Color for negative values
+                alt.value(positive_color)              # Color for positive values
+            )
+        ).properties(
+            title='Portfolio Return % by Year'
+        ).transform_calculate(
+            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
+        )
+
+        # Create text labels for the bars, using the transformed field
+        text = chart.mark_text(
+            align='center',
+            baseline='middle'
+        ).encode(
+            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
+        )
+
+        textAbove = text.transform_filter( alt.datum['Investment Return %'] > 0).mark_text(
+            align='center',
+            baseline='middle',
+            fontSize=10,
+            dy=-10
+        )
+
+        textBelow = text.transform_filter( alt.datum['Investment Return %'] <= 0).mark_text(
+            align='center',
+            baseline='middle',
+            fontSize=10,
+            dy=10
+        )
+
+        # Combine the bar chart and text labels
+        final_chart = chart + textAbove + textBelow
+
+        # Display the chart in Streamlit
+        st.altair_chart(final_chart, use_container_width=True)
+
+    with tab3: 
+        # Create the chart with inline transformation to scale values by 100
+        chart = alt.Chart(df_cashflow_value).mark_bar().encode(
+            x='Year:O',
+            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
+            color=alt.condition(
+                alt.datum['Drawdown %'] < 0,  # Condition for negative values
+                alt.value(negative_color),              # Color for negative values
+                alt.value(positive_color)              # Color for positive values
+            )
+        ).properties(
+            title='Withdrawal Rate % by Year'
+        ).transform_calculate(
+            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
+        )
+
+        # Create text labels for the bars, using the transformed field
+        text = chart.mark_text(
+            align='center',
+            baseline='middle'
+        ).encode(
+            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
+        )
+
+        textAbove = text.transform_filter( alt.datum['Drawdown %'] > 0).mark_text(
+            align='center',
+            baseline='middle',
+            fontSize=10,
+            dy=-10
+        )
+
+        textBelow = text.transform_filter( alt.datum['Drawdown %'] <= 0).mark_text(
+            align='center',
+            baseline='middle',
+            fontSize=10,
+            dy=10
+        )
+
+        # Combine the bar chart and text labels
+        final_chart = chart + textAbove + textBelow
+
+        # Display the chart in Streamlit
+        st.altair_chart(final_chart, use_container_width=True)
+
+    # Display detailed cashflow 
+    st.markdown("###### Cashflow ")   
+    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+
 
 # Create tabs for the cash flow summaries
 tab_10th, tab_25th, tab_50th, tab_75th = st.tabs(["Worst Case - 10th Percentile ", "Below Market - 25th Percentile", "Most Likely - 50th Percentile ", "Best Case - 75th Percentile "])
 
-
 # Tab for 10th Percentile
 with tab_10th:
-    # Apply the styling to specific columns
-
-    styled_df_10th = df_cashflow_10th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    st.dataframe(styled_df_10th, hide_index=True, use_container_width=True)
-    st.subheader("10th Percentile")
-
-    tab1, tab2, tab3 = st.tabs (["Portfolio Balance", "Market Returns", "Withdrawl Rate"])
-
-    with tab1: 
-        # Portfolio Balance
-        chart = alt.Chart(df_cashflow_10th_value).mark_bar().encode(
-            x='Year:O',
-            y='Ending Portfolio Value:Q',
-            color=alt.condition(
-                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
-                alt.value('red'),                   # Color for negative values
-                alt.value('blue')                   # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Balance Over Time'
-        )
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
-
-    with tab2: 
-
-        # Chart for portfolio return
-        chart = alt.Chart(df_cashflow_10th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Investment Return %:Q', title='Porfolio Return %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Investment Return %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Return % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-
-    with tab3: 
-        # Create the chart with inline transformation to scale values by 100
-        chart = alt.Chart(df_cashflow_10th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Drawdown %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Withdrawal Rate % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10  # Adjust the vertical position of the text
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-        
+    create_cash_flow_tab(df_cashflow_10th, df_cashflow_10th_value, "10th Percentile")
 
 # Tab for 25th Percentile
 with tab_25th:
-    # Apply the styling to specific columns
-    styled_df_25th = df_cashflow_25th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    st.dataframe(styled_df_25th, hide_index=True, use_container_width=True)
-    st.subheader("25th Percentile")
-
-
-    tab1, tab2, tab3 = st.tabs (["Portfolio Balance", "Market Returns", "Withdrawl Rate"])
-
-    with tab1: 
-        # Portfolio Balance
-        chart = alt.Chart(df_cashflow_25th_value).mark_bar().encode(
-            x='Year:O',
-            y='Ending Portfolio Value:Q',
-            color=alt.condition(
-                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
-                alt.value('red'),                   # Color for negative values
-                alt.value('blue')                   # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Balance Over Time'
-        )
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
-
-    with tab2: 
-
-        # Chart for portfolio return
-        chart = alt.Chart(df_cashflow_25th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Investment Return %:Q', title='Porfolio Return %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Investment Return %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Return % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-
-    with tab3: 
-        # Create the chart with inline transformation to scale values by 100
-        chart = alt.Chart(df_cashflow_25th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Drawdown %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Withdrawal Rate % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10  # Adjust the vertical position of the text
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
+    create_cash_flow_tab(df_cashflow_25th, df_cashflow_25th_value, "25th Percentile")
 
 # Tab for 50th Percentile
 with tab_50th:
-    # Apply the styling to specific columns
-    styled_df_50th = df_cashflow_50th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    st.dataframe(styled_df_50th, hide_index=True, use_container_width=True)
-    st.subheader("50th Percentile")
-
-    tab1, tab2, tab3 = st.tabs (["Portfolio Balance", "Market Returns", "Withdrawl Rate"])
-
-    with tab1: 
-        # Portfolio Balance
-        chart = alt.Chart(df_cashflow_50th_value).mark_bar().encode(
-            x='Year:O',
-            y='Ending Portfolio Value:Q',
-            color=alt.condition(
-                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
-                alt.value('red'),                   # Color for negative values
-                alt.value('blue')                   # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Balance Over Time'
-        )
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
-
-    with tab2: 
-
-        # Chart for portfolio return
-        chart = alt.Chart(df_cashflow_50th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Investment Return %:Q', title='Porfolio Return %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Investment Return %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Return % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-
-    with tab3: 
-        # Create the chart with inline transformation to scale values by 100
-        chart = alt.Chart(df_cashflow_50th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Drawdown %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Withdrawal Rate % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10  # Adjust the vertical position of the text
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
+    create_cash_flow_tab(df_cashflow_50th, df_cashflow_50th_value, "50th Percentile")
 
 # Tab for 75th Percentile
 with tab_75th:
-    # Apply the styling to specific columns
-    styled_df_75th = df_cashflow_75th.style.apply(highlight_columns, subset=['Beginning Portfolio Value', 'Ending Portfolio Value'])
-    st.dataframe(styled_df_75th, hide_index=True, use_container_width=True)
-    st.subheader("75th Percentile")
+    create_cash_flow_tab(df_cashflow_75th, df_cashflow_75th_value, "75th Percentile")
 
-    tab1, tab2, tab3 = st.tabs (["Portfolio Balance", "Market Returns", "Withdrawl Rate"])
 
-    with tab1: 
-        # Portfolio Balance
-        chart = alt.Chart(df_cashflow_75th_value).mark_bar().encode(
-            x='Year:O',
-            y='Ending Portfolio Value:Q',
-            color=alt.condition(
-                alt.datum['Ending Portfolio Value'] < 0,  # Condition for negative values
-                alt.value('red'),                   # Color for negative values
-                alt.value('blue')                   # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Balance Over Time'
-        )
-        # Display the chart in Streamlit
-        st.altair_chart(chart, use_container_width=True)
 
-    with tab2: 
 
-        # Chart for portfolio return
-        chart = alt.Chart(df_cashflow_75th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Investment Return %:Q', title='Porfolio Return %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Investment Return %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Portfolio Return % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Investment Return %"] * 100'  # Scale the Drawdown % by 100
-        )
 
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
 
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
-
-    with tab3: 
-        # Create the chart with inline transformation to scale values by 100
-        chart = alt.Chart(df_cashflow_75th_value).mark_bar().encode(
-            x='Year:O',
-            y=alt.Y('Drawdown %:Q', title='Drawdown %', axis=alt.Axis(format='%')),
-            color=alt.condition(
-                alt.datum['Drawdown %'] < 0,  # Condition for negative values
-                alt.value('red'),              # Color for negative values
-                alt.value('blue')              # Color for positive values
-            )
-        ).properties(
-            title='Withdrawal Rate % by Year'
-        ).transform_calculate(
-            'ScaledDrawdown', 'datum["Drawdown %"] * 100'  # Scale the Drawdown % by 100
-        )
-
-        # Create text labels for the bars, using the transformed field
-        text = chart.mark_text(
-            align='center',
-            baseline='middle',
-            dy=-10  # Adjust the vertical position of the text
-        ).encode(
-            text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
-        )
-
-        # Combine the bar chart and text labels
-        final_chart = chart + text
-
-        # Display the chart in Streamlit
-        st.altair_chart(final_chart, use_container_width=True)
+######################################
 
