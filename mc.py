@@ -748,14 +748,14 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
             text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
         )
 
-        textAbove = text.transform_filter( alt.datum['Investment Return %'] > 0).mark_text(
+        textAbove = text.transform_filter( alt.datum['Investment Return %'] >= 0).mark_text(
             align='center',
             baseline='middle',
             fontSize=10,
             dy=-10
         )
 
-        textBelow = text.transform_filter( alt.datum['Investment Return %'] <= 0).mark_text(
+        textBelow = text.transform_filter( alt.datum['Investment Return %'] < 0).mark_text(
             align='center',
             baseline='middle',
             fontSize=10,
@@ -792,14 +792,14 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
             text=alt.Text('ScaledDrawdown:Q', format='.2f')  # Display the scaled percentage
         )
 
-        textAbove = text.transform_filter( alt.datum['Drawdown %'] > 0).mark_text(
+        textAbove = text.transform_filter( alt.datum['Drawdown %'] >= 0).mark_text(
             align='center',
             baseline='middle',
             fontSize=10,
             dy=-10
         )
 
-        textBelow = text.transform_filter( alt.datum['Drawdown %'] <= 0).mark_text(
+        textBelow = text.transform_filter( alt.datum['Drawdown %'] < 0).mark_text(
             align='center',
             baseline='middle',
             fontSize=10,
