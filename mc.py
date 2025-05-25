@@ -410,13 +410,13 @@ with st.container(height=260, border=None):
         col1, col2, col3, col4  = st.columns([1, 1, 1, 1])  # Adjust column widths as needed
         with col1:
             windfall_year_1 = st.selectbox("Year of Windfall 1", years, index=0 if parameters is None else years.index(parameters["windfall_year_1"]))
-            windfall_amount_1 = st.number_input("Windfall Amount 1 ", value=parameters["windfall_amount_1"] if parameters else 0, step=5000)
+            windfall_amount_1 = st.number_input("Windfall Amount 1 ", value=parameters["windfall_amount_1"] if parameters else 0, step=20000)
         with col2:
             windfall_year_2 = st.selectbox("Year of Windfall 2", years, index=0 if parameters is None else years.index(parameters["windfall_year_2"]))
-            windfall_amount_2 = st.number_input("Windfall Amount 2 ", value=parameters["windfall_amount_2"] if parameters else 0, step=5000)
+            windfall_amount_2 = st.number_input("Windfall Amount 2 ", value=parameters["windfall_amount_2"] if parameters else 0, step=20000)
         with col3:
             windfall_year_3 = st.selectbox("Year of Windfall 3", years, index=0 if parameters is None else years.index(parameters["windfall_year_3"]))
-            windfall_amount_3 = st.number_input("Windfall Amount 3 ", value=parameters["windfall_amount_3"] if parameters else 0, step=5000)
+            windfall_amount_3 = st.number_input("Windfall Amount 3 ", value=parameters["windfall_amount_3"] if parameters else 0, step=20000)
 
 
 # Create download parameters feature 

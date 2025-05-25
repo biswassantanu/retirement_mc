@@ -44,6 +44,11 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
     windfall_year_1, windfall_year_2, windfall_year_3 = windfall_years
     windfall_amount_1, windfall_amount_2, windfall_amount_3 = windfall_amounts
 
+    # get the ranges of historical equity and bond returns 
+    equity_return_min = min(historical_equity_returns.values()) / 100.0
+    equity_return_max = max(historical_equity_returns.values()) / 100.0
+    bond_return_min = min(historical_bond_returns.values()) / 100.0 
+    bond_return_max = max(historical_bond_returns.values()) / 100.0 
 
     for sim in range(simulations):
         savings = initial_savings
@@ -71,6 +76,9 @@ def monte_carlo_simulation(current_age, partner_current_age, life_expectancy, in
         # Preselect the set of invest returns - the set will be normally distributed 
         preset_stock_returns = np.random.normal(stock_return_mean, stock_return_std, years_in_simulation)
         preset_bond_returns = np.random.normal(bond_return_mean, bond_return_std, years_in_simulation)
+        # Clip the values to ensure they are within the specified bounds
+        preset_stock_returns = np.clip(preset_stock_returns, equity_return_min, equity_return_max)
+        preset_bond_returns = np.clip(preset_bond_returns, bond_return_min, bond_return_max)
 
         # Preset  lognormal returns
         preset_lognormal_stock_returns = np.random.lognormal(mean=np.log(stock_return_mean), sigma=stock_return_std, size=years_in_simulation)
