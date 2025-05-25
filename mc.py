@@ -686,7 +686,7 @@ def highlight_columns(s):
 st.markdown("<br>", unsafe_allow_html=True)
 
 
-st.write("#### Analysis Details ")
+st.write("#### Scenario Analysis ")
 st.markdown("<br>", unsafe_allow_html=True)
 
 ####################################
@@ -843,7 +843,7 @@ with tab_75th:
 
 
 
-
+st.markdown("<br><br> ################## <br>", unsafe_allow_html=True)
 
     ######################################
 
