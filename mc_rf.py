@@ -486,7 +486,7 @@ def create_contribution_tab(tab, parameters, current_age, partner_current_age):
 def create_taxes_tab(tab, parameters):
     """Create the Taxes tab inputs"""
     with tab:
-        col1, col2, col3, col4, col5 = st.columns([2, 2, 2, 2, 2])
+        col1, col2, col3, col4, col5 = st.columns([2, 2, 2, 2, 3])
 
         with col1:
             filing_status = st.selectbox("Filing Status", 
@@ -503,7 +503,7 @@ def create_taxes_tab(tab, parameters):
 
         with col5:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.write("Tax calculations are not fully implemented. Currently the entered estimated effective tax rate is used for all calculation.")
+            st.write("Tax calculations are not fully implemented. Currently the entered estimated effective tax rate is used for all calculations.")
             
 
     return (filing_status, state_of_residence, tax_rate)
