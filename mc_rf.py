@@ -371,10 +371,9 @@ def create_savings_tab(tab, parameters):
             bond_amount = total_investment * (bond_percentage / 100)
 
             # Display totals
-            st.write(f"Total Investments : {total_investment:,.0f}")
+            st.write(f"Investments : {total_investment:,.0f}")
             st.write(f"Cash : {cash_savings_balance:,.0f}")
-            st.write(f"Total Portfolio : {total_investment + cash_savings_balance:,.0f}")
-            st.markdown(f"### **Total Portfolio Balance: {total_investment + cash_savings_balance:,.0f}**")
+            st.markdown(f"###### **Total Portfolio Balance:  {total_investment + cash_savings_balance:,.0f}**")
 
         initial_savings = total_investment + cash_savings_balance
         
