@@ -2,7 +2,7 @@
 tab_style_css ="""
         <style>
             .stTabs [data-baseweb="tab-list"] {
-                gap: 5px;
+                gap: 4px;
             }
 
             .stTabs [data-baseweb="tab"] {
@@ -13,8 +13,8 @@ tab_style_css ="""
                 gap: 1px;
                 padding-top: 5px;
                 padding-bottom: 5px;
-                padding-right: 10px;
-                padding-left: 10px;
+                padding-right: 6px;
+                padding-left: 6px;
             }
 
             /* Active tab styling */
@@ -52,7 +52,8 @@ button_style_css = """
             }
             .stButton > button:hover {
                 background-color: #A9A9A9;  /* Darker grey on hover */
-            }
+            }       
+
         </style>
     """
 

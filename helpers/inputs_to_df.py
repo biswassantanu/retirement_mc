@@ -5,7 +5,14 @@ def create_parameters_dataframe(
     partner_retirement_age, initial_savings, stock_percentage, bond_percentage,
     annual_earnings, self_yearly_increase, tax_rate, partner_earnings, partner_yearly_increase, 
     annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
-    rental_start, rental_end, rental_amt, rental_yearly_increase,         
+    rental_start, rental_end, rental_amt, rental_yearly_increase,     
+    # New parameters from Tab 2 (Savings)
+    self_401k_balance, partner_401k_balance,
+    roth_ira_balance, cash_savings_balance, brokerage_balance,
+    # New parameters from Tab 4 (Taxes)
+    self_401k_contribution, partner_401k_contribution, employer_self_401k_contribution,
+    employer_partner_401k_contribution, maximize_self_contribution, maximize_partner_contribution,
+    #
     annual_expense, mortgage_payment, inflation_mean,
     annual_expense_decrease, mortgage_years_remaining, inflation_std,
     annual_social_security, withdrawal_start_age, cola_rate,
@@ -48,6 +55,20 @@ def create_parameters_dataframe(
         "rental_end": [rental_end],
         "rental_amt": [rental_amt],
         "rental_yearly_increase": [rental_yearly_increase],
+        # New parameters from Tab 2 (Savings)
+        "self_401k_balance": [self_401k_balance],
+        "partner_401k_balance": [partner_401k_balance],
+        "roth_ira_balance": [roth_ira_balance],
+        "cash_savings_balance": [cash_savings_balance],
+        "brokerage_balance": [brokerage_balance],
+        # New parameters from Tab 4 (Taxes)
+        "self_401k_contribution": [self_401k_contribution],
+        "partner_401k_contribution": [partner_401k_contribution],
+        "employer_self_401k_contribution": [employer_self_401k_contribution],
+        "employer_partner_401k_contribution": [employer_partner_401k_contribution],
+        "maximize_self_contribution": [maximize_self_contribution],
+        "maximize_partner_contribution": [maximize_partner_contribution],
+        #
         "annual_expense": [annual_expense],
         "mortgage_payment": [mortgage_payment],
         "inflation_mean": [inflation_mean],

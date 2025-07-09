@@ -21,4 +21,13 @@ myvenv/
 git_note.docx
 instructions.txt
 git_remote_repo.pdf
+IRE_METHODOLOGY.pdf
+
+# placeholder folders
+archive/
+docs/
+
+# document files 
+*.pdf 
+*.doc
 
