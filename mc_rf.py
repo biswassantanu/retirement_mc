@@ -28,23 +28,14 @@ from helpers.help_texts import (simulation_help_text, smile_help_text,
 def main():
     """Main function to run the Streamlit app"""
 
-    # Initialize session state variables if they don't exist
-    if 'reset_to_defaults' not in st.session_state:
-        st.session_state.reset_to_defaults = False
-        
-    # Check if we need to reset the app
-    reset_required = st.session_state.reset_to_defaults
 
     # Setup app configuration
     setup_app()
-    
-    # Load parameters from uploaded file if available
-    # parameters = load_parameters_from_upload()
-    parameters = None if reset_required else load_parameters_from_upload()
 
-    # Clear the reset flag if it was set
-    if reset_required:
-        st.session_state.reset_to_defaults = False
+
+    # Load parameters from uploaded file if available
+    parameters = load_parameters_from_upload()
+
     
     # Create input form with tabs
     config = create_input_form(parameters)
@@ -82,7 +73,7 @@ def setup_app():
 
 def load_parameters_from_upload() -> Dict[str, Any]:
     """Load parameters from uploaded CSV file"""
-    uploaded_file = st.file_uploader("Upload previously downloaded simulation parameters", type=["csv"])
+    uploaded_file = st.file_uploader("Upload previously downloaded simulation parameters", type=["csv"], key="param_file_uploader")
     
     if uploaded_file is None:
         return None
@@ -914,21 +905,6 @@ def display_action_buttons(params_df):
     with col4:
         auto_run = st.checkbox(":material/directions_run: Run Automatically", value=False)
 
-    # Reset button 
-    with col5:
-        reset_button = st.button("Reset to Default Values", type="secondary", icon=":material/refresh:")
-    
-
-    # Handle reset button action
-    if reset_button:
-        # Clear the session state
-        # for key in list(st.session_state.keys()):
-        #     del st.session_state[key]
-        # # Force rerun
-        st.session_state.clear()
-        st.session_state.reset_to_defaults = True
-        st.rerun()
-
     return run_button, auto_run
 
 
@@ -1138,29 +1114,81 @@ def display_ending_balance_summary(processed_results):
     # Calculate inflation adjustment for ending balances
     years = st.session_state.get('years_in_simulation', 30)
     inflation_mean = 0.025  # Default if not available
-    
+
+    # Calculate the return statistics for each percentile
+    for percentile in ['10th', '25th', '50th', '75th']:
+        df = processed_results[percentile]['df_values']
+        if 'return_rate' in df.columns:
+            # Calculate median return rate
+            median_return = df['return_rate'].median()
+            processed_results[percentile]['median_return_rate'] = f"{median_return * 100:.2f}%"
+
+            # Calculate arithmetic mean and standard deviation
+            arithmetic_mean = df['return_rate'].mean()
+            std_dev = df['return_rate'].std()            
+
+            # Calculate geometric mean using the provided formula
+            geometric_mean = (arithmetic_mean*100 - ((std_dev*100)**0.5)/2)/100.00
+            processed_results[percentile]['geometric_mean'] = f"{geometric_mean * 100:.2f}%"
+
+            # Count years with positive and negative returns
+            positive_years = (df['return_rate'] > 0).sum()
+            negative_years = (df['return_rate'] < 0).sum()
+            processed_results[percentile]['positive_return_years'] = positive_years
+            processed_results[percentile]['negative_return_years'] = negative_years
+        else:
+            # Default values if return_rate isn't available
+            processed_results[percentile]['median_return_rate'] = "N/A"
+            processed_results[percentile]['geometric_mean'] = "N/A"
+            processed_results[percentile]['positive_return_years'] = 0
+            processed_results[percentile]['negative_return_years'] = 0
+  
     # Prepare the data for the grid
     data = {
-        "Ending Balance": ["Future Currency Value", "Today's Currency Value", "Year of Depletion"],
+        "Ending Balance": [
+            "Future Currency Value", 
+            "Today's Currency Value", 
+            "Year of Depletion",
+            "Median Return Rate",
+            "Average Return Rate",
+            "Years with Positive Return",
+            "Years with Negative Return"
+        ],
         "Worst Case": [
             f"{processed_results['10th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['10th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M", 
-            processed_results['10th']['year_of_depletion']
+            processed_results['10th']['year_of_depletion'],
+            processed_results['10th']['median_return_rate'],
+            processed_results['10th']['geometric_mean'],
+            processed_results['10th']['positive_return_years'],
+            processed_results['10th']['negative_return_years']
         ],
         "Below Market": [
             f"{processed_results['25th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['25th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
-            processed_results['25th']['year_of_depletion']
+            processed_results['25th']['year_of_depletion'],
+            processed_results['25th']['median_return_rate'],
+            processed_results['25th']['geometric_mean'],
+            processed_results['25th']['positive_return_years'],
+            processed_results['25th']['negative_return_years']
         ],
         "Most Likely": [
             f"{processed_results['50th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['50th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
-            processed_results['50th']['year_of_depletion']
+            processed_results['50th']['year_of_depletion'],
+            processed_results['50th']['median_return_rate'],
+            processed_results['50th']['geometric_mean'],
+            processed_results['50th']['positive_return_years'],
+            processed_results['50th']['negative_return_years']
         ],
         "Best Case": [
             f"{processed_results['75th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['75th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
-            processed_results['75th']['year_of_depletion']
+            processed_results['75th']['year_of_depletion'],
+            processed_results['75th']['median_return_rate'],
+            processed_results['75th']['geometric_mean'],
+            processed_results['75th']['positive_return_years'],
+            processed_results['75th']['negative_return_years']
         ]
     }
     
@@ -1193,6 +1221,15 @@ def display_ending_balance_summary(processed_results):
                 try:
                     if isinstance(value, str) and 'M' in value:
                         numeric_value = float(value.replace('M', ''))
+                        color = 'red' if numeric_value < 0 else 'green'
+                        styles.iloc[i, j] = f'color: {color}; font-weight: bold;'
+                except:
+                    pass
+            # For Median Return Rate (row index 3)
+            elif i == 3 or i == 4:
+                try:
+                    if isinstance(value, str) and '%' in value:
+                        numeric_value = float(value.replace('%', ''))
                         color = 'red' if numeric_value < 0 else 'green'
                         styles.iloc[i, j] = f'color: {color}; font-weight: bold;'
                 except:
