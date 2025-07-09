@@ -27,11 +27,24 @@ from helpers.help_texts import (simulation_help_text, smile_help_text,
 
 def main():
     """Main function to run the Streamlit app"""
+
+    # Initialize session state variables if they don't exist
+    if 'reset_to_defaults' not in st.session_state:
+        st.session_state.reset_to_defaults = False
+        
+    # Check if we need to reset the app
+    reset_required = st.session_state.reset_to_defaults
+
     # Setup app configuration
     setup_app()
     
     # Load parameters from uploaded file if available
-    parameters = load_parameters_from_upload()
+    # parameters = load_parameters_from_upload()
+    parameters = None if reset_required else load_parameters_from_upload()
+
+    # Clear the reset flag if it was set
+    if reset_required:
+        st.session_state.reset_to_defaults = False
     
     # Create input form with tabs
     config = create_input_form(parameters)
@@ -880,7 +893,7 @@ def display_action_buttons(params_df):
     csv = params_df.to_csv(index=False)
     
     # Create columns for the buttons
-    col1, col2, col3, col4 = st.columns([1, 1, 2, 3])
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 2, 1, 2])
     
     # Download button
     with col1:
@@ -900,7 +913,22 @@ def display_action_buttons(params_df):
     # Auto-run checkbox
     with col4:
         auto_run = st.checkbox(":material/directions_run: Run Automatically", value=False)
+
+    # Reset button 
+    with col5:
+        reset_button = st.button("Reset to Default Values", type="secondary", icon=":material/refresh:")
     
+
+    # Handle reset button action
+    if reset_button:
+        # Clear the session state
+        # for key in list(st.session_state.keys()):
+        #     del st.session_state[key]
+        # # Force rerun
+        st.session_state.clear()
+        st.session_state.reset_to_defaults = True
+        st.rerun()
+
     return run_button, auto_run
 
 
