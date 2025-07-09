@@ -500,7 +500,12 @@ def create_taxes_tab(tab, parameters):
         with col2:
             tax_rate = st.number_input("Estimated Effective Tax Rate (%)", 
                 value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100
-                
+
+        with col5:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.write("Tax calculations are not fully implemented. Currently the entered estimated effective tax rate is used for all calculation.")
+            
+
     return (filing_status, state_of_residence, tax_rate)
 
 
