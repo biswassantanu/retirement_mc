@@ -3,7 +3,7 @@
 
 A powerful financial planning tool built with Streamlit that helps you analyze retirement scenarios using Monte Carlo simulations.
 
-**Note**: This application provides financial modeling for educational purposes only. It should not be considered financial advice. Always consult with a qualified financial advisor for personalized retirement planning. Use commercial software like Boudin for more robust feature sets. 
+**Note**: This application provides financial modeling for educational purposes only. It should not be considered financial advice. Always consult with a qualified financial advisor for personalized retirement planning. Use commercial software like Boldin (http://boldin.com) for more robust feature sets. 
 
 ## Overview
 
