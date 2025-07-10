@@ -312,7 +312,7 @@ def create_tabs():
         ":material/shopping_cart: Expense", 
         ":material/verified_user: Social Security", 
         ":material/local_hospital: Healthcare",   
-        ":material/finance_mode: Market Returns", 
+        ":material/bar_chart: Market Returns", 
         ":material/house: Downsize", 
         ":material/tune: Adjust Exp.", 
         ":material/checkbook: One Time", 
@@ -1103,62 +1103,60 @@ def display_ending_balance_summary(processed_results):
 
             # Count years with positive and negative returns
             positive_years = (df['return_rate'] > 0).sum()
-            negative_years = (df['return_rate'] < 0).sum()
+            negative_years = (df['return_rate'] <= 0).sum()
+            total_years = positive_years + negative_years
+
+
             processed_results[percentile]['positive_return_years'] = positive_years
             processed_results[percentile]['negative_return_years'] = negative_years
+
+            processed_results[percentile]['negative_return_formatted'] = f"{negative_years} out of {total_years} "
+
+
         else:
             # Default values if return_rate isn't available
             processed_results[percentile]['median_return_rate'] = "N/A"
             processed_results[percentile]['geometric_mean'] = "N/A"
             processed_results[percentile]['positive_return_years'] = 0
             processed_results[percentile]['negative_return_years'] = 0
+            processed_results[percentile]['negative_return_formatted'] = "N/A"
   
     # Prepare the data for the grid
     data = {
-        "Ending Balance": [
-            "Future Currency Value", 
-            "Today's Currency Value", 
+        "Scenarios": [
+            "Ending Balance", 
+            "Ending Balance @ Today's $", 
             "Year of Depletion",
-            "Median Return Rate",
-            "Average Return Rate",
-            "Years with Positive Return",
+            "Affective Rate of Return",
             "Years with Negative Return"
         ],
-        "Worst Case": [
+        "Significantly Below Returns": [
             f"{processed_results['10th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['10th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M", 
             processed_results['10th']['year_of_depletion'],
-            processed_results['10th']['median_return_rate'],
             processed_results['10th']['geometric_mean'],
-            processed_results['10th']['positive_return_years'],
-            processed_results['10th']['negative_return_years']
+            processed_results['10th']['negative_return_formatted']
         ],
-        "Below Market": [
+        "Below Historical Returns": [
             f"{processed_results['25th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['25th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             processed_results['25th']['year_of_depletion'],
-            processed_results['25th']['median_return_rate'],
             processed_results['25th']['geometric_mean'],
-            processed_results['25th']['positive_return_years'],
-            processed_results['25th']['negative_return_years']
+            processed_results['25th']['negative_return_formatted']
         ],
-        "Most Likely": [
+        "Historical Returns": [
             f"{processed_results['50th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['50th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             processed_results['50th']['year_of_depletion'],
-            processed_results['50th']['median_return_rate'],
             processed_results['50th']['geometric_mean'],
-            processed_results['50th']['positive_return_years'],
-            processed_results['50th']['negative_return_years']
+            processed_results['50th']['negative_return_formatted']
         ],
-        "Best Case": [
+        "Above Historical Returns": [
             f"{processed_results['75th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['75th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             processed_results['75th']['year_of_depletion'],
-            processed_results['75th']['median_return_rate'],
             processed_results['75th']['geometric_mean'],
-            processed_results['75th']['positive_return_years'],
-            processed_results['75th']['negative_return_years']
+            processed_results['75th']['negative_return_formatted']
         ]
     }
     
@@ -1207,7 +1205,7 @@ def display_ending_balance_summary(processed_results):
     
     # Apply the styles
     styled_df = df.style.apply(lambda _: styles, axis=None)
-    styled_df.set_table_attributes('style="font-size: 18px; width: 60%;"')
+    styled_df.set_table_attributes('style="font-size: 18px; width: 75%;"')
     
     
     # Hide the index
@@ -1220,32 +1218,32 @@ def display_percentile_tabs(processed_results):
     """Display tabs with detailed cash flow analysis for each percentile"""
     # Create tabs for the cash flow summaries
     tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
-        ":material/sentiment_dissatisfied: Worst Case ", 
-        ":material/avg_pace: Below Average", 
-        ":material/speed: Most Likely ", 
-        ":material/diamond: Best Case "
+        ":material/sentiment_dissatisfied: Significantly Below Average", 
+        ":material/avg_pace: Below Average Returns", 
+        ":material/speed: Average Returns", 
+        ":material/diamond: Above Average Returns"
     ])
     
     # Display each percentile in its tab
     with tab_10th:
         create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
                            processed_results["10th"]["df_values"], 
-                           "10th Percentile")
+                           "Significantly Below Average Returns - 10th Percentile")
     
     with tab_25th:
         create_cash_flow_tab(processed_results["25th"]["df_formatted"], 
                            processed_results["25th"]["df_values"], 
-                           "25th Percentile")
+                           "Below Average Returns - 25th Percentile")
     
     with tab_50th:
         create_cash_flow_tab(processed_results["50th"]["df_formatted"], 
                            processed_results["50th"]["df_values"], 
-                           "50th Percentile")
+                           "Average Returns - 50th Percentile")
     
     with tab_75th:
         create_cash_flow_tab(processed_results["75th"]["df_formatted"], 
                            processed_results["75th"]["df_values"], 
-                           "75th Percentile")
+                           "Above Average Returns - 75th Percentile")
 
 def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
     """Create a tab with cash flow details and visualizations"""
