@@ -17,13 +17,14 @@ from helpers.styling import (tab_style_css, button_style_css,
                            remove_top_white_space,
                            file_uploader_style_css)
 
+# Import help texts 
+from helpers.help_texts import (simulation_help_text, smile_help_text, 
+                                living_expense_help_text, bridge_healthcare_help_text)
+
 # Import simulation module with our new refactored function
 from simulations.simulation_mc_rf import SimulationConfig, monte_carlo_simulation
 from simulations.tax_master_data import contribution_limits
 
-# Import help texts 
-from helpers.help_texts import (simulation_help_text, smile_help_text, 
-                                living_expense_help_text, bridge_healthcare_help_text)
 
 def main():
     """Main function to run the Streamlit app"""
@@ -1039,37 +1040,6 @@ def convert_to_dict_for_display(cash_flow):
     return cash_flow
 
 
-# def format_cashflow_dataframe_old(df):
-#     """Format the cash flow DataFrame for display"""
-#     if df.empty:
-#         return df
-    
-#     # Format amount columns
-#     numeric_columns = [
-#         'Beginning Portfolio Value', 'Self Gross Earning', 'Partner Gross Earning',
-#         'Self Social Security', 'Partner Social Security', 'Gross Earnings', 'Combined Social Security',
-#         'Investment Return', 'Downsize Proceeds', 'Mortgage', 'Healthcare Expense', 'Self Health Expense',  
-#         'Partner Health Expense', 'Self Pension', 'Partner Pension', 'Rental Income',
-#         'Total Expense', 'Tax', 'Portfolio Draw', 'Ending Portfolio Value', 'At Constant Currency', 
-#         'Yearly Expense Adj', 'One Time Expense', 'Windfall Amt', 'Self 401K Contribution', 
-#         'Partner 401K Contribution', 'Self 401K Balance', 'Partner 401K Balance', 'Self 401K Return', 
-#         'Partner 401K Return', 'Roth IRA Return', 'Roth IRA Balance', 'Brokerage Acct Return', 
-#         'Brokerage Draw', 'Brokerage Acct Balance', 'Partner 401K Draw', 'Self 401K Draw', 
-#         'Roth IRA Draw', 'Cash Draw', 'Cash Return', 'Cash Balance', 'Total Acct Balance'
-#     ]
-    
-#     for col in numeric_columns:
-#         if col in df.columns:
-#             df[col] = df[col].apply(lambda x: f"{x:,.0f}")
-    
-#     # Format percentage columns
-#     percent_columns = ['Investment Return %', 'Drawdown %']
-#     for col in percent_columns:
-#         if col in df.columns:
-#             df[col] = df[col].apply(lambda x: f"{x * 100:.2f}%")
-    
-#     return df
-
 def format_cashflow_dataframe(df):
     """Format the cash flow DataFrame for display"""
     if df.empty:
@@ -1282,14 +1252,7 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
     # Display title
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("##### " + title + " details")
-    
-    # Print available columns to help identify column names
-    # print(f"Available columns for {title}:", df_cashflow.columns.tolist())
-
-    # st.write("Available columns:", df_cashflow_value.columns.tolist())
-    # st.write("First row sample:", df_cashflow_value.iloc[0].to_dict())
-   
-    
+       
     # Apply styling to columns that exist
     columns_to_style = []
     target_columns = ['beginning_balance', 'ending_balance', 'investment_return_total', 'return_rate']
@@ -1299,10 +1262,6 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
         if col in df_cashflow.columns:
             columns_to_style.append(col)
 
-    # for col in df_cashflow.columns:
-    #     # Check for balance columns using partial name matching
-    #     if 'balance' in col.lower() or 'portfolio' in col.lower():
-    #         columns_to_style.append(col)
     
     # Apply styling
     if columns_to_style:
@@ -1375,15 +1334,6 @@ def flatten_nested_dataframe(df):
             df_flat = df_flat.drop(columns=['contributions'])
         except Exception as e:
             st.warning(f"Error processing contributions: {e}")
-
-
-    # # Calculate useful derived metrics
-    # if 'beginning_balance' in df_flat.columns and 'investment_return_total' in df_flat.columns:
-    #     df_flat['return_rate'] = df_flat['investment_return_total'] / df_flat['beginning_balance']
-
-
-    # if 'portfolio_draw' in df_flat.columns and 'beginning_balance' in df_flat.columns:
-    #     df_flat['withdrawal_rate'] = df_flat['portfolio_draw'] / df_flat['beginning_balance']
 
     # Calculate useful derived metrics
     if 'beginning_balance' in df_flat.columns and 'investment_return_total' in df_flat.columns:
@@ -1597,9 +1547,6 @@ def highlight_columns(s):
     styles = []
     for value in s:
         try:
-            # Convert formatted string to numeric value
-            # value_str = str(value).replace('$', '').replace(',', '')
-            # numeric_value = float(value_str)
 
             # Handle the value as string for preprocessing
             value_str = str(value)
