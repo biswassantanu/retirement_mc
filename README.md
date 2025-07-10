@@ -3,6 +3,8 @@
 
 A powerful financial planning tool built with Streamlit that helps you analyze retirement scenarios using Monte Carlo simulations.
 
+**Note**: This application provides financial modeling for educational purposes only. It should not be considered financial advice. Always consult with a qualified financial advisor for personalized retirement planning.
+
 ## Overview
 
 This application provides a comprehensive retirement planning framework using Monte Carlo simulation to model the uncertainty in market returns and inflation. It helps users visualize different retirement scenarios and understand the probability of financial success in retirement.
@@ -104,5 +106,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Note**: This application provides financial modeling for educational purposes only. It should not be considered financial advice. Always consult with a qualified financial advisor for personalized retirement planning.
+
 ```
