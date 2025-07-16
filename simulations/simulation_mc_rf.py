@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Optional, Any
 import copy
 
 from simulations.historical_returns import historical_equity_returns, historical_bond_returns
-from simulations.tax_master_data import contribution_limits, cathup_age_401k
+from simulations.tax_master_data import contribution_limits, catchup_age_401k
 
 
 # Constants
@@ -729,7 +729,7 @@ def calculate_401k_contribution(current_age, retirement_age, yearly_contribution
     scaled_employer_contribution = employer_contribution * ((1 + pay_growth_rate) ** year)
     
     # Determine catch-up amount
-    catch_up_amount = adjusted_catch_up_limit if current_age >= cathup_age_401k else 0
+    catch_up_amount = adjusted_catch_up_limit if current_age >= catchup_age_401k else 0
     
     # Calculate total contribution
     if maximize_contribution:

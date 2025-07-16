@@ -19,7 +19,7 @@ contribution_limits = {
 }
 
 # 401k Catchup age 
-cathup_age_401k = 50 
+catchup_age_401k = 50 
 
 # Federal tax brackets (2023)
 federal_tax_brackets = [
