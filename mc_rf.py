@@ -71,7 +71,7 @@ def setup_app():
     st.markdown(button_style_css, unsafe_allow_html=True)
     st.markdown(download_button_style_css, unsafe_allow_html=True)
     st.markdown(remove_top_white_space, unsafe_allow_html=True)
-    st.markdown(file_uploader_style_css, unsafe_allow_html=True)
+    #st.markdown(file_uploader_style_css, unsafe_allow_html=True)
     
     # Create columns for title and help link
     col1, col2 = st.columns([5, 1])
