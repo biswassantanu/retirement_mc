@@ -86,7 +86,7 @@ remove_top_white_space = """
         </style>
         """
 
-file_uploader_style_css = '''
+file_uploader_style_css_old = """
 <style>
     [data-testid='stFileUploader'] {
         width: max-content;
@@ -104,4 +104,46 @@ file_uploader_style_css = '''
     }
 
 </style>
-'''
+"""
+
+file_uploader_style_css = """
+<style>
+    [data-testid='stFileUploader'] {
+        width: max-content;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    [data-testid='stFileUploader'] section {
+        padding: 0;
+        float: left;
+    }
+    [data-testid='stFileUploader'] section > input + div {
+        display: none;
+    }
+    [data-testid='stFileUploader'] section + div {
+        float: right;
+        padding-top: 0;
+    }
+    
+    /* Additional overrides for Streamlit Community */
+    .stFileUploader {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    
+    .stFileUploader > div {
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    /* Target any outer containers that might be adding the gray box */
+    [data-testid='stFileUploader'] > div {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+</style>
+"""
