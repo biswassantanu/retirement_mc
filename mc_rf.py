@@ -36,7 +36,7 @@ def main():
 
     # Add styled heading with icon above file upload
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("<h5 style='margin-bottom:5px;'>Enter your financial information in the tabs below or upload a previously saved parameter file</h3>", unsafe_allow_html=True)
+    st.markdown("<h5 style='margin-bottom:5px;'>Enter your financial information in the tabs below or upload a previously saved parameter file</h5>", unsafe_allow_html=True)
 
     # Load parameters from uploaded file if available
     parameters = load_parameters_from_upload()
