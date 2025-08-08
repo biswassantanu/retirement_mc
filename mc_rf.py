@@ -19,7 +19,8 @@ from helpers.styling import (tab_style_css, button_style_css,
 
 # Import help texts 
 from helpers.help_texts import (simulation_help_text, smile_help_text, 
-                                living_expense_help_text, bridge_healthcare_help_text)
+                                living_expense_help_text, bridge_healthcare_help_text, 
+                                help_document, disclaimer_text)
 
 # Import simulation module with our new refactored function
 from simulations.simulation_mc_rf import SimulationConfig, monte_carlo_simulation
@@ -29,10 +30,13 @@ from simulations.tax_master_data import contribution_limits
 def main():
     """Main function to run the Streamlit app"""
 
-
     # Setup app configuration
     setup_app()
 
+
+    # Add styled heading with icon above file upload
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<h5 style='margin-bottom:5px;'>Enter your financial information in the tabs below or upload a previously saved parameter file</h3>", unsafe_allow_html=True)
 
     # Load parameters from uploaded file if available
     parameters = load_parameters_from_upload()
@@ -68,9 +72,23 @@ def setup_app():
     st.markdown(remove_top_white_space, unsafe_allow_html=True)
     st.markdown(file_uploader_style_css, unsafe_allow_html=True)
     
-    # App title
-    st.write("#### Retirement Analysis with Monte Carlo Simulation")
+    # Create columns for title and help link
+    col1, col2 = st.columns([5, 1])
+    
+    # App title in first column
+    with col1:
+        st.write("### Retirement Analysis with Monte Carlo Simulation")
+    
+    # Help hyperlink in second column with tooltip
+    with col2:
+        st.markdown("<div style='text-align: right; margin-top: 8px;'>", unsafe_allow_html=True)
 
+        st.button("Help Guide", key="help_button", type="secondary", icon=":material/menu_book:",
+                 help=help_document)  # Using the full help document as tooltip
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Add disclaimer using imported text
+    st.markdown(disclaimer_text, unsafe_allow_html=True)
 
 def load_parameters_from_upload() -> Dict[str, Any]:
     """Load parameters from uploaded CSV file"""
@@ -102,13 +120,17 @@ def get_required_columns() -> List[str]:
     return [
         "current_age", "partner_current_age", "life_expectancy", "retirement_age",
         "partner_retirement_age", "initial_savings", "stock_percentage", "bond_percentage",
-        "annual_earnings", "self_yearly_increase", "tax_rate", "partner_earnings", "partner_yearly_increase", 
+        "annual_earnings", "self_yearly_increase", "partner_earnings", "partner_yearly_increase", 
         "annual_pension", "partner_pension", "self_pension_yearly_increase","partner_pension_yearly_increase", 
         "rental_start", "rental_end", "rental_amt", "rental_yearly_increase",      
         "self_401k_balance", "partner_401k_balance",
         "roth_ira_balance", "cash_savings_balance", "brokerage_balance",
         "self_401k_contribution", "partner_401k_contribution", "employer_self_401k_contribution",
         "employer_partner_401k_contribution", "maximize_self_contribution", "maximize_partner_contribution",
+        # Tax columns ...
+        "filing_status", "state_of_residence", "tax_rate",
+        "tax_rate_both_working", "tax_rate_one_retired", "tax_rate_both_retired",
+        #
         "annual_expense", "mortgage_payment", "inflation_mean",
         "annual_expense_decrease", "mortgage_years_remaining", "inflation_std",
         "annual_social_security", "withdrawal_start_age", "cola_rate",
@@ -133,6 +155,7 @@ def get_required_columns() -> List[str]:
 def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
     """Create the tabbed input form and return the simulation configuration"""
     current_year = datetime.now().year
+
     
     # Set up the tabbed container
     with st.container(height=280, border=None):
@@ -171,7 +194,8 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Tab 4b: Taxes 
         tax_params = create_taxes_tab(tabs[4], parameters)
-        (filing_status, state_of_residence, tax_rate) = tax_params
+        # (filing_status, state_of_residence, tax_rate) = tax_params
+        (filing_status, state_of_residence, tax_rate, tax_rate_both_working, tax_rate_one_retired, tax_rate_both_retired) = tax_params
         
         # Tab 5: Expenses
         expense_params = create_expenses_tab(tabs[5], parameters)
@@ -262,6 +286,10 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         filing_status=filing_status, 
         state_of_residence=state_of_residence,
         tax_rate=tax_rate,
+        # 3 tax rates 
+        tax_rate_both_working=tax_rate_both_working,
+        tax_rate_one_retired=tax_rate_one_retired,
+        tax_rate_both_retired=tax_rate_both_retired,
 
         annual_expense=annual_expense,
         mortgage_payment=mortgage_payment,
@@ -307,17 +335,17 @@ def create_tabs():
         ":material/group: Profile", 
         ":material/attach_money: Balances", 
         ":material/payments: Income", 
-        ":material/savings: 401K/IRA", 
+        ":material/savings: 401K", 
         ":material/account_balance: Taxes", 
         ":material/shopping_cart: Expense", 
-        ":material/verified_user: Social Security", 
-        ":material/local_hospital: Healthcare",   
-        ":material/bar_chart: Market Returns", 
+        ":material/verified_user: SS", 
+        ":material/local_hospital: Health",   
+        ":material/bar_chart: Market", 
         ":material/house: Downsize", 
-        ":material/tune: Adjust Exp.", 
+        ":material/tune: Adjust", 
         ":material/checkbook: One Time", 
         ":material/money_bag: Windfall",
-        ":material/settings: Parameters",        
+        ":material/settings: Params",        
     ])
 
 
@@ -502,16 +530,39 @@ def create_taxes_tab(tab, parameters):
                 options=["CA", "TX", "FL", "NY", "OR", "WA", "IL", "GA"], 
                 index=0 if parameters is None else ["CA", "TX", "FL", "NY", "OR", "WA", "IL", "GA"].index(parameters.get("state_of_residence", "CA")))               
 
+        # 3 tax rates 
         with col2:
-            tax_rate = st.number_input("Estimated Effective Tax Rate (%)", 
-                value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100
+            # Convert the original tax_rate to tax_rate_both_working if present
+            default_tax_both_working = parameters["tax_rate"] * 100 if parameters and "tax_rate" in parameters else 15.0
+            if parameters and "tax_rate_both_working" in parameters:
+                default_tax_both_working = parameters["tax_rate_both_working"] * 100
+                
+            tax_rate_both_working = st.number_input("Tax Rate - Both Working (%)", 
+                value=default_tax_both_working, step=1.0) / 100
+                
+            tax_rate_one_retired = st.number_input("Tax Rate - One Retired (%)", 
+                value=parameters["tax_rate_one_retired"] * 100 if parameters and "tax_rate_one_retired" in parameters else 12.0, step=1.0) / 100
+                
+        with col3:
+            tax_rate_both_retired = st.number_input("Tax Rate - Both Retired (%)", 
+                value=parameters["tax_rate_both_retired"] * 100 if parameters and "tax_rate_both_retired" in parameters else 10.0, step=1.0) / 100
+
+        ########
+        with col4:
+            # tax_rate = st.number_input("Estimated Effective Tax Rate (%)", 
+            #     value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100
+
+            # Hidden field approach - just set tax_rate to match tax_rate_both_working
+            # Keep this field for backward compatibility - @todo cleanup later
+            tax_rate = tax_rate_both_working
 
         with col5:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.write("Tax calculations are not fully implemented. Currently the entered estimated effective tax rate is used for all calculations.")
+            st.write("Basic tax modeling with three stages is implemented. More advanced features like state-specific rates, tax brackets, tax treatment of social security payemnts and RMDs etc. are not yet supported.")
             
 
-    return (filing_status, state_of_residence, tax_rate)
+    return (filing_status, state_of_residence, tax_rate, tax_rate_both_working, tax_rate_one_retired, tax_rate_both_retired)
+
 
 
 def create_expenses_tab(tab, parameters):
@@ -821,9 +872,16 @@ def create_parameters_dataframe_from_config(config):
         "maximize_self_contribution": config.maximize_self_contribution,
         "maximize_partner_contribution": config.maximize_partner_contribution,
         #Taxes
-        "tax_rate": config.tax_rate,
+        #"tax_rate": config.tax_rate,
         "filing_status": config.filing_status, 
         "state_of_residence": config.state_of_residence,
+
+        "tax_rate_both_working": config.tax_rate_both_working,
+        "tax_rate_one_retired": config.tax_rate_one_retired,
+        "tax_rate_both_retired": config.tax_rate_both_retired,
+        # Include the original tax_rate for backward compatibility
+        "tax_rate": config.tax_rate_both_working,
+
         # Expenses
         "annual_expense": config.annual_expense,
         "mortgage_payment": config.mortgage_payment,
@@ -885,12 +943,12 @@ def display_action_buttons(params_df):
     csv = params_df.to_csv(index=False)
     
     # Create columns for the buttons
-    col1, col2, col3, col4, col5 = st.columns([1, 1, 2, 1, 2])
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 2, 2, 2])
     
     # Download button
     with col1:
         st.download_button(
-            label="Download Simulation Parameters",
+            label="Save Parameters",
             data=csv,
             file_name="retirement_parameters.csv",
             mime="text/csv",
@@ -904,7 +962,8 @@ def display_action_buttons(params_df):
     
     # Auto-run checkbox
     with col4:
-        auto_run = st.checkbox(":material/directions_run: Run Automatically", value=False)
+        help_text = "When enabled, the simulation will run automatically each time you change any parameter, without needing to click the Run Simulation button."   
+        auto_run = st.checkbox(":material/autorenew: Run Automatically", value=False, help=help_text)
 
     return run_button, auto_run
 
@@ -1012,7 +1071,7 @@ def process_percentile_scenarios(sorted_simulation_results):
             df_values = reorder_columns(df_values)
 
             # Calculate year of depletion
-            year_of_depletion = "Never"
+            year_of_depletion = "Lasts lifetime"
             if not df_values.empty and 'ending_balance' in df_values.columns:
                 negative_years = df_values[df_values['ending_balance'] < 0]
                 if not negative_years.empty:
@@ -1180,7 +1239,7 @@ def display_ending_balance_summary(processed_results):
                 
             # For Year of Depletion (row index 2)
             if i == 2:
-                if value == "Never":
+                if value == "Lasts lifetime":
                     styles.iloc[i, j] = 'color: green; font-weight: bold;'
                 else:
                     styles.iloc[i, j] = 'color: red; font-weight: bold;'
@@ -1205,7 +1264,7 @@ def display_ending_balance_summary(processed_results):
     
     # Apply the styles
     styled_df = df.style.apply(lambda _: styles, axis=None)
-    styled_df.set_table_attributes('style="font-size: 18px; width: 75%;"')
+    styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
     
     
     # Hide the index
@@ -1250,55 +1309,59 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
     # Display title
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("##### " + title + " details")
-       
-    # Apply styling to columns that exist
-    columns_to_style = []
-    target_columns = ['beginning_balance', 'ending_balance', 'investment_return_total', 'return_rate']
 
-    # Only add columns that actually exist in the dataframe
-    for col in target_columns:
-        if col in df_cashflow.columns:
-            columns_to_style.append(col)
+    # Create columns with 10% padding on each side (10% - 80% - 10%)
+    content_area, right_spacer = st.columns([9, 1])
+    with content_area:
 
-    
-    # Apply styling
-    if columns_to_style:
-        styled_df = df_cashflow.style.apply(highlight_columns, subset=columns_to_style)
-    else:
-        styled_df = df_cashflow.style
-    
-    # Create tabs for visualizations
-    tab1, tab2, tab3 = st.tabs([
-        ":material/attach_money: Portfolio Balance", 
-        ":material/bar_chart: Market Returns", 
-        ":material/mintmark: Withdrawal Rate"
-    ])
-    
-    positive_color = "#55AA55"
-    negative_color = "#DD5050"
-    
-    with tab1: 
+        # Apply styling to columns that exist
+        columns_to_style = []
+        target_columns = ['beginning_balance', 'ending_balance', 'investment_return_total', 'return_rate']
 
-        # Create portfolio balance chart
-        chart = create_balance_chart(df_cashflow_value, positive_color, negative_color)
-        if chart:
-            st.altair_chart(chart, use_container_width=True)
-    
-    with tab2: 
-        # Create return chart with actual column names
-        chart = create_return_chart(df_cashflow_value, positive_color, negative_color)
-        if chart:
-            st.altair_chart(chart, use_container_width=True)
-    
-    with tab3: 
-        # Create withdrawal chart with actual column names
-        chart = create_withdrawal_chart(df_cashflow_value, positive_color, negative_color)
-        if chart:
-            st.altair_chart(chart, use_container_width=True)
-    
-    # Display the dataframe
-    st.markdown("###### Cashflow ")   
-    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+        # Only add columns that actually exist in the dataframe
+        for col in target_columns:
+            if col in df_cashflow.columns:
+                columns_to_style.append(col)
+
+        
+        # Apply styling
+        if columns_to_style:
+            styled_df = df_cashflow.style.apply(highlight_columns, subset=columns_to_style)
+        else:
+            styled_df = df_cashflow.style
+        
+        # Create tabs for visualizations
+        tab1, tab2, tab3 = st.tabs([
+            ":material/attach_money: Portfolio Balance", 
+            ":material/bar_chart: Market Returns", 
+            ":material/mintmark: Withdrawal Rate"
+        ])
+        
+        positive_color = "#55AA55"
+        negative_color = "#DD5050"
+        
+        with tab1: 
+
+            # Create portfolio balance chart
+            chart = create_balance_chart(df_cashflow_value, positive_color, negative_color)
+            if chart:
+                st.altair_chart(chart, use_container_width=True)
+        
+        with tab2: 
+            # Create return chart with actual column names
+            chart = create_return_chart(df_cashflow_value, positive_color, negative_color)
+            if chart:
+                st.altair_chart(chart, use_container_width=True)
+        
+        with tab3: 
+            # Create withdrawal chart with actual column names
+            chart = create_withdrawal_chart(df_cashflow_value, positive_color, negative_color)
+            if chart:
+                st.altair_chart(chart, use_container_width=True)
+        
+        # Display the dataframe
+        st.markdown("###### Cashflow ")   
+        st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
 def flatten_nested_dataframe(df):
     """
@@ -1422,45 +1485,65 @@ def reorder_columns(df):
     return df[final_column_order]
 
 
-
 def create_balance_chart(df, positive_color, negative_color):
-    """Create a chart showing portfolio balance over time"""
+    """Create a chart showing portfolio balance over time in millions"""
     if 'year' not in df.columns or 'ending_balance' not in df.columns:
         st.error(f"Cannot create portfolio balance chart: Missing required columns.")
         return None
     
-    chart = alt.Chart(df).mark_bar().encode(
+    # Create a copy of the dataframe to avoid modifying the original
+    chart_df = df.copy()
+    
+    # Convert ending_balance to millions
+    chart_df['ending_balance_millions'] = chart_df['ending_balance'] / 1_000_000
+    
+    # Create the base chart with values in millions
+    chart = alt.Chart(chart_df).mark_bar().encode(
         x='year:O',
-        y=alt.Y('ending_balance:Q', title='Portfolio Balance'),
+        y=alt.Y('ending_balance_millions:Q', title='Portfolio Balance (Millions $)'),
         color=alt.condition(
-            'datum.ending_balance < 0',
+            'datum.ending_balance_millions < 0',
             alt.value(negative_color),
             alt.value(positive_color)
         )
     ).properties(
         title='Portfolio Balance Over Time'
+    ).transform_calculate(
+        # Create a formatted text field for the labels
+        # FormattedValue='format(datum.ending_balance_millions, ".1f") + "M"'
+        FormattedValue='format(datum.ending_balance_millions, ".1f")'
     )
     
-    # Add data labels
+    # Create base text marks
     text = chart.mark_text(align='center', baseline='middle').encode(
-        text=alt.Text('ending_balance:Q', format=',.0f')  # Formatted with commas
+        text='FormattedValue:N'  # Use the formatted value we calculated
     )
     
+    # Text above positive bars
     textAbove = text.transform_filter(
-        'datum.ending_balance >= 0'
+        'datum.ending_balance_millions >= 0'
     ).mark_text(
-        align='center', baseline='middle', fontSize=10, dy=-10
+        align='center', 
+        baseline='middle', 
+        fontSize=10, 
+        dy=-10,
+        color=positive_color  # Use the same green color as the bars
     )
     
+    # Text below negative bars
     textBelow = text.transform_filter(
-        'datum.ending_balance < 0'
+        'datum.ending_balance_millions < 0'
     ).mark_text(
-        align='center', baseline='middle', fontSize=10, dy=10
+        align='center', 
+        baseline='middle', 
+        fontSize=10, 
+        dy=10,
+        color=negative_color  # Use the same red color as the bars
     )
     
-    # return chart + textAbove + textBelow - if data label is needed
+    # Combine chart and text layers
+    return chart + textAbove + textBelow
 
-    return chart 
 
 def create_return_chart(df, positive_color, negative_color):
     """Create a chart showing portfolio returns"""
@@ -1484,7 +1567,7 @@ def create_return_chart(df, positive_color, negative_color):
     
     # Create text labels
     text = chart.mark_text(align='center', baseline='middle').encode(
-        text=alt.Text('ScaledValue:Q', format='.2f')
+        text=alt.Text('ScaledValue:Q', format='.1f')
     )
     
     textAbove = text.transform_filter(
@@ -1523,7 +1606,7 @@ def create_withdrawal_chart(df, positive_color, negative_color):
     
     # Create text labels
     text = chart.mark_text(align='center', baseline='middle').encode(
-        text=alt.Text('ScaledValue:Q', format='.2f')
+        text=alt.Text('ScaledValue:Q', format='.1f')
     )
     
     textAbove = text.transform_filter(

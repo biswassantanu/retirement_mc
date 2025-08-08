@@ -48,7 +48,7 @@ button_style_css = """
                 padding: 5px 10px;         /* Padding */
                 font-size: 10px;            /* Font size */
                 cursor: pointer;             /* Pointer cursor on hover */
-                width: 350px;  
+                width: 250px;  
             }
             .stButton > button:hover {
                 background-color: #A9A9A9;  /* Darker grey on hover */
@@ -67,7 +67,7 @@ download_button_style_css = """
                 padding: 5px 10px;         /* Padding */
                 font-size: 10px;            /* Font size */
                 cursor: pointer;             /* Pointer cursor on hover */
-                width: 350px;  
+                width: 250px;  
             }
             .stDownloadButton > button:hover {
                 background-color: #A9A9A9;  /* Darker grey on hover */

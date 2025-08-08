@@ -3,7 +3,14 @@ import pandas as pd
 def create_parameters_dataframe(
     current_age, partner_current_age, life_expectancy, retirement_age,
     partner_retirement_age, initial_savings, stock_percentage, bond_percentage,
-    annual_earnings, self_yearly_increase, tax_rate, partner_earnings, partner_yearly_increase, 
+    annual_earnings, self_yearly_increase, 
+    tax_rate, 
+    # Replace single tax_rate with three specific rates
+    tax_rate_both_working, tax_rate_one_retired, tax_rate_both_retired,
+    # Optional filing status and state parameters
+    filing_status, 
+    state_of_residence, 
+    partner_earnings, partner_yearly_increase, 
     annual_pension, partner_pension, self_pension_yearly_increase, partner_pension_yearly_increase,
     rental_start, rental_end, rental_amt, rental_yearly_increase,     
     # New parameters from Tab 2 (Savings)
@@ -44,7 +51,14 @@ def create_parameters_dataframe(
         "bond_percentage": [bond_percentage],
         "annual_earnings": [annual_earnings],
         "self_yearly_increase": [self_yearly_increase],
-        "tax_rate": [tax_rate],
+        # Include all tax rates
+        "tax_rate": [tax_rate if tax_rate is not None else tax_rate_both_working],
+        "tax_rate_both_working": [tax_rate_both_working],
+        "tax_rate_one_retired": [tax_rate_one_retired],
+        "tax_rate_both_retired": [tax_rate_both_retired],
+        "filing_status": [filing_status],
+        "state_of_residence": [state_of_residence],
+        #
         "partner_earnings": [partner_earnings],
         "partner_yearly_increase": [partner_yearly_increase],
         "annual_pension": [annual_pension],

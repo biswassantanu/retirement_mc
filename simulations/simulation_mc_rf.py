@@ -58,6 +58,11 @@ class SimulationConfig:
     filing_status:str
     state_of_residence:str
     tax_rate: float
+    # introduce 3 effective rates
+    tax_rate_both_working: float
+    tax_rate_one_retired: float
+    tax_rate_both_retired: float
+
 
     # Expense parameters
     annual_expense: float
@@ -306,7 +311,9 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
 
             # Calculate tax and portfolio draw
             portfolio_draw, total_tax = calculate_portfolio_draw(
-                expenses.total, income.total, income.total * config.tax_rate, config.tax_rate
+                expenses.total, income.total, 
+                self_age, partner_age, config.retirement_age, config.partner_retirement_age,
+                config.tax_rate_both_working, config.tax_rate_one_retired, config.tax_rate_both_retired
             )
             
             # Calculate the draw-down amount proportioned among different accounts
@@ -685,8 +692,32 @@ def adjust_expenses(current_expense, inflation_mean, inflation_std, annual_expen
     return current_expense
 
 
-def calculate_portfolio_draw(total_expense, gross_income, estimated_tax, tax_rate):
+def calculate_portfolio_draw(total_expense, gross_income, 
+                             self_age, partner_age, retirement_age, partner_retirement_age,
+                             tax_rate_both_working, tax_rate_one_retired, tax_rate_both_retired):
     """Calculate required portfolio withdrawal and total tax"""
+
+    # Determine effective tax rate based on the retirement status 
+
+    # Determine tax rate based on retirement status
+    # Check if each partner is retired
+    self_is_retired = self_age >= retirement_age
+    partner_is_retired = partner_age >= partner_retirement_age
+    
+    # Determine tax rate based on retirement status
+    if not self_is_retired and not partner_is_retired:
+        # Both partners still working
+        tax_rate = tax_rate_both_working
+    elif self_is_retired and partner_is_retired:
+        # Both partners retired
+        tax_rate = tax_rate_both_retired
+    else:
+        # One partner is retired, one is still working
+        tax_rate = tax_rate_one_retired
+
+    # Calculate estimated tax using the determined tax rate
+    estimated_tax = gross_income * tax_rate
+
     if total_expense <= (gross_income - estimated_tax):
         # No withdrawal needed
         return 0, estimated_tax
