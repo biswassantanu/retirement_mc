@@ -33,11 +33,6 @@ def main():
     # Setup app configuration
     setup_app()
 
-
-    # Add styled heading with icon above file upload
-    st.markdown("<br>", unsafe_allow_html=True)
-    # st.markdown("<h5 style='margin-bottom:5px;'>Enter your financial information in the tabs below or upload a previously saved parameter file</h5>", unsafe_allow_html=True)
-
     st.write("###### Enter your financial information in the tabs below or upload a previously saved parameter file")
 
     # Load parameters from uploaded file if available
