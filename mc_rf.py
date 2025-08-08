@@ -1025,8 +1025,8 @@ def display_results():
     display_ending_balance_summary(processed_results)
     
     # Display detailed scenario analysis
-    st.write("#### Scenario Analysis ")
     st.markdown("<br>", unsafe_allow_html=True)
+    st.write("#### Scenario Analysis ")
     
     # Create tabs for each percentile scenario
     display_percentile_tabs(processed_results)
