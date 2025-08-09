@@ -44,13 +44,23 @@ bridge_healthcare_help_text = """
 """
 
 
-disclaimer_text = """
+disclaimer_text_old = """
     <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:15px">
-        <p style="font-size:0.9em; margin-bottom:0px">
+        <p style="font-size:0.7em; margin-bottom:0px">
             <strong>Disclaimer:</strong> This tool provides simplified simulations for educational purposes only. 
             The results are rough estimates based on the inputs provided and should not be used as the sole basis for investment decisions. 
             For personalized financial advice, please consult with a certified financial planner or investment advisor. 
             The creators of this tool accept no responsibility for decisions made based on these simulations.
+        </p>
+    </div>
+    """
+
+disclaimer_text = """
+    <div style="background-color:#e8f4f8; padding:10px; border-radius:5px; margin-bottom:15px; border-left:3px solid #6c757d;">
+        <p style="font-size:0.8em; margin-bottom:0px; color:#0d4c73;">
+            <strong>Disclaimer:</strong> For educational purposes only. 
+            For personalized financial advice, please consult a certified professional advisor. 
+            No liability accepted for decisions based on these simulations.
         </p>
     </div>
     """
