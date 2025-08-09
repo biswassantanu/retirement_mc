@@ -1283,32 +1283,32 @@ def display_percentile_tabs(processed_results):
     """Display tabs with detailed cash flow analysis for each percentile"""
     # Create tabs for the cash flow summaries
     tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
-        ":material/sentiment_dissatisfied: Far Below Hist. Avg. Returns", 
-        ":material/avg_pace: Below Average Historical Returns", 
-        ":material/speed: Average Historical Returns", 
-        ":material/diamond: Above Historical Average Returns"
+        ":material/ac_unit: Far Below Hist. Avg. Returns", 
+        ":material/rainy: Below Average Historical Returns", 
+        ":material/partly_cloudy_day: Average Historical Returns", 
+        ":material/sunny: Above Historical Average Returns"
     ])
     
     # Display each percentile in its tab
     with tab_10th:
         create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
                            processed_results["10th"]["df_values"], 
-                           "With Significantly Below Historical Average Returns")
+                           ":material/ac_unit: With Significantly Below Historical Average Returns")
     
     with tab_25th:
         create_cash_flow_tab(processed_results["25th"]["df_formatted"], 
                            processed_results["25th"]["df_values"], 
-                           "With Below Historical Average Returns")
+                           ":material/rainy: With Below Historical Average Returns")
     
     with tab_50th:
         create_cash_flow_tab(processed_results["50th"]["df_formatted"], 
                            processed_results["50th"]["df_values"], 
-                           "With Average Historical Returns")
+                           ":material/partly_cloudy_day: With Average Historical Returns")
     
     with tab_75th:
         create_cash_flow_tab(processed_results["75th"]["df_formatted"], 
                            processed_results["75th"]["df_values"], 
-                           "With Above Historical Average Returns")
+                           ":material/sunny: With Above Historical Average Returns")
 
 def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
     """Create a tab with cash flow details and visualizations"""
