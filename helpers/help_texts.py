@@ -43,6 +43,31 @@ bridge_healthcare_help_text = """
 
 """
 
+# Tax Rate Help Text
+tax_rate_both_working_help = """
+The average tax rate applied to your combined income when **both partners are working.**
+This is total tax paid divided by total income.
+"""
+
+tax_rate_one_retired_help = """
+The average tax rate when **one person is still working and the other is retired.**
+Often lower than when both are working due to different income sources and tax brackets.
+"""
+
+tax_rate_both_retired_help = """
+The average tax rate when **both partners are retired.** Typically the lowest of the three rates
+due to favorable tax treatment of retirement income and potentially lower overall income.
+"""
+tax_calculation_disclaimer = """
+Basic tax modeling with three stages is implemented. 
+More advanced features like state-specific rates, tax brackets, tax treatment of social security payemnts 
+and RMDs etc. are not yet supported.
+"""
+
+adjust_expense_text = """
+These adjustments get carried forward. 
+You can enter negative amount to reduce recurring expenses.
+"""
 
 disclaimer_text_old = """
     <div style="background-color:#f0f2f6; padding:10px; border-radius:5px; margin-bottom:15px">

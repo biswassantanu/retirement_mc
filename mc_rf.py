@@ -20,7 +20,8 @@ from helpers.styling import (tab_style_css, button_style_css,
 # Import help texts 
 from helpers.help_texts import (simulation_help_text, smile_help_text, 
                                 living_expense_help_text, bridge_healthcare_help_text, 
-                                help_document, disclaimer_text)
+                                tax_rate_both_working_help, tax_rate_one_retired_help, tax_rate_both_retired_help,
+                                tax_calculation_disclaimer, adjust_expense_text, help_document, disclaimer_text)
 
 # Import simulation module with our new refactored function
 from simulations.simulation_mc_rf import SimulationConfig, monte_carlo_simulation
@@ -520,7 +521,7 @@ def create_contribution_tab(tab, parameters, current_age, partner_current_age):
 def create_taxes_tab(tab, parameters):
     """Create the Taxes tab inputs"""
     with tab:
-        col1, col2, col3, col4, col5 = st.columns([2, 2, 2, 2, 3])
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
 
         with col1:
             filing_status = st.selectbox("Filing Status", 
@@ -538,18 +539,28 @@ def create_taxes_tab(tab, parameters):
             if parameters and "tax_rate_both_working" in parameters:
                 default_tax_both_working = parameters["tax_rate_both_working"] * 100
                 
-            tax_rate_both_working = st.number_input("Tax Rate - Both Working (%)", 
-                value=default_tax_both_working, step=1.0) / 100
+            tax_rate_both_working = st.number_input(
+                "Effective Tax Rate - Both Working (%)", 
+                value=default_tax_both_working, 
+                step=1.0,
+                help=tax_rate_both_working_help
+            ) / 100
                 
-            tax_rate_one_retired = st.number_input("Tax Rate - One Retired (%)", 
-                value=parameters["tax_rate_one_retired"] * 100 if parameters and "tax_rate_one_retired" in parameters else 12.0, step=1.0) / 100
-                
-        with col3:
-            tax_rate_both_retired = st.number_input("Tax Rate - Both Retired (%)", 
-                value=parameters["tax_rate_both_retired"] * 100 if parameters and "tax_rate_both_retired" in parameters else 10.0, step=1.0) / 100
+            tax_rate_one_retired = st.number_input(
+                "Effective Tax Rate - One Retired (%)", 
+                value=parameters["tax_rate_one_retired"] * 100 if parameters and "tax_rate_one_retired" in parameters else 12.0, 
+                step=1.0,
+                help=tax_rate_one_retired_help
+            ) / 100
 
-        ########
-        with col4:
+        with col3:
+            tax_rate_both_retired = st.number_input(
+                "Effective Tax Rate - Both Retired (%)", 
+                value=parameters["tax_rate_both_retired"] * 100 if parameters and "tax_rate_both_retired" in parameters else 10.0, 
+                step=1.0,
+                help=tax_rate_both_retired_help
+            ) / 100
+
             # tax_rate = st.number_input("Estimated Effective Tax Rate (%)", 
             #     value=parameters["tax_rate"] * 100 if parameters else 10.0, step=1.0) / 100
 
@@ -557,9 +568,15 @@ def create_taxes_tab(tab, parameters):
             # Keep this field for backward compatibility - @todo cleanup later
             tax_rate = tax_rate_both_working
 
-        with col5:
+        with col4:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.write("Basic tax modeling with three stages is implemented. More advanced features like state-specific rates, tax brackets, tax treatment of social security payemnts and RMDs etc. are not yet supported.")
+            st.markdown(f"""
+                <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
+                    <span style="color:#0d4c73;">ℹ️ <strong> Note: </strong> <br>{tax_calculation_disclaimer}</span>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
             
 
     return (filing_status, state_of_residence, tax_rate, tax_rate_both_working, tax_rate_one_retired, tax_rate_both_retired)
@@ -717,7 +734,13 @@ def create_adjust_expense_tab(tab, parameters, years_range):
                 
         with col4:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.write("These adjustments get carried forward. You can enter negative amount to reduce recurring expenses.")
+            st.markdown(f"""
+                <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
+                    <span style="color:#0d4c73;">ℹ️ <strong> Note: </strong> <br>{adjust_expense_text}</span>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
             
     return (adjust_expense_year_1, adjust_expense_amount_1, adjust_expense_year_2, 
             adjust_expense_amount_2, adjust_expense_year_3, adjust_expense_amount_3)
