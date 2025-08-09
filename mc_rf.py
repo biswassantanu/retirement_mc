@@ -60,7 +60,12 @@ def main():
 
 def setup_app():
     """Configure Streamlit app settings"""
-    st.set_page_config(layout="wide")
+
+    st.set_page_config(
+    page_title="Retirement Planning Tool",
+    page_icon="./assets/beach_access.png",
+    layout="wide"
+    )
     
     # Apply CSS styling
     st.markdown(button_style_css, unsafe_allow_html=True)
