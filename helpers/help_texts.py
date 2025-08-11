@@ -79,14 +79,15 @@ healthcare_bridge_text = """
 adjust_expense_text = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
     <span style="color:#0d4c73;">ℹ️ <strong> About Living Expense Adjustments: </strong> <br>These <strong>recurring adjustments to yealy living expense</strong> amount get carried forward. 
-You can enter negative amount to reduce recurring expenses. Enter upto 3 such recurring adjustments.</span>
+You can enter negative amount to reduce recurring expenses. 
+<br><br>Enter upto 3 such recurring adjustments.</span>
 </div>
 """
 
 one_time_expense_text = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
-    <span style="color:#0d4c73;">ℹ️ <strong> About One Time Expenses: </strong> <br>These are <strong>one time non-recurring expenses</strong> like car purchase or kid's wedding etc. 
-    Enter upto 3 such expenses.</span>
+    <span style="color:#0d4c73;">ℹ️ <strong> About One Time Expenses: </strong> <br>These are <strong>one time non-recurring expenses</strong> like car purchase or kid's wedding etc.<br><br>
+    Enter upto 3 such one time expenses.</span>
 </div>
 """
 
@@ -96,6 +97,7 @@ windfall_text = """
     <span style="color:#0d4c73;">
         <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
         <strong>About Windfalls:</strong><br> Include expected one-time financial gains such as inheritances, or other lump-sum payments. Enter the amount and year you expect to receive each windfall. These amounts will be added to your investment accounts based on your allocation settings at that time.
+        <br><br>Enter upto 3 such windfall amounts.
     </span>
 </div>
 """
