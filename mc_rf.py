@@ -1319,8 +1319,11 @@ def display_ending_balance_summary(processed_results):
     
     # Hide the index
     styled_df = styled_df.hide(axis="index")
-    # Display the table
-    st.markdown(styled_df.to_html(index=False, escape=False), unsafe_allow_html=True)
+
+    # Display the modified table
+    table_html = styled_df.to_html(index=False, escape=False)
+
+    st.markdown(table_html, unsafe_allow_html=True)
 
 
 def display_percentile_tabs(processed_results):
@@ -1381,10 +1384,11 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
             styled_df = df_cashflow.style
         
         # Create tabs for visualizations
-        tab1, tab2, tab3 = st.tabs([
+        tab1, tab2, tab3, tab4 = st.tabs([
             ":material/attach_money: Portfolio Balance", 
             ":material/bar_chart: Market Returns", 
-            ":material/mintmark: Withdrawal Rate"
+            ":material/mintmark: Withdrawal Rate", 
+            ":material/table_view: Cash Flow Details"
         ])
         
         positive_color = "#55AA55"
@@ -1409,9 +1413,10 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
             if chart:
                 st.altair_chart(chart, use_container_width=True)
         
-        # Display the dataframe
-        st.markdown("###### Cashflow ")   
-        st.dataframe(styled_df, hide_index=True, use_container_width=True)
+        with tab4: 
+            # Display the dataframe
+            st.markdown("###### Cashflow ")   
+            st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
 def flatten_nested_dataframe(df):
     """
