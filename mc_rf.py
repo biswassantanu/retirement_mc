@@ -21,7 +21,11 @@ from helpers.styling import (tab_style_css, button_style_css,
 from helpers.help_texts import (simulation_help_text, smile_help_text, 
                                 living_expense_help_text, bridge_healthcare_help_text, 
                                 tax_rate_both_working_help, tax_rate_one_retired_help, tax_rate_both_retired_help,
-                                tax_calculation_disclaimer, adjust_expense_text, help_document, disclaimer_text)
+                                tax_calculation_disclaimer, adjust_expense_text, 
+                                stock_return_mean_help, stock_return_std_help, 
+                                bond_return_mean_help, bond_return_std_help,
+                                market_returns_note, 
+                                help_document, disclaimer_text)
 
 # Import simulation module with our new refactored function
 from simulations.simulation_mc_rf import SimulationConfig, monte_carlo_simulation
@@ -666,23 +670,43 @@ def create_healthcare_tab(tab, parameters, retirement_age, partner_retirement_ag
 def create_market_returns_tab(tab, parameters):
     """Create the Market Returns tab inputs"""
     with tab:
-        col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 1, 1])
+        col1, col2, col3, col4 = st.columns([2, 2, 1, 6])
         
-        with col1:
-            stock_return_mean = st.number_input("Stock Return Mean (%)", 
-                value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100
-            bond_return_mean = st.number_input("Bond Return Mean (%)", 
-                value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100
+        # with col1:
+        #     stock_return_mean = st.number_input("Stock Return Mean (%)", 
+        #         value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100
+        #     bond_return_mean = st.number_input("Bond Return Mean (%)", 
+        #         value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100
                 
+        # with col2:
+        #     stock_return_std = st.number_input("Stock Return Std Dev (%)", 
+        #         value=parameters["stock_return_std"] * 100 if parameters else 15.50, step=0.25) / 100
+        #     bond_return_std = st.number_input("Bond Return Std Dev (%)", 
+        #         value=parameters["bond_return_std"] * 100 if parameters else 4.5, step=0.05) / 100
+
+
+        with col1:
+            stock_return_mean = st.number_input("Expected Annual Stock Return (%)", 
+                value=parameters["stock_return_mean"] * 100 if parameters else 6.5, 
+                step=0.25,
+                help=stock_return_mean_help) / 100
+            bond_return_mean = st.number_input("Expected Annual Bond Return (%)", 
+                value=parameters["bond_return_mean"] * 100 if parameters else 3.5, 
+                step=0.25,
+                help=bond_return_mean_help) / 100
+                    
         with col2:
             stock_return_std = st.number_input("Stock Return Std Dev (%)", 
-                value=parameters["stock_return_std"] * 100 if parameters else 15.50, step=0.25) / 100
+                value=parameters["stock_return_std"] * 100 if parameters else 15.50, 
+                step=0.25,
+                help=stock_return_std_help) / 100
             bond_return_std = st.number_input("Bond Return Std Dev (%)", 
-                value=parameters["bond_return_std"] * 100 if parameters else 4.5, step=0.05) / 100
+                value=parameters["bond_return_std"] * 100 if parameters else 4.5, 
+                step=0.05,
+                help=bond_return_std_help) / 100
 
-
-        with col5:
-            st.text(" ")
+        with col4:
+            st.markdown(market_returns_note, unsafe_allow_html=True)
 
     return (stock_return_mean, bond_return_mean, stock_return_std, bond_return_std)
 
@@ -1181,7 +1205,8 @@ def display_ending_balance_summary(processed_results):
             std_dev = df['return_rate'].std()            
 
             # Calculate geometric mean using the provided formula
-            geometric_mean = (arithmetic_mean*100 - ((std_dev*100)**0.5)/2)/100.00
+            #geometric_mean = (arithmetic_mean*100 - ((std_dev*100)**0.5)/2)/100.00
+            geometric_mean = arithmetic_mean - (arithmetic_mean ** 2) /2
             processed_results[percentile]['geometric_mean'] = f"{geometric_mean * 100:.2f}%"
 
             # Count years with positive and negative returns

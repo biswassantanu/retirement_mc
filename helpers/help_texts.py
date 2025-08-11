@@ -90,6 +90,70 @@ disclaimer_text = """
     </div>
     """
 
+stock_return_mean_help = """
+The expected average annual return for stocks (arithmetic mean).
+- This is the simple average return (not compound/CAGR)
+- Higher than CAGR due to volatility
+- Historical US stock market average: ~7-10%
+- Recent forecasts by Vanguard, JP Morgan and others trend lower: ~6% US equity and ~8% international equity
+- Used to simulate year-by-year returns
+"""
+
+stock_return_std_help = """
+Standard deviation measures volatility of annual stock returns.
+- Higher values = more volatile performance
+- Historical US stock market: ~15-20%
+- Recent market standard: ~15-16%
+- Impacts both upside potential and downside risk
+"""
+
+bond_return_mean_help = """
+The expected average annual return for bonds (arithmetic mean).
+- This is the simple average return (not compound/CAGR)
+- Generally lower than stocks with less volatility
+- Historical average: ~3-5%
+- Recent forecasts: ~3.5-4.5%
+- More stable but lower growth than stocks
+"""
+
+bond_return_std_help = """
+Standard deviation measures volatility of annual bond returns.
+- Lower values than stocks = more stable returns
+- Historical bond market: ~3-8% (varies by type)
+- Recent market standard: ~4-5%
+- Higher quality bonds typically have lower volatility
+"""
+
+market_returns_note_old = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>Return Assumptions:</strong> According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> capital market forecasts, most investment firms have lowered their US stock return expectations. Non-US stocks are generally expected to outperform US stocks over the next decade, while bond returns are expected to be competitive with stock returns. These forecasts are intermediate-term (7-10 years) rather than long-term.
+        <br><br>        
+        <strong>Default values used in this tool:</strong>
+        <ul style="margin: 4px 0 4px 15px; padding: 0;">
+            <li><strong>Stocks:</strong> 7.0% return (arithmetic mean), 15.5% volatility</li>
+            <li><strong>Bonds:</strong> 3.5% return (arithmetic mean), 4.5% volatility</li>
+        </ul>
+    </span>
+</div>
+"""
+
+market_returns_note = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>Return Assumptions:</strong> While historical US stock returns have averaged 7-10% annually, major firms (J.P. Morgan, Schwab, Morningstar, BlackRock etc.) have lowered their 10-year forecasts to 3-7% for US stocks and 4-5% for bonds. According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> outlook, non-US stocks are expected to outperform US stocks over the next decade.
+        <br><br>   
+        <strong>Default values used in this tool (assuming a diversified portfolio):</strong>
+        <ul style="margin: 4px 0 4px 15px; padding: 0;">
+            <li><strong>Stocks:</strong> 6.5% return (arithmetic mean), 15.5% volatility</li>
+            <li><strong>Bonds:</strong> 3.5% return (arithmetic mean), 4.5% volatility</li>
+        </ul>
+    </span>
+</div>
+"""
+
 # Overall help document 
 help_document = """
 # Retirement Planning Tool Help
