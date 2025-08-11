@@ -77,7 +77,6 @@ def setup_app():
     st.markdown(button_style_css, unsafe_allow_html=True)
     st.markdown(download_button_style_css, unsafe_allow_html=True)
     st.markdown(remove_top_white_space, unsafe_allow_html=True)
-    #st.markdown(file_uploader_style_css, unsafe_allow_html=True)
     
     # Create columns for title and help link
     col1, col2 = st.columns([5, 1])
@@ -673,19 +672,6 @@ def create_market_returns_tab(tab, parameters):
     with tab:
         col1, col2, col3, col4 = st.columns([2, 2, 1, 6])
         
-        # with col1:
-        #     stock_return_mean = st.number_input("Stock Return Mean (%)", 
-        #         value=parameters["stock_return_mean"] * 100 if parameters else 7.00, step=0.25) / 100
-        #     bond_return_mean = st.number_input("Bond Return Mean (%)", 
-        #         value=parameters["bond_return_mean"] * 100 if parameters else 3.5, step=0.25) / 100
-                
-        # with col2:
-        #     stock_return_std = st.number_input("Stock Return Std Dev (%)", 
-        #         value=parameters["stock_return_std"] * 100 if parameters else 15.50, step=0.25) / 100
-        #     bond_return_std = st.number_input("Bond Return Std Dev (%)", 
-        #         value=parameters["bond_return_std"] * 100 if parameters else 4.5, step=0.05) / 100
-
-
         with col1:
             stock_return_mean = st.number_input("Expected Annual Stock Return (%)", 
                 value=parameters["stock_return_mean"] * 100 if parameters else 6.5, 
@@ -1205,7 +1191,6 @@ def display_ending_balance_summary(processed_results):
             std_dev = df['return_rate'].std()            
 
             # Calculate geometric mean using the provided formula
-            #geometric_mean = (arithmetic_mean*100 - ((std_dev*100)**0.5)/2)/100.00
             geometric_mean = arithmetic_mean - (arithmetic_mean ** 2) /2
             processed_results[percentile]['geometric_mean'] = f"{geometric_mean * 100:.2f}%"
 
