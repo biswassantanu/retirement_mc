@@ -66,9 +66,61 @@ More advanced features like state-specific rates, tax brackets, tax treatment of
 and RMDs etc. are not yet supported.
 """
 
+healthcare_bridge_text = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>Healthcare Bridge Costs:</strong><br> These are the expenses to cover health insurance between retirement and Medicare eligibility (age 65). For early retirees, this can be one of the largest pre-Medicare expenses.<br><br>        
+        Typical monthly costs range from $800-$2,000 per person depending on coverage level, location, and health status. ACA marketplace plans with subsidies may reduce costs based on your retirement income. Remember that healthcare costs typically increase faster than general inflation (often 5-7% annually).
+    </span>
+</div>
+"""
+
 adjust_expense_text = """
-These adjustments to yealy expense amount get carried forward. 
-You can enter negative amount to reduce recurring expenses.
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
+    <span style="color:#0d4c73;">ℹ️ <strong> About Living Expense Adjustments: </strong> <br>These <strong>recurring adjustments to yealy living expense</strong> amount get carried forward. 
+You can enter negative amount to reduce recurring expenses. Enter upto 3 such recurring adjustments.</span>
+</div>
+"""
+
+one_time_expense_text = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
+    <span style="color:#0d4c73;">ℹ️ <strong> About One Time Expenses: </strong> <br>These are <strong>one time non-recurring expenses</strong> like car purchase or kid's wedding etc. 
+    Enter upto 3 such expenses.</span>
+</div>
+"""
+
+
+windfall_text = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>About Windfalls:</strong><br> Include expected one-time financial gains such as inheritances, or other lump-sum payments. Enter the amount and year you expect to receive each windfall. These amounts will be added to your investment accounts based on your allocation settings at that time.
+    </span>
+</div>
+"""
+
+downsize_text = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>About Downsizing:</strong><br> Enter details about selling your current home and purchasing a less expensive one. The net proceeds (sale price minus new purchase and transaction costs) will be added to your investment accounts based on your allocation settings at that time. This can be a significant source of retirement funding.
+    </span>
+</div>
+"""
+
+parameter_text = """
+<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>About Simulation Parameters:</strong><br>        
+        Parameters control how your retirement simulation behaves. The distribution type affects how market volatility is modeled:<br>        
+        • <strong>Normal Distribution:</strong> Traditional approach using symmetric bell curves. May underestimate severe market downturns.<br>         
+        • <strong>Students' T Distribution:</strong> Better captures market crashes and rallies with more frequent extreme events.<br>         
+        • <strong>Empirical Distribution:</strong> Based on actual historical market behavior rather than mathematical models.<br><br>       
+        <strong>Number of Simulations:</strong> Higher values (1,000+) provide more reliable results but take longer to calculate.
+    </span>
+</div>
 """
 
 disclaimer_text_old = """
@@ -132,7 +184,7 @@ market_returns_note = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
     <span style="color:#0d4c73;">
         <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
-        <strong>Return Assumptions:</strong> While historical US stock returns have averaged 7-10% annually, major firms (J.P. Morgan, Schwab, Morningstar, BlackRock etc.) have lowered their 10-year forecasts to 3-7% CAGR (equivalent to 5-8% Aritmatic Mean) for US stocks and 4-5% for bonds. According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> outlook, non-US stocks are expected to outperform US stocks over the next decade.
+        <strong>Return Assumptions:</strong><br> While historical US stock returns have averaged 7-10% annually, major firms (J.P. Morgan, Schwab, Morningstar, BlackRock etc.) have lowered their 10-year forecasts to 3-7% CAGR (equivalent to 5-8% Aritmatic Mean) for US stocks and 4-5% for bonds. According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> outlook, non-US stocks are expected to outperform US stocks over the next decade.
         <br><br>   
         <strong>Default values used in this tool </strong>(assuming a diversified equity portfolio):
         <ul style="margin: 4px 0 4px 15px; padding: 0;">

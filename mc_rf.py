@@ -19,9 +19,12 @@ from helpers.styling import (tab_style_css, button_style_css,
 
 # Import help texts 
 from helpers.help_texts import (simulation_help_text, smile_help_text, 
-                                living_expense_help_text, bridge_healthcare_help_text, 
+                                living_expense_help_text, 
+                                bridge_healthcare_help_text, healthcare_bridge_text,
                                 tax_rate_both_working_help, tax_rate_one_retired_help, tax_rate_both_retired_help,
-                                tax_calculation_disclaimer, adjust_expense_text, 
+                                tax_calculation_disclaimer, 
+                                adjust_expense_text, one_time_expense_text, windfall_text,
+                                downsize_text, parameter_text,
                                 auto_run_help_text,
                                 stock_return_mean_help, stock_return_std_help, 
                                 bond_return_mean_help, bond_return_std_help,
@@ -360,12 +363,12 @@ def create_profile_tab(tab, parameters):
     with tab:
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
         with col1:
-            current_age = st.number_input("Current Age", 
+            current_age = st.number_input("Your Current Age", 
                 value=parameters["current_age"] if parameters else 50)
             partner_current_age = st.number_input("Partner's Current Age", 
                 value=parameters["partner_current_age"] if parameters else 50)
         with col2:
-            retirement_age = st.number_input("Retirement Age", 
+            retirement_age = st.number_input("Your Retirement Age", 
                 value=parameters["retirement_age"] if parameters else 60)
             partner_retirement_age = st.number_input("Partner's Retirement Age", 
                 value=parameters["partner_retirement_age"] if parameters else 58)
@@ -381,7 +384,7 @@ def create_savings_tab(tab, parameters):
     with tab:
         col1, col2, col3, col4, col5 = st.columns([2,2,2,1,2])
         with col1:
-            self_401k_balance = st.number_input("Self 401(k)/ IRA Balance", 
+            self_401k_balance = st.number_input("Your 401(k)/ IRA Balance", 
                 value=parameters["self_401k_balance"] if parameters else 200000, 
                 step=25000)
             partner_401k_balance = st.number_input("Partner's 401(k) / IRA Balance", 
@@ -426,24 +429,24 @@ def create_income_tab(tab, parameters, years_range):
     with tab:
         col1, col2, col3, col4, col5, col6 = st.columns([1, 1, 1, 1, 1, 1])
         with col1:
-            annual_earnings = st.number_input("Annual Earnings", 
+            annual_earnings = st.number_input("Your Annual Earnings", 
                 value=parameters["annual_earnings"] if parameters else 100000, step=5000)
             partner_earnings = st.number_input("Partner's Annual Earnings", 
                 value=parameters["partner_earnings"] if parameters else 100000, step=5000)
         with col2:
-            self_yearly_increase = st.number_input("Self Yearly Increase (%)", 
+            self_yearly_increase = st.number_input("Your Yearly Increase (%)", 
                 value=parameters["self_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100
             partner_yearly_increase = st.number_input("Partner Yearly Increase (%)", 
                 value=parameters["partner_yearly_increase"] * 100 if parameters else 3.0, step=0.5) / 100
         with col3:
-            annual_pension = st.number_input("Self Annual Pension", 
+            annual_pension = st.number_input("Your Annual Pension", 
                 value=parameters["annual_pension"] if parameters else 0, step=1000)
             partner_pension = st.number_input("Partner's Annual Pension", 
                 value=parameters["partner_pension"] if parameters else 0, step=1000)
         with col4:
-            self_pension_yearly_increase = st.number_input("Self Pension Increase (%)", 
+            self_pension_yearly_increase = st.number_input("Your Pension Yrly. Increase (%)", 
                 value=parameters["self_pension_yearly_increase"] * 100 if parameters else 0.0, step=0.5) / 100
-            partner_pension_yearly_increase = st.number_input("Partner Pension Increase (%)", 
+            partner_pension_yearly_increase = st.number_input("Partner Pension Yrly. Increase (%)", 
                 value=parameters["partner_pension_yearly_increase"] * 100 if parameters else 0.0, step=0.5) / 100
         with col5:
             # Default to first year in range
@@ -461,8 +464,8 @@ def create_income_tab(tab, parameters, years_range):
                 rental_start_index = 0
                 rental_end_index = 0
                 
-            rental_start = st.selectbox("Rental Starts", years_range, index=rental_start_index)
-            rental_end = st.selectbox("Rental Ends", years_range, index=rental_end_index)
+            rental_start = st.selectbox("Rental Income Starts", years_range, index=rental_start_index)
+            rental_end = st.selectbox("Rental Income Ends", years_range, index=rental_end_index)
         with col6:
             rental_amt = st.number_input("Annual Rental Amount", 
                 value=parameters["rental_amt"] if parameters else 0, step=1000)
@@ -480,9 +483,9 @@ def create_contribution_tab(tab, parameters, current_age, partner_current_age):
         col1, col2, col3, col4, col5 = st.columns([2, 2, 2, 2, 2])
 
         with col1:
-            self_401k_contribution = st.number_input("Self 401(k) Contribution", 
+            self_401k_contribution = st.number_input("Your 401(k) Contribution", 
                 value=parameters["self_401k_contribution"] if parameters else 10000, step=1000)
-            partner_401k_contribution = st.number_input("Partner 401(k) Contribution", 
+            partner_401k_contribution = st.number_input("Partner's 401(k) Contribution", 
                 value=parameters["partner_401k_contribution"] if parameters else 10000, step=1000)
                 
         with col2:
@@ -497,7 +500,7 @@ def create_contribution_tab(tab, parameters, current_age, partner_current_age):
                 else:
                     self_401k_contribution = contribution_limits["401k"]["2025"] + contribution_limits["catch_up"]["2025"]
             
-            st.write(f"Self Contribution: {self_401k_contribution:,.0f}")
+            st.write(f"Your Contribution: {self_401k_contribution:,.0f}")
             
             st.markdown("<div style='margin-bottom: 10px;'></div>", unsafe_allow_html=True)
             maximize_partner_contribution = st.checkbox("Maximize 401(k) Partner", 
@@ -509,7 +512,7 @@ def create_contribution_tab(tab, parameters, current_age, partner_current_age):
                 else:
                     partner_401k_contribution = contribution_limits["401k"]["2025"] + contribution_limits["catch_up"]["2025"]
             
-            st.write(f"Partner Contribution: {partner_401k_contribution:,.0f}")
+            st.write(f"Partner's Contribution: {partner_401k_contribution:,.0f}")
             
         with col3:
             employer_self_401k_contribution = st.number_input("Employer 401K Contrib. (Self)", 
@@ -544,14 +547,14 @@ def create_taxes_tab(tab, parameters):
                 default_tax_both_working = parameters["tax_rate_both_working"] * 100
                 
             tax_rate_both_working = st.number_input(
-                "Effective Tax Rate - Both Working (%)", 
+                "Effective Tax Rate % - **When both are working**", 
                 value=default_tax_both_working, 
                 step=1.0,
                 help=tax_rate_both_working_help
             ) / 100
                 
             tax_rate_one_retired = st.number_input(
-                "Effective Tax Rate - One Retired (%)", 
+                "Effective Tax Rate % - **When one is retired**", 
                 value=parameters["tax_rate_one_retired"] * 100 if parameters and "tax_rate_one_retired" in parameters else 12.0, 
                 step=1.0,
                 help=tax_rate_one_retired_help
@@ -559,7 +562,7 @@ def create_taxes_tab(tab, parameters):
 
         with col3:
             tax_rate_both_retired = st.number_input(
-                "Effective Tax Rate - Both Retired (%)", 
+                "Effective Tax Rate % - **When both are retired**", 
                 value=parameters["tax_rate_both_retired"] * 100 if parameters and "tax_rate_both_retired" in parameters else 10.0, 
                 step=1.0,
                 help=tax_rate_both_retired_help
@@ -625,13 +628,13 @@ def create_social_security_tab(tab, parameters):
         col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
         
         with col1:
-            annual_social_security = st.number_input("Social Security", 
+            annual_social_security = st.number_input("Your Social Security Benefit Amount", 
                 value=parameters["annual_social_security"] if parameters else 2000 * 12, step=1000)
-            partner_social_security = st.number_input("Partner's Social Security", 
+            partner_social_security = st.number_input("Partner's Social Security Benefit", 
                 value=parameters["partner_social_security"] if parameters else 2000 * 12, step=1000)
                 
         with col2:
-            withdrawal_start_age = st.number_input("Withdrawal Start Age (Self)", 
+            withdrawal_start_age = st.number_input("Your Withdrawal Start Age Amount", 
                 value=parameters["withdrawal_start_age"] if parameters else 67)
             partner_withdrawal_start_age = st.number_input("Partner's Withdrawal Start Age", 
                 value=parameters["partner_withdrawal_start_age"] if parameters else 65)
@@ -647,22 +650,24 @@ def create_social_security_tab(tab, parameters):
 def create_healthcare_tab(tab, parameters, retirement_age, partner_retirement_age):
     """Create the Healthcare tab inputs"""
     with tab:
-        col1, col2, col3, Col4 = st.columns([1, 1, 1, 1])
+        col1, col2, col3, col4 = st.columns([2, 2, 1, 4])
         
         with col1:
-            self_healthcare_cost = st.number_input("Self Bridge Healthcare Cost (Annual)",
+            self_healthcare_cost = st.number_input("Your Bridge Healthcare Cost Yrly.",
                 help=bridge_healthcare_help_text,  
                 value=parameters["self_healthcare_cost"] if parameters else 5000, step=1000)
-            self_healthcare_start_age = st.number_input("Self Healthcare Bridge Start Age", 
+            self_healthcare_start_age = st.number_input("Your Healthcare Bridge Start Age", 
                 value=parameters["self_healthcare_start_age"] if parameters else retirement_age)
                 
         with col2:
-            partner_healthcare_cost = st.number_input("Partner Bridge Healthcare Cost (Annual)", 
+            partner_healthcare_cost = st.number_input("Partner Bridge Healthcare Cost Yrly.", 
                 help=bridge_healthcare_help_text, 
                 value=parameters["partner_healthcare_cost"] if parameters else 5000, step=1000)
-            partner_healthcare_start_age = st.number_input("Partner Healthcare Bridge Start Age", 
-                value=parameters["partner_healthcare_start_age"] if parameters else partner_retirement_age)
+            partner_healthcare_start_age = st.number_input("Partner's Healthcare Bridge Start Age", 
 
+                value=parameters["partner_healthcare_start_age"] if parameters else partner_retirement_age)
+        with col4:
+            st.markdown(healthcare_bridge_text, unsafe_allow_html=True)
 
     return (self_healthcare_cost, self_healthcare_start_age, partner_healthcare_cost, partner_healthcare_start_age)
 
@@ -701,7 +706,7 @@ def create_market_returns_tab(tab, parameters):
 def create_downsize_tab(tab, parameters):
     """Create the Downsize tab inputs"""
     with tab:
-        col1, col2, col3 = st.columns([1, 1, 2])
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
         
         with col1:
             years_until_downsize = st.number_input("After how many years?", 
@@ -710,6 +715,10 @@ def create_downsize_tab(tab, parameters):
         with col2:
             residual_amount = st.number_input("Net Addition to Retirement Savings", 
                 value=parameters["residual_amount"] if parameters else 0, step=100000)
+            
+        with col4:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(downsize_text, unsafe_allow_html=True)
                 
     return (years_until_downsize, residual_amount)
 
@@ -728,30 +737,24 @@ def create_adjust_expense_tab(tab, parameters, years_range):
         with col1:
             adjust_expense_year_1 = st.selectbox("Year of Adjustment 1", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_1"]) if parameters else 0)
-            adjust_expense_amount_1 = st.number_input("Yearly Expense Adjustment Amount 1", 
+            adjust_expense_amount_1 = st.number_input("Yearly Living Expense Adjustment Amount 1", 
                 value=parameters["adjust_expense_amount_1"] if parameters else 0, step=2000)
                 
         with col2:
             adjust_expense_year_2 = st.selectbox("Year of Adjustment 2", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_2"]) if parameters else 0)
-            adjust_expense_amount_2 = st.number_input("Yearly Expense Adjustment Amount 2", 
+            adjust_expense_amount_2 = st.number_input("Yearly Living Expense Adjustment Amount 2", 
                 value=parameters["adjust_expense_amount_2"] if parameters else 0, step=2000)
                 
         with col3:
             adjust_expense_year_3 = st.selectbox("Year of Adjustment 3", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_3"]) if parameters else 0)
-            adjust_expense_amount_3 = st.number_input("Yearly Expense Adjustment Amount 3", 
+            adjust_expense_amount_3 = st.number_input("Yearly Living Expense Adjustment Amount 3", 
                 value=parameters["adjust_expense_amount_3"] if parameters else 0, step=2000)
                 
         with col4:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.markdown(f"""
-                <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
-                    <span style="color:#0d4c73;">ℹ️ <strong> Note: </strong> <br>{adjust_expense_text}</span>
-                </div>
-                """, 
-                unsafe_allow_html=True
-            )
+            st.markdown(adjust_expense_text, unsafe_allow_html=True)
             
     return (adjust_expense_year_1, adjust_expense_amount_1, adjust_expense_year_2, 
             adjust_expense_amount_2, adjust_expense_year_3, adjust_expense_amount_3)
@@ -788,7 +791,7 @@ def create_one_time_tab(tab, parameters, years_range):
                 
         with col4:
             st.markdown("<br>", unsafe_allow_html=True)
-            st.write(" ")
+            st.markdown(one_time_expense_text, unsafe_allow_html=True)
             
     return (one_time_year_1, one_time_amount_1, one_time_year_2, 
             one_time_amount_2, one_time_year_3, one_time_amount_3)
@@ -822,7 +825,11 @@ def create_windfall_tab(tab, parameters, years_range):
                 index=get_year_index(parameters["windfall_year_3"]) if parameters else 0)
             windfall_amount_3 = st.number_input("Windfall Amount 3", 
                 value=parameters["windfall_amount_3"] if parameters else 0, step=20000)
-                
+               
+        with col4:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown(windfall_text, unsafe_allow_html=True)
+
     return (windfall_year_1, windfall_amount_1, windfall_year_2, 
             windfall_amount_2, windfall_year_3, windfall_amount_3)
 
@@ -830,7 +837,7 @@ def create_windfall_tab(tab, parameters, years_range):
 def create_simulation_parameters_tab(tab, parameters):
     """Create the Simulation Parameters tab inputs"""
     with tab:
-        col1, col2, col3, col4 = st.columns([1,1,1,1])
+        col1, col2, col3 = st.columns([1,1,2])
                 
         with col1:
             simulations = st.number_input("Number of Simulations", 
@@ -852,7 +859,7 @@ def create_simulation_parameters_tab(tab, parameters):
                 help=simulation_help_text)
 
         with col3:
-            st.text(" ")
+            st.markdown(parameter_text, unsafe_allow_html=True)
 
     return (simulations, simulation_type)
 
