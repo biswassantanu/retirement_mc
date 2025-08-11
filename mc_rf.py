@@ -64,7 +64,7 @@ def setup_app():
 
     st.set_page_config(
     page_title="Retirement Planning Tool",
-    page_icon="./assets/beach_access.png",
+    page_icon="./assets/beach_access_2T.png",
     layout="wide"
     )
     
