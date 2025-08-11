@@ -124,20 +124,7 @@ Standard deviation measures volatility of annual bond returns.
 - Higher quality bonds typically have lower volatility
 """
 
-market_returns_note_old = """
-<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
-    <span style="color:#0d4c73;">
-        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
-        <strong>Return Assumptions:</strong> According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> capital market forecasts, most investment firms have lowered their US stock return expectations. Non-US stocks are generally expected to outperform US stocks over the next decade, while bond returns are expected to be competitive with stock returns. These forecasts are intermediate-term (7-10 years) rather than long-term.
-        <br><br>        
-        <strong>Default values used in this tool:</strong>
-        <ul style="margin: 4px 0 4px 15px; padding: 0;">
-            <li><strong>Stocks:</strong> 7.0% return (arithmetic mean), 15.5% volatility</li>
-            <li><strong>Bonds:</strong> 3.5% return (arithmetic mean), 4.5% volatility</li>
-        </ul>
-    </span>
-</div>
-"""
+auto_run_help_text = "When enabled, the simulation will run automatically each time you change any parameter, without needing to click the Run Simulation button."  
 
 market_returns_note = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">

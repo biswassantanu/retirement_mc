@@ -22,6 +22,7 @@ from helpers.help_texts import (simulation_help_text, smile_help_text,
                                 living_expense_help_text, bridge_healthcare_help_text, 
                                 tax_rate_both_working_help, tax_rate_one_retired_help, tax_rate_both_retired_help,
                                 tax_calculation_disclaimer, adjust_expense_text, 
+                                auto_run_help_text,
                                 stock_return_mean_help, stock_return_std_help, 
                                 bond_return_mean_help, bond_return_std_help,
                                 market_returns_note, 
@@ -1010,8 +1011,7 @@ def display_action_buttons(params_df):
     
     # Auto-run checkbox
     with col4:
-        help_text = "When enabled, the simulation will run automatically each time you change any parameter, without needing to click the Run Simulation button."   
-        auto_run = st.checkbox(":material/autorenew: Run Automatically", value=False, help=help_text)
+       auto_run = st.toggle("Run Automatically", value=False, help=auto_run_help_text)
 
     return run_button, auto_run
 
