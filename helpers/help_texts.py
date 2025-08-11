@@ -143,12 +143,12 @@ market_returns_note = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
     <span style="color:#0d4c73;">
         <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
-        <strong>Return Assumptions:</strong> While historical US stock returns have averaged 7-10% annually, major firms (J.P. Morgan, Schwab, Morningstar, BlackRock etc.) have lowered their 10-year forecasts to 3-7% for US stocks and 4-5% for bonds. According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> outlook, non-US stocks are expected to outperform US stocks over the next decade.
+        <strong>Return Assumptions:</strong> While historical US stock returns have averaged 7-10% annually, major firms (J.P. Morgan, Schwab, Morningstar, BlackRock etc.) have lowered their 10-year forecasts to 3-7% CAGR (equivalent to 5-8% Aritmatic Mean) for US stocks and 4-5% for bonds. According to <a href='https://global.morningstar.com/en-eu/markets/experts-forecast-us-stock-bond-returns-2025-edition' target='_blank' rel='noopener noreferrer'>Morningstar's 2025</a> outlook, non-US stocks are expected to outperform US stocks over the next decade.
         <br><br>   
-        <strong>Default values used in this tool (assuming a diversified portfolio):</strong>
+        <strong>Default values used in this tool </strong>(assuming a diversified equity portfolio):
         <ul style="margin: 4px 0 4px 15px; padding: 0;">
-            <li><strong>Stocks:</strong> 6.5% return (arithmetic mean), 15.5% volatility</li>
-            <li><strong>Bonds:</strong> 3.5% return (arithmetic mean), 4.5% volatility</li>
+            <li><strong>Stocks:</strong> 6.5% return <strong>(arithmetic mean)</strong>, 15.5% volatility</li>
+            <li><strong>Bonds:</strong> 3.5% return <strong>(arithmetic mean)</strong>, 4.5% volatility</li>
         </ul>
     </span>
 </div>
