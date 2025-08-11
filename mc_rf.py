@@ -630,11 +630,11 @@ def create_social_security_tab(tab, parameters):
         with col1:
             annual_social_security = st.number_input("Your Social Security Benefit Amount", 
                 value=parameters["annual_social_security"] if parameters else 2000 * 12, step=1000)
-            partner_social_security = st.number_input("Partner's Social Security Benefit", 
+            partner_social_security = st.number_input("Partner's Social Security Benefit Amount", 
                 value=parameters["partner_social_security"] if parameters else 2000 * 12, step=1000)
                 
         with col2:
-            withdrawal_start_age = st.number_input("Your Withdrawal Start Age Amount", 
+            withdrawal_start_age = st.number_input("Your Withdrawal Start Age", 
                 value=parameters["withdrawal_start_age"] if parameters else 67)
             partner_withdrawal_start_age = st.number_input("Partner's Withdrawal Start Age", 
                 value=parameters["partner_withdrawal_start_age"] if parameters else 65)
