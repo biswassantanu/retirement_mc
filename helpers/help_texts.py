@@ -67,7 +67,7 @@ and RMDs etc. are not yet supported.
 """
 
 adjust_expense_text = """
-These adjustments get carried forward. 
+These adjustments to yealy expense amount get carried forward. 
 You can enter negative amount to reduce recurring expenses.
 """
 

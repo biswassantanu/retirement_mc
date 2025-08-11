@@ -728,19 +728,19 @@ def create_adjust_expense_tab(tab, parameters, years_range):
         with col1:
             adjust_expense_year_1 = st.selectbox("Year of Adjustment 1", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_1"]) if parameters else 0)
-            adjust_expense_amount_1 = st.number_input("Adjustment Amount 1", 
+            adjust_expense_amount_1 = st.number_input("Yearly Expense Adjustment Amount 1", 
                 value=parameters["adjust_expense_amount_1"] if parameters else 0, step=2000)
                 
         with col2:
             adjust_expense_year_2 = st.selectbox("Year of Adjustment 2", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_2"]) if parameters else 0)
-            adjust_expense_amount_2 = st.number_input("Adjustment Amount 2", 
+            adjust_expense_amount_2 = st.number_input("Yearly Expense Adjustment Amount 2", 
                 value=parameters["adjust_expense_amount_2"] if parameters else 0, step=2000)
                 
         with col3:
             adjust_expense_year_3 = st.selectbox("Year of Adjustment 3", years_range, 
                 index=get_year_index(parameters["adjust_expense_year_3"]) if parameters else 0)
-            adjust_expense_amount_3 = st.number_input("Adjustment Amount 3", 
+            adjust_expense_amount_3 = st.number_input("Yearly Expense Adjustment Amount 3", 
                 value=parameters["adjust_expense_amount_3"] if parameters else 0, step=2000)
                 
         with col4:
