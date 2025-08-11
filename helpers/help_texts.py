@@ -46,11 +46,13 @@ bridge_healthcare_help_text = """
 # Tax Rate Help Text
 tax_rate_both_working_help = """
 The average tax rate applied to your combined income when **both partners are working.**
-This is total tax paid divided by total income.
+This is total tax paid divided by total income. 
+Include **Payroll Taxes** like Social Security and Medicare Taxes.
 """
 
 tax_rate_one_retired_help = """
-The average tax rate when **one person is still working and the other is retired.**
+The average tax rate when **one person is still working and the other is retired.** 
+Include **Payroll Taxes** like Social Security and Medicare Taxes.
 Often lower than when both are working due to different income sources and tax brackets.
 """
 
