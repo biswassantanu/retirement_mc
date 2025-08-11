@@ -653,14 +653,14 @@ def create_healthcare_tab(tab, parameters, retirement_age, partner_retirement_ag
         col1, col2, col3, col4 = st.columns([2, 2, 1, 4])
         
         with col1:
-            self_healthcare_cost = st.number_input("Your Bridge Healthcare Cost Yrly.",
+            self_healthcare_cost = st.number_input("Your Yearly Bridge Healthcare Cost",
                 help=bridge_healthcare_help_text,  
                 value=parameters["self_healthcare_cost"] if parameters else 5000, step=1000)
             self_healthcare_start_age = st.number_input("Your Healthcare Bridge Start Age", 
                 value=parameters["self_healthcare_start_age"] if parameters else retirement_age)
                 
         with col2:
-            partner_healthcare_cost = st.number_input("Partner Bridge Healthcare Cost Yrly.", 
+            partner_healthcare_cost = st.number_input("Partner Yearly Bridge Healthcare Cost", 
                 help=bridge_healthcare_help_text, 
                 value=parameters["partner_healthcare_cost"] if parameters else 5000, step=1000)
             partner_healthcare_start_age = st.number_input("Partner's Healthcare Bridge Start Age", 
