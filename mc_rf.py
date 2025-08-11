@@ -827,7 +827,6 @@ def create_windfall_tab(tab, parameters, years_range):
                 value=parameters["windfall_amount_3"] if parameters else 0, step=20000)
                
         with col4:
-            st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(windfall_text, unsafe_allow_html=True)
 
     return (windfall_year_1, windfall_amount_1, windfall_year_2, 
