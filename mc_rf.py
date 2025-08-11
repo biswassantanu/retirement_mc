@@ -1220,7 +1220,7 @@ def display_ending_balance_summary(processed_results):
             "Ending Balance", 
             "At Today's $", 
             "Year of Depletion",
-            "Affective Rate of Return",
+            "Effective Rate of Return",
             "Negative Returns", 
             "Simulation Percentile"
         ],
@@ -1303,6 +1303,10 @@ def display_ending_balance_summary(processed_results):
     
     # Apply the styles
     styled_df = df.style.apply(lambda _: styles, axis=None)
+    # Set the header background color to light grey
+    styled_df = styled_df.set_table_styles([
+        {'selector': 'thead th', 'props': [('background-color', '#f2f2f2'), ('color', '#333'), ('font-weight', 'bold')]}
+    ])
     styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
     
     
