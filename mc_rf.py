@@ -64,7 +64,7 @@ def main():
         
         # Display results if simulation has been run
     display_results()
-    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
 
 
 def setup_app():
@@ -753,7 +753,6 @@ def create_adjust_expense_tab(tab, parameters, years_range):
                 value=parameters["adjust_expense_amount_3"] if parameters else 0, step=2000)
                 
         with col4:
-            st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(adjust_expense_text, unsafe_allow_html=True)
             
     return (adjust_expense_year_1, adjust_expense_amount_1, adjust_expense_year_2, 
@@ -990,6 +989,7 @@ def display_action_buttons(params_df):
     with col1:
         st.download_button(
             label="Save Parameters",
+            key="parameter_download",
             data=csv,
             file_name="retirement_parameters.csv",
             mime="text/csv",
@@ -1339,24 +1339,31 @@ def display_percentile_tabs(processed_results):
     with tab_10th:
         create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
                            processed_results["10th"]["df_values"], 
-                           ":material/ac_unit: With Significantly Below Historical Average Returns")
+                           ":material/ac_unit: With Significantly Below Historical Average Returns",
+                           "download_key_10th")
     
     with tab_25th:
         create_cash_flow_tab(processed_results["25th"]["df_formatted"], 
                            processed_results["25th"]["df_values"], 
-                           ":material/rainy: With Below Historical Average Returns")
+                           ":material/rainy: With Below Historical Average Returns",
+                           "download_key_25th"
+                           )
     
     with tab_50th:
         create_cash_flow_tab(processed_results["50th"]["df_formatted"], 
                            processed_results["50th"]["df_values"], 
-                           ":material/partly_cloudy_day: With Average Historical Returns")
+                           ":material/partly_cloudy_day: With Average Historical Returns",
+                           "download_key_50th"
+                           )
     
     with tab_75th:
         create_cash_flow_tab(processed_results["75th"]["df_formatted"], 
                            processed_results["75th"]["df_values"], 
-                           ":material/sunny: With Above Historical Average Returns")
+                           ":material/sunny: With Above Historical Average Returns", 
+                           "download_key_75th"
+                           )
 
-def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
+def create_cash_flow_tab(df_cashflow, df_cashflow_value, title, download_button_key):
     """Create a tab with cash flow details and visualizations"""
     # Display title
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1416,6 +1423,17 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title):
             # Display the dataframe
             st.markdown("###### Cashflow ")   
             st.dataframe(styled_df, hide_index=True, use_container_width=True)
+
+            csv1 = df_cashflow_value.to_csv(index=False)
+            st.download_button(
+                label="Download Cashflow Data",
+                key=download_button_key, #key need to be different for each tab
+                data=csv1,
+                file_name="retirement_cashflow.csv",
+                mime="text/csv",
+                type="primary",
+                icon=":material/download:"
+            )           
 
 def flatten_nested_dataframe(df):
     """

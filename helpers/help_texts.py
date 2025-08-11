@@ -79,7 +79,7 @@ healthcare_bridge_text = """
 adjust_expense_text = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.8em;">
     <span style="color:#0d4c73;">ℹ️ <strong> About Living Expense Adjustments: </strong> <br>These <strong>recurring adjustments to yealy living expense</strong> amount get carried forward. 
-You can enter negative amount to reduce recurring expenses. 
+You can enter both positive (e.g. kid starting college) and negative (e.g. kid finishing college) amount to reduce recurring expenses. 
 <br><br>Enter upto 3 such recurring adjustments.</span>
 </div>
 """
