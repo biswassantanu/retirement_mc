@@ -197,6 +197,26 @@ market_returns_note = """
 </div>
 """
 
+stress_test_text = """
+<div style="background-color:#fae8e8; padding:6px; border-radius:4px; font-size:0.75em;">
+    <span style="color:#0d4c73;">
+        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
+        <strong>Sequence of Returns Risk:</strong><br> Tests how your plan performs if you experience poor market returns in early retirement years while also making withdrawals. This can have a significant impact on portfolio longevity.
+    </span>
+</div>
+"""
+enable_sequence_risk_help = """
+When enabled, the simulation will test how your plan performs with poor returns in early retirement
+"""
+
+seq_risk_years_help="""
+Number of consecutive years with poor returns at the beginning of retirement
+"""
+
+seq_risk_returns_help="""
+Market return percentage during the stress period
+"""
+
 # Overall help document 
 help_document = """
 # Retirement Planning Tool Help

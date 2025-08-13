@@ -105,6 +105,11 @@ class SimulationConfig:
     rental_amt: float
     rental_yearly_increase: float
 
+    # Stress test parameters
+    enable_sequence_risk: bool 
+    seq_risk_years: int 
+    seq_risk_returns: float 
+
 
 @dataclass
 class AccountBalances:
@@ -275,6 +280,29 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             # Calculate current ages
             self_age = config.current_age + year
             partner_age = config.partner_current_age + year
+
+            # Set flag for sequence risk if enabled
+            apply_sequence_risk = False
+            if config.enable_sequence_risk:
+                # Check if either person is retired
+                self_retired = self_age >= config.retirement_age
+                partner_retired = partner_age >= config.partner_retirement_age
+                
+                # Calculate years since first retirement occurred
+                if self_retired or partner_retired:
+                    # Calculate the calendar year when each person retires
+                    self_retirement_year = current_year + (config.retirement_age - config.current_age)
+                    partner_retirement_year = current_year + (config.partner_retirement_age - config.partner_current_age)
+                    
+                    # Find which retirement happens first
+                    first_retirement_year = min(self_retirement_year, partner_retirement_year)
+                    
+                    # Calculate how many years have passed since the first retirement
+                    years_since_first_retirement = (current_year + year) - first_retirement_year
+                    
+                    # Apply stress if we're within the sequence risk period after first retirement
+                    if years_since_first_retirement >= 0 and years_since_first_retirement < config.seq_risk_years:
+                        apply_sequence_risk = True
             
             # Calculate income streams
             income = calculate_yearly_income(
@@ -328,10 +356,22 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             # Calculate the draw-down amount proportioned among different accounts
             draws = calculate_draws(portfolio_draw, balances)
             
+            # Calculate investment returns with stress test applied
+            if apply_sequence_risk:
+                # Override returns with stress test values
+                investment_return = calculate_investment_return_with_override(
+                    config, balances, savings, returns, year, config.seq_risk_returns
+                )
+            else:
+                # Normal return calculation
+                investment_return = calculate_investment_return(
+                    config, balances, savings, returns, year
+                )
+
             # Calculate investment returns using the selected simulation method
-            investment_return = calculate_investment_return(
-                config, balances, savings, returns, year
-            )
+            # investment_return = calculate_investment_return(
+            #     config, balances, savings, returns, year
+            # )
             
             # Special events
             downsize_proceeds = config.residual_amount if year == config.years_until_downsize else 0
@@ -579,6 +619,37 @@ def calculate_investment_return(config, balances, savings, returns, year):
         total=total_return
     )
 
+
+def calculate_investment_return_with_override(config, balances, savings, returns, year, override_return):
+    """Calculate investment returns with an overridden return rate - used for Stress Test"""
+    
+    # Apply the overridden return rate to stocks
+    # Bond returns are often less volatile in downturns
+    stock_return_rate = override_return
+    bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
+    
+    # Calculate weighted return using the same allocation as normal returns
+    weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
+                       bond_return_rate * (config.bond_percentage / 100))
+    
+    # Calculate returns for each account type using the override
+    self_401k_return = balances.self_401k * weighted_return
+    partner_401k_return = balances.partner_401k * weighted_return
+    roth_ira_return = balances.roth_ira * weighted_return
+    brokerage_return = balances.brokerage * weighted_return
+    cash_return = balances.cash * CASH_ACCOUNT_RETURN_RATE  # Cash accounts are less affected
+    
+    # Calculate total portfolio return
+    total_return = savings * weighted_return
+    
+    return YearlyReturns(
+        self_401k=self_401k_return,
+        partner_401k=partner_401k_return,
+        roth_ira=roth_ira_return,
+        brokerage=brokerage_return,
+        cash=cash_return,
+        total=total_return
+    )
 
 def update_account_balances(balances, returns, draws, self_contribution, partner_contribution, income, expenses, tax):
     """Update all account balances based on contributions, returns, and withdrawals"""

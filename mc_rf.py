@@ -29,7 +29,9 @@ from helpers.help_texts import (simulation_help_text, smile_help_text,
                                 stock_return_mean_help, stock_return_std_help, 
                                 bond_return_mean_help, bond_return_std_help,
                                 market_returns_note, 
-                                help_document, disclaimer_text)
+                                stress_test_text, enable_sequence_risk_help,
+                                seq_risk_years_help, seq_risk_returns_help, 
+                                disclaimer_text, help_document)
 
 # Import simulation module with our new refactored function
 from simulations.simulation_mc_rf import SimulationConfig, monte_carlo_simulation
@@ -248,6 +250,11 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         # Tab 13
         simulation_params = create_simulation_parameters_tab(tabs[13], parameters)
         (simulations, simulation_type)= simulation_params
+
+        # Tab 15: Stress Tests
+        stress_test_params = create_stress_tests_tab(tabs[14], parameters, years_range)
+        (enable_sequence_risk, seq_risk_years, seq_risk_returns) = stress_test_params
+    
     
     # Create lists for special events
     adjust_expense_years = [adjust_expense_year_1, adjust_expense_year_2, adjust_expense_year_3]
@@ -334,7 +341,12 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         rental_start=rental_start,
         rental_end=rental_end,
         rental_amt=rental_amt,
-        rental_yearly_increase=rental_yearly_increase
+        rental_yearly_increase=rental_yearly_increase,
+
+        # Stress test parameters
+        enable_sequence_risk=enable_sequence_risk,
+        seq_risk_years=seq_risk_years,
+        seq_risk_returns=seq_risk_returns
     )
 
 
@@ -354,7 +366,8 @@ def create_tabs():
         ":material/tune: Adjust", 
         ":material/checkbook: One Time", 
         ":material/money_bag: Windfall",
-        ":material/settings: Params",        
+        ":material/settings: Params",   
+        ":material/exercise: Stress Tests"      
     ])
 
 
@@ -860,6 +873,61 @@ def create_simulation_parameters_tab(tab, parameters):
             st.markdown(parameter_text, unsafe_allow_html=True)
 
     return (simulations, simulation_type)
+
+
+def create_stress_tests_tab(tab, parameters, years_range=None):
+    """Create the Stress Tests tab inputs"""
+    with tab:
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 2])
+        
+        with col1:
+            # Add explanatory text before the toggle
+            st.markdown("""
+            <div style=font-size:0.9em;">
+            <strong>Sequence of Returns Risk Test</strong> <br>
+            Consecutive poor returns when retirement starts.
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Keep the toggle label simpler now
+            enable_sequence_risk = st.toggle(
+                "Enable this test",
+                value=parameters["enable_sequence_risk"] if parameters and "enable_sequence_risk" in parameters else False,
+                help=enable_sequence_risk_help
+            )
+            # # Display the effective values if enabled
+            # if enable_sequence_risk:
+            #     st.write(f"Return during first {seq_risk_years} years of retirement: {seq_risk_returns*100:.1f}%")
+        with col2:
+            seq_risk_years = st.number_input(
+                "Duration (consecutive years)",
+                min_value=1,
+                max_value=20,
+                value=parameters["seq_risk_years"] if parameters and "seq_risk_years" in parameters else 3,
+                disabled=not enable_sequence_risk,
+                help=seq_risk_years_help
+            )
+            seq_risk_returns = st.number_input(
+                "Annual Return During Stress (%)",
+                min_value=-40.0,
+                max_value=0.0, 
+                value=parameters["seq_risk_returns"] if parameters and "seq_risk_returns" in parameters else -15.0,
+                step=1.0,
+                disabled=not enable_sequence_risk,
+                help=seq_risk_returns_help
+            ) / 100
+                
+
+        with col3:
+            # Placeholder for next stress test (Black Swan)
+            # We'll implement this in the next step
+            st.markdown("<div style='height: 50px;'></div>", unsafe_allow_html=True)
+                
+        with col4:
+            st.markdown(stress_test_text, unsafe_allow_html=True)
+            
+    return (enable_sequence_risk, seq_risk_years, seq_risk_returns)
+
 
 
 
