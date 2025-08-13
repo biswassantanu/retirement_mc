@@ -1304,7 +1304,7 @@ def display_ending_balance_summary(processed_results):
             processed_results['10th']['year_of_depletion'],
             processed_results['10th']['geometric_mean'],
             processed_results['10th']['negative_return_formatted'],
-            "90% Scenarios"
+            "Top 90% Scenarios"
         ],
         "Below Historical Average Returns": [
             f"{processed_results['25th']['ending_balance'] / 1_000_000:,.2f}M",
@@ -1312,7 +1312,7 @@ def display_ending_balance_summary(processed_results):
             processed_results['25th']['year_of_depletion'],
             processed_results['25th']['geometric_mean'],
             processed_results['25th']['negative_return_formatted'],
-            "75% Scenarios"
+            "Top 75% Scenarios"
         ],
         "Historical Average Returns": [
             f"{processed_results['50th']['ending_balance'] / 1_000_000:,.2f}M",
@@ -1320,7 +1320,7 @@ def display_ending_balance_summary(processed_results):
             processed_results['50th']['year_of_depletion'],
             processed_results['50th']['geometric_mean'],
             processed_results['50th']['negative_return_formatted'],
-            "50% Scenarios"
+            "Top 50% Scenarios"
         ],
         "Above Historical Average Returns": [
             f"{processed_results['75th']['ending_balance'] / 1_000_000:,.2f}M",
@@ -1328,7 +1328,7 @@ def display_ending_balance_summary(processed_results):
             processed_results['75th']['year_of_depletion'],
             processed_results['75th']['geometric_mean'],
             processed_results['75th']['negative_return_formatted'],
-            "25% Scenarios"
+            "Top 25% Scenarios"
         ]
     }
     
