@@ -303,7 +303,16 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
                 partner_age, config.partner_retirement_age
             )
 
-            # Calculate expenses
+
+            # Calculate living expense adjustment for current year 
+            expense_adjustment = get_expense_adjustment(
+                config.adjust_expense_years, config.adjust_expense_amounts, current_year + year)
+            
+
+            # Apply the adjustment to reduce living expenses
+            current_annual_expense = current_annual_expense + expense_adjustment
+
+            #Calculate expenses using the adjusted amount
             expenses = calculate_yearly_expenses(
                 config, self_age, partner_age, year, current_year,
                 current_annual_expense
@@ -329,9 +338,6 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             
             windfall_amount = calculate_windfall(config.windfall_years, config.windfall_amounts, 
                                                 current_year + year)
-            
-            expense_adjustment = get_expense_adjustment(
-                config.adjust_expense_years, config.adjust_expense_amounts, current_year + year)
             
             # Update account balances
             update_account_balances(
