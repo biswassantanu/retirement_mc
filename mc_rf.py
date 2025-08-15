@@ -248,7 +248,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
          windfall_year_3, windfall_amount_3) = windfall_params
 
         # Tab 13
-        simulation_params = create_simulation_parameters_tab(tabs[13], parameters)
+        simulation_params = create_simulation_parameters_tab(tabs[13], parameters, years_range)
         (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)= simulation_params
 
         # Tab 15: Stress Tests
@@ -852,7 +852,7 @@ def create_windfall_tab(tab, parameters, years_range):
             windfall_amount_2, windfall_year_3, windfall_amount_3)
 
 
-def create_simulation_parameters_tab(tab, parameters):
+def create_simulation_parameters_tab(tab, parameters, years_range):
     """Create the Simulation Parameters tab inputs"""
     with tab:
         col1, col2, col3, col4 = st.columns([3,3,5,6])
@@ -888,16 +888,20 @@ def create_simulation_parameters_tab(tab, parameters):
             collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
 
         with col3:
+
+            def get_year_index(year_value, default_index=0):
+                if parameters and years_range and year_value in years_range:
+                    return years_range.index(year_value)
+                return default_index
+            
             # Determine the default simulation type
             # Only show collar strategy controls if that option is selected
             if simulation_type == "Collar Strategy":
 
-                # Get the range of years for the simulation
-                life_expectancy = parameters.get("life_expectancy", 92) if parameters else 92
-                current_age = parameters.get("current_age", 50) if parameters else 50
-                years_in_simulation = life_expectancy - current_age + 1
-                years_range = list(range(current_year, current_year + years_in_simulation))
-
+                # # Get the range of years for the simulation
+                # life_expectancy = parameters.get("life_expectancy", 92) if parameters else 92
+                # current_age = parameters.get("current_age", 50) if parameters else 50
+                # years_in_simulation = life_expectancy - current_age + 1
 
                 # Add collar strategy year selectors
                 st.markdown("###### Collar Strategy Details")
@@ -912,17 +916,16 @@ def create_simulation_parameters_tab(tab, parameters):
                     ) / 100  # Convert back to decimal
 
 
-                    # Find index for start year
-                    start_year_index = 0
-                    if collar_start_year in years_range:
-                        start_year_index = years_range.index(collar_start_year)
-                    else:
-                        start_year_index = 0
-                        
+                    # Get saved start year or default to first year in range
+                    saved_start_year = parameters.get("collar_start_year", years_range[0]) if parameters else years_range[0]
+                    
+                    # Find the index for the start year
+                    start_index = get_year_index(saved_start_year, 0)
+                    
                     collar_start_year = st.selectbox(
                         "Start Year",
                         options=years_range,
-                        index=start_year_index,
+                        index=start_index,
                         key="collar_start",
                         format_func=lambda x: str(x),
                         help="Year when collar strategy begins"
@@ -937,22 +940,34 @@ def create_simulation_parameters_tab(tab, parameters):
                         step=1.0
                     ) / 100  # Convert back to decimal
 
-                    # Find index for end year
-                    end_year_index = min(start_year_index + 10, len(years_range) - 1)
-                    if collar_end_year in years_range:
-                        end_year_index = years_range.index(collar_end_year)
-                    else:
-                        end_year_index = min(start_year_index + 10, len(years_range) - 1)
+                    # Get saved end year or default to LAST year in range (end of life expectancy)
+                    saved_end_year = parameters.get("collar_end_year", years_range[-1]) if parameters else years_range[-1]
+                    
+                    # Find the index for the end year, defaulting to last year in range
+                    end_index = get_year_index(saved_end_year, len(years_range)-1)
                     
                     collar_end_year = st.selectbox(
                         "End Year",
                         options=years_range,
-                        index=end_year_index,
+                        index=end_index,
                         key="collar_end",
                         format_func=lambda x: str(x),
                         help="Year when collar strategy ends"
                     )
 
+                # Display the duration
+                if collar_end_year >= collar_start_year:
+                    collar_duration_years = collar_end_year - collar_start_year + 1
+                    st.write(f"The collar will be active for {collar_duration_years} years ({collar_start_year} to {collar_end_year}).")
+                else:
+                    st.error("End year must be after start year.")
+
+            else:
+                # Default values when collar strategy isn't selected
+                collar_start_year = years_range[0] if years_range else current_year
+                collar_end_year = years_range[-1] if years_range else current_year + 30
+
+                
         with col4:
             st.markdown(parameter_text, unsafe_allow_html=True)
 
