@@ -110,6 +110,11 @@ class SimulationConfig:
     seq_risk_years: int 
     seq_risk_returns: float 
 
+    # Collar Strategy parameters
+    collar_min_return: float 
+    collar_max_return: float 
+
+
 
 @dataclass
 class AccountBalances:
@@ -268,7 +273,8 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             config.stock_return_mean, config.stock_return_std,
             config.bond_return_mean, config.bond_return_std,
             equity_return_min, equity_return_max, 
-            bond_return_min, bond_return_max
+            bond_return_min, bond_return_max, 
+            config.collar_min_return, config.collar_max_return
         )
         
         for year in range(years_in_simulation):
@@ -457,7 +463,9 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
 
 def preselect_investment_returns(simulation_type, years, 
                                 stock_mean, stock_std, bond_mean, bond_std,
-                                equity_min, equity_max, bond_min, bond_max):
+                                equity_min, equity_max, bond_min, bond_max, 
+                                collar_min_return=None, collar_max_return=None
+                                ):
     """Preselect investment returns for the entire simulation"""
     
     # For empirical distribution - get historical data
@@ -476,9 +484,15 @@ def preselect_investment_returns(simulation_type, years,
     normal_stock_returns = np.random.normal(stock_mean, stock_std, years)
     normal_bond_returns = np.random.normal(bond_mean, bond_std, years)
     
-    # Clip values to reasonable bounds
+    # Clip values to reasonable bounds (based on past actual min and max)
     normal_stock_returns = np.clip(normal_stock_returns, equity_min, equity_max)
     normal_bond_returns = np.clip(normal_bond_returns, bond_min, bond_max)
+
+    # Collar strategy returns - clipped normal distribution
+    if simulation_type == "Collar Strategy" and collar_min_return is not None and collar_max_return is not None:
+        collar_stock_returns = np.clip(normal_stock_returns, collar_min_return, collar_max_return)
+    else:
+        collar_stock_returns = normal_stock_returns.copy()
     
     # Student-t distribution returns
     df = 5  # degrees of freedom
@@ -495,7 +509,8 @@ def preselect_investment_returns(simulation_type, years,
         "empirical": (empirical_equity_returns, empirical_bond_returns),
         "normal": (normal_stock_returns, normal_bond_returns),
         "t": (t_stock_returns, t_bond_returns),
-        "lognormal": (lognormal_stock_returns, lognormal_bond_returns)
+        "lognormal": (lognormal_stock_returns, lognormal_bond_returns),
+        "collar": (collar_stock_returns, normal_bond_returns)  # Collared stock returns, normal bond returns
     }
 
 
@@ -590,6 +605,8 @@ def calculate_investment_return(config, balances, savings, returns, year):
         stock_return_rate, bond_return_rate = returns["t"][0][year], returns["t"][1][year]
     elif config.simulation_type == "Empirical Distribution":
         stock_return_rate, bond_return_rate = returns["empirical"][0][year], returns["empirical"][1][year]
+    elif config.simulation_type == "Collar Strategy":
+        stock_return_rate, bond_return_rate = returns["collar"][0][year], returns["empirical"][1][year]
     else:
         raise ValueError(f"Unknown simulation type: {config.simulation_type}")
     
@@ -626,8 +643,25 @@ def calculate_investment_return_with_override(config, balances, savings, returns
     # Apply the overridden return rate to stocks
     # Bond returns are often less volatile in downturns
     stock_return_rate = override_return
-    bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
     
+    # bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
+        # Select the appropriate bond return rate based on simulation type
+    if config.simulation_type == "Normal Distribution" or config.simulation_type == "Collar Strategy":
+        bond_return_rate = returns["normal"][1][year]
+    elif config.simulation_type == "Students-T Distribution":
+        bond_return_rate = returns["t"][1][year]
+    elif config.simulation_type == "Empirical Distribution":
+        bond_return_rate = returns["empirical"][1][year]
+    elif config.simulation_type == "Collar Strategy":
+        bond_return_rate = returns["collar"][1][year]
+    else:
+        # Fallback to mean bond return if unknown simulation type
+        bond_return_rate = config.bond_return_mean
+
+    # Apply collar limits to stock returns if using collar strategy
+    if config.simulation_type == "Collar Strategy":
+        stock_return_rate = np.clip(stock_return_rate, config.collar_min_return, config.collar_max_return)
+       
     # Calculate weighted return using the same allocation as normal returns
     weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
                        bond_return_rate * (config.bond_percentage / 100))

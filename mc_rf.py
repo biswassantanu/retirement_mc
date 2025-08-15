@@ -169,7 +169,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
     
     # Set up the tabbed container
-    with st.container(height=280, border=None):
+    with st.container(height=310, border=None):
         # Set the tab styles 
         st.markdown(tab_style_css, unsafe_allow_html=True)
         
@@ -249,7 +249,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Tab 13
         simulation_params = create_simulation_parameters_tab(tabs[13], parameters)
-        (simulations, simulation_type)= simulation_params
+        (simulations, simulation_type, collar_min_return, collar_max_return)= simulation_params
 
         # Tab 15: Stress Tests
         stress_test_params = create_stress_tests_tab(tabs[14], parameters, years_range)
@@ -346,7 +346,11 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         # Stress test parameters
         enable_sequence_risk=enable_sequence_risk,
         seq_risk_years=seq_risk_years,
-        seq_risk_returns=seq_risk_returns
+        seq_risk_returns=seq_risk_returns,
+
+        # Collar Strategy 
+        collar_min_return=collar_min_return,
+        collar_max_return=collar_max_return
     )
 
 
@@ -860,19 +864,46 @@ def create_simulation_parameters_tab(tab, parameters):
                 default_simulation_type = "Normal Distribution"
             else:
                 default_simulation_type = parameters.get("simulation_type", "Normal Distribution")
-                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution"]:
+                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Collar Strategy"]:
                     default_simulation_type = "Normal Distribution"
 
             # Create the radio button group
-            simulation_options = ["Normal Distribution", "Students-T Distribution", "Empirical Distribution"]
+            simulation_options = ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Collar Strategy"]
             simulation_type = st.radio("Simulation Type", options=simulation_options,
                 index=simulation_options.index(default_simulation_type),
                 help=simulation_help_text)
+            
+            # These will only be shown and adjustable in the UI when Collar Strategy is selected
+            collar_min_return = parameters.get("collar_min_return", -0.05) if parameters else -0.05
+            collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
+
+            # Only show collar strategy controls if that option is selected
+            if simulation_type == "Collar Strategy":
+                cols = st.columns(2)
+                with cols[0]:
+                    collar_min_return = st.number_input(
+                        "Min Equity Return (%)",
+                        min_value=-30.0,
+                        max_value=0.0,
+                        value=collar_min_return * 100,  # Convert to percentage for display
+                        step=1.0
+                    ) / 100  # Convert back to decimal
+                
+                with cols[1]:
+                    collar_max_return = st.number_input(
+                        "Max Equity Return (%)",
+                        min_value=0.0,
+                        max_value=30.0,
+                        value=collar_max_return * 100,  # Convert to percentage for display
+                        step=1.0
+                    ) / 100  # Convert back to decimal
+
+
 
         with col3:
             st.markdown(parameter_text, unsafe_allow_html=True)
 
-    return (simulations, simulation_type)
+    return (simulations, simulation_type, collar_min_return, collar_max_return)
 
 
 def create_stress_tests_tab(tab, parameters, years_range=None):

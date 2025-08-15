@@ -10,6 +10,9 @@ simulation_help_text = """
 
 - **Empirical Distribution**: Uses actual historical market data rather than theoretical models.
   Reflects real market patterns but limited to past events.
+
+- **Collar Strategy**: Uses Normal Distribution but limits stock returns between minimum and maximum values. 
+  This is implemented through buying option collars and models investments with downside protection and capped upside.
 """
 
 # SMILE Help Text
@@ -119,7 +122,8 @@ parameter_text = """
         Parameters control how your retirement simulation behaves. The distribution type affects how market volatility is modeled:<br>        
         • <strong>Normal Distribution:</strong> Traditional approach using symmetric bell curves. May underestimate severe market downturns.<br>         
         • <strong>Students' T Distribution:</strong> Better captures market crashes and rallies with more frequent extreme events.<br>         
-        • <strong>Empirical Distribution:</strong> Based on actual historical market behavior rather than mathematical models.<br><br>       
+        • <strong>Empirical Distribution:</strong> Based on actual historical market behavior rather than mathematical models.<br>
+        • <strong>Collar Strategy:</strong> Uses Normal Distribution but limits stock returns between minimum and maximum values. This is implemented through buying option collars and models investments with downside protection and capped upside.<br><br>        
         <strong>Number of Simulations:</strong> Higher values (1,000+) provide more reliable results but take longer to calculate.
     </span>
 </div>
