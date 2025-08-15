@@ -118,13 +118,13 @@ parameter_text = """
 <div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
     <span style="color:#0d4c73;">
         <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
-        <strong>About Simulation Parameters:</strong><br>        
-        Parameters control how your retirement simulation behaves. The distribution type affects how market volatility is modeled:<br>        
-        • <strong>Normal Distribution:</strong> Traditional approach using symmetric bell curves. May underestimate severe market downturns.<br>         
-        • <strong>Students' T Distribution:</strong> Better captures market crashes and rallies with more frequent extreme events.<br>         
-        • <strong>Empirical Distribution:</strong> Based on actual historical market behavior rather than mathematical models.<br>
-        • <strong>Collar Strategy:</strong> Uses Normal Distribution but limits stock returns between minimum and maximum values. This is implemented through buying option collars and models investments with downside protection and capped upside.<br><br>        
-        <strong>Number of Simulations:</strong> Higher values (1,000+) provide more reliable results but take longer to calculate.
+        <strong>Simulation Parameters:</strong><br>        
+        Parameters control how your retirement simulation behaves. The distribution type affects how market volatility is modeled:<br>       
+        • <strong>Normal:</strong> Standard bell curve. May underestimate crashes.<br>         
+        • <strong>Students' T:</strong> Better captures market crashes with fatter tails.<br>          
+        • <strong>Empirical:</strong> Based on actual historical returns.<br>
+        • <strong>Collar Strategy:</strong> Limits stock returns between min/max values, providing downside protection with capped upside.<br><br>      
+        <strong>Simulations:</strong> More runs = more reliable but slower.
     </span>
 </div>
 """

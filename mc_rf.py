@@ -249,7 +249,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Tab 13
         simulation_params = create_simulation_parameters_tab(tabs[13], parameters)
-        (simulations, simulation_type, collar_min_return, collar_max_return)= simulation_params
+        (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)= simulation_params
 
         # Tab 15: Stress Tests
         stress_test_params = create_stress_tests_tab(tabs[14], parameters, years_range)
@@ -350,7 +350,10 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Collar Strategy 
         collar_min_return=collar_min_return,
-        collar_max_return=collar_max_return
+        collar_max_return=collar_max_return, 
+        collar_start_year=collar_start_year, 
+        collar_end_year=collar_end_year 
+
     )
 
 
@@ -852,7 +855,14 @@ def create_windfall_tab(tab, parameters, years_range):
 def create_simulation_parameters_tab(tab, parameters):
     """Create the Simulation Parameters tab inputs"""
     with tab:
-        col1, col2, col3 = st.columns([1,1,2])
+        col1, col2, col3, col4 = st.columns([3,3,5,6])
+    
+        # Initialize collar strategy variables with defaults
+        current_year = datetime.now().year
+        collar_min_return = parameters.get("collar_min_return", -0.05) if parameters else -0.05
+        collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
+        collar_start_year = parameters.get("collar_start_year", current_year) if parameters else current_year
+        collar_end_year = parameters.get("collar_end_year", current_year + 32) if parameters else current_year + 32         
                 
         with col1:
             simulations = st.number_input("Number of Simulations", 
@@ -877,8 +887,20 @@ def create_simulation_parameters_tab(tab, parameters):
             collar_min_return = parameters.get("collar_min_return", -0.05) if parameters else -0.05
             collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
 
+        with col3:
+            # Determine the default simulation type
             # Only show collar strategy controls if that option is selected
             if simulation_type == "Collar Strategy":
+
+                # Get the range of years for the simulation
+                life_expectancy = parameters.get("life_expectancy", 92) if parameters else 92
+                current_age = parameters.get("current_age", 50) if parameters else 50
+                years_in_simulation = life_expectancy - current_age + 1
+                years_range = list(range(current_year, current_year + years_in_simulation))
+
+
+                # Add collar strategy year selectors
+                st.markdown("###### Collar Strategy Details")
                 cols = st.columns(2)
                 with cols[0]:
                     collar_min_return = st.number_input(
@@ -888,6 +910,23 @@ def create_simulation_parameters_tab(tab, parameters):
                         value=collar_min_return * 100,  # Convert to percentage for display
                         step=1.0
                     ) / 100  # Convert back to decimal
+
+
+                    # Find index for start year
+                    start_year_index = 0
+                    if collar_start_year in years_range:
+                        start_year_index = years_range.index(collar_start_year)
+                    else:
+                        start_year_index = 0
+                        
+                    collar_start_year = st.selectbox(
+                        "Start Year",
+                        options=years_range,
+                        index=start_year_index,
+                        key="collar_start",
+                        format_func=lambda x: str(x),
+                        help="Year when collar strategy begins"
+                    )
                 
                 with cols[1]:
                     collar_max_return = st.number_input(
@@ -898,12 +937,26 @@ def create_simulation_parameters_tab(tab, parameters):
                         step=1.0
                     ) / 100  # Convert back to decimal
 
+                    # Find index for end year
+                    end_year_index = min(start_year_index + 10, len(years_range) - 1)
+                    if collar_end_year in years_range:
+                        end_year_index = years_range.index(collar_end_year)
+                    else:
+                        end_year_index = min(start_year_index + 10, len(years_range) - 1)
+                    
+                    collar_end_year = st.selectbox(
+                        "End Year",
+                        options=years_range,
+                        index=end_year_index,
+                        key="collar_end",
+                        format_func=lambda x: str(x),
+                        help="Year when collar strategy ends"
+                    )
 
-
-        with col3:
+        with col4:
             st.markdown(parameter_text, unsafe_allow_html=True)
 
-    return (simulations, simulation_type, collar_min_return, collar_max_return)
+    return (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)
 
 
 def create_stress_tests_tab(tab, parameters, years_range=None):

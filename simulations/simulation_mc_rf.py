@@ -113,7 +113,8 @@ class SimulationConfig:
     # Collar Strategy parameters
     collar_min_return: float 
     collar_max_return: float 
-
+    collar_start_year: int 
+    collar_end_year: int 
 
 
 @dataclass
@@ -597,6 +598,9 @@ def calculate_yearly_expenses(config, self_age, partner_age, year, current_year,
 
 def calculate_investment_return(config, balances, savings, returns, year):
     """Calculate investment returns across all account types"""
+
+    # Get current simulation year
+    current_year = datetime.now().year + year
     
     # Select the appropriate return rates based on simulation type
     if config.simulation_type == "Normal Distribution":
@@ -606,7 +610,16 @@ def calculate_investment_return(config, balances, savings, returns, year):
     elif config.simulation_type == "Empirical Distribution":
         stock_return_rate, bond_return_rate = returns["empirical"][0][year], returns["empirical"][1][year]
     elif config.simulation_type == "Collar Strategy":
-        stock_return_rate, bond_return_rate = returns["collar"][0][year], returns["empirical"][1][year]
+        # Check if current year is within the collar period
+        if config.collar_start_year <= current_year <= config.collar_end_year:
+            # Apply collar constraints during specified period
+            stock_return_rate = returns["collar"][0][year]
+        else:
+            # Use normal returns outside the collar period
+            stock_return_rate = returns["normal"][0][year]   
+        # Always use normal bond returns
+        bond_return_rate = returns["normal"][1][year]
+
     else:
         raise ValueError(f"Unknown simulation type: {config.simulation_type}")
     
@@ -643,6 +656,13 @@ def calculate_investment_return_with_override(config, balances, savings, returns
     # Apply the overridden return rate to stocks
     # Bond returns are often less volatile in downturns
     stock_return_rate = override_return
+
+    # Check if we should apply collar this year based on start and end years
+    current_year = datetime.now().year + year
+    apply_collar = False
+    if config.simulation_type == "Collar Strategy":
+        if config.collar_start_year <= current_year <= config.collar_end_year:
+            apply_collar = True
     
     # bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
         # Select the appropriate bond return rate based on simulation type
@@ -658,8 +678,8 @@ def calculate_investment_return_with_override(config, balances, savings, returns
         # Fallback to mean bond return if unknown simulation type
         bond_return_rate = config.bond_return_mean
 
-    # Apply collar limits to stock returns if using collar strategy
-    if config.simulation_type == "Collar Strategy":
+    # Apply collar limits to stock returns if using collar strategy AND within collar period
+    if apply_collar:
         stock_return_rate = np.clip(stock_return_rate, config.collar_min_return, config.collar_max_return)
        
     # Calculate weighted return using the same allocation as normal returns
