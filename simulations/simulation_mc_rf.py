@@ -462,6 +462,48 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
     return success_count, failure_count, sorted_simulation_results
 
 
+def setup_markov_chain():
+    """Setup conservative Markov Chain model parameters for market regimes"""
+    # Define market states: 0 = Bear, 1 = Normal, 2 = Bull
+    
+    # # Conservative transition matrix
+    # transition_matrix = np.array([
+    #     [0.25, 0.65, 0.10],  # From Bear: 25% stay Bear, 65% to Normal, 10% to Bull
+    #     [0.20, 0.65, 0.15],  # From Normal: 20% to Bear, 65% stay Normal, 15% to Bull
+    #     [0.20, 0.60, 0.20],  # From Bull: 20% to Bear, 60% to Normal, 20% stay Bull
+    # ])
+
+    # Conservative transition matrix
+    transition_matrix = np.array([
+        [0.45, 0.30, 0.25],  # From Bear: 25% stay Bear, 65% to Normal, 10% to Bull
+        [0.20, 0.45, 0.35],  # From Normal: 20% to Bear, 65% stay Normal, 15% to Bull
+        [0.10, 0.18, 0.72],  # From Bull: 20% to Bear, 60% to Normal, 20% stay Bull
+    ]) 
+
+    # Conservative return characteristics
+    # state_returns = {
+    #     0: {"mean": -0.20, "std": 0.25},  # Bear market: -20% average return
+    #     1: {"mean": 0.08, "std": 0.12},   # Normal market: 8% average return
+    #     2: {"mean": 0.18, "std": 0.14}    # Bull market: 18% average return
+    # }
+
+    # Conservative return characteristics
+    state_returns = {
+        0: {"mean": -0.15, "std": 0.20},  # Bear market: -20% average return
+        1: {"mean": 0.07, "std": 0.10},   # Normal market: 8% average return
+        2: {"mean": 0.15, "std": 0.18}    # Bull market: 18% average return
+    }
+    
+    # Bond adjustment factors by state
+    bond_adjustment = {
+        0: {"mean": 0.03, "std": 0.7},    # Bear: bonds perform better (+3%, 30% less volatile)
+        1: {"mean": 0.0, "std": 1.0},     # Normal: standard bond performance
+        2: {"mean": -0.005, "std": 1.05}  # Bull: bonds slightly underperform (-0.5%, 5% more volatile)
+    }
+    
+    return transition_matrix, state_returns, bond_adjustment
+
+
 def preselect_investment_returns(simulation_type, years, 
                                 stock_mean, stock_std, bond_mean, bond_std,
                                 equity_min, equity_max, bond_min, bond_max, 
@@ -506,12 +548,54 @@ def preselect_investment_returns(simulation_type, years,
     lognormal_bond_returns = np.random.lognormal(mean=np.log(bond_mean), 
                                                 sigma=bond_std, size=years)
     
+    # Markov Chain returns
+    if simulation_type == "Markov Chain":
+        transition_matrix, state_returns, bond_adjustment = setup_markov_chain()
+        
+        # Start in random state weighted by equilibrium distribution 
+        # 20% Bear MArket, 60% Normal Market and 20% Bill Market Probability weightage
+        initial_state = np.random.choice([0, 1, 2], p=[0.2, 0.6, 0.2])
+        
+        # Initialize arrays for storing returns and states
+        markov_stock_returns = np.zeros(years)
+        markov_bond_returns = np.zeros(years)
+        states = np.zeros(years, dtype=int)
+        current_state = initial_state
+        
+        # Generate returns using Markov process
+        for i in range(years):
+            states[i] = current_state
+            
+            # Generate returns based on current state
+            state_mean = state_returns[current_state]["mean"]
+            state_std = state_returns[current_state]["std"]
+            markov_stock_returns[i] = np.random.normal(state_mean, state_std)
+            
+            # Adjust bond returns based on state
+            bond_adj_mean = bond_adjustment[current_state]["mean"]
+            bond_adj_std = bond_adjustment[current_state]["std"]
+            adjusted_bond_mean = bond_mean + bond_adj_mean
+            adjusted_bond_std = bond_std * bond_adj_std
+            markov_bond_returns[i] = np.random.normal(adjusted_bond_mean, adjusted_bond_std)
+            
+            # Transition to next state based on current state
+            current_state = np.random.choice([0, 1, 2], p=transition_matrix[current_state])
+        
+        # Clip to reasonable bounds
+        markov_stock_returns = np.clip(markov_stock_returns, equity_min, equity_max)
+        markov_bond_returns = np.clip(markov_bond_returns, bond_min, bond_max)
+    else:
+        # Initialize with empty arrays if not using Markov Chain
+        markov_stock_returns = np.zeros(years)
+        markov_bond_returns = np.zeros(years)
+    
     return {
         "empirical": (empirical_equity_returns, empirical_bond_returns),
         "normal": (normal_stock_returns, normal_bond_returns),
         "t": (t_stock_returns, t_bond_returns),
         "lognormal": (lognormal_stock_returns, lognormal_bond_returns),
-        "collar": (collar_stock_returns, normal_bond_returns)  # Collared stock returns, normal bond returns
+        "collar": (collar_stock_returns, normal_bond_returns), # Collared stock returns, normal bond returns
+        "markov": (markov_stock_returns, markov_bond_returns)
     }
 
 
@@ -609,6 +693,9 @@ def calculate_investment_return(config, balances, savings, returns, year):
         stock_return_rate, bond_return_rate = returns["t"][0][year], returns["t"][1][year]
     elif config.simulation_type == "Empirical Distribution":
         stock_return_rate, bond_return_rate = returns["empirical"][0][year], returns["empirical"][1][year]
+    elif config.simulation_type == "Markov Chain":
+        # Use the Markov chain generated returns
+        stock_return_rate, bond_return_rate = returns["markov"][0][year], returns["markov"][1][year]
     elif config.simulation_type == "Collar Strategy":
         # Check if current year is within the collar period
         if config.collar_start_year <= current_year <= config.collar_end_year:
@@ -672,6 +759,8 @@ def calculate_investment_return_with_override(config, balances, savings, returns
         bond_return_rate = returns["t"][1][year]
     elif config.simulation_type == "Empirical Distribution":
         bond_return_rate = returns["empirical"][1][year]
+    elif config.simulation_type == "Markov Chain":
+        bond_return_rate = returns["markov"][1][year]
     elif config.simulation_type == "Collar Strategy":
         bond_return_rate = returns["collar"][1][year]
     else:

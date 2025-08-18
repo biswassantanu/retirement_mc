@@ -11,6 +11,8 @@ simulation_help_text = """
 - **Empirical Distribution**: Uses actual historical market data rather than theoretical models.
   Reflects real market patterns but limited to past events.
 
+- **Markov Chain**: Models market regimes (bear, normal, bull) with transition probabilities between states, capturing market cycles and persistence.
+
 - **Collar Strategy**: Uses Normal Distribution but limits stock returns between minimum and maximum values. 
   This is implemented through buying option collars and models investments with downside protection and capped upside.
 """
@@ -123,8 +125,8 @@ parameter_text = """
         • <strong>Normal:</strong> Standard bell curve. May underestimate crashes.<br>         
         • <strong>Students' T:</strong> Better captures market crashes with fatter tails.<br>          
         • <strong>Empirical:</strong> Based on actual historical returns.<br>
+        • <strong>Markov Chain:</strong> Models market regimes and their transitions.<br>
         • <strong>Collar Strategy:</strong> Limits stock returns between min/max values, providing downside protection with capped upside.<br><br>      
-        <strong>Simulations:</strong> More runs = more reliable but slower.
     </span>
 </div>
 """

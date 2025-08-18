@@ -874,11 +874,11 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
                 default_simulation_type = "Normal Distribution"
             else:
                 default_simulation_type = parameters.get("simulation_type", "Normal Distribution")
-                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Collar Strategy"]:
+                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Markov Chain", "Collar Strategy"]:
                     default_simulation_type = "Normal Distribution"
 
             # Create the radio button group
-            simulation_options = ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Collar Strategy"]
+            simulation_options = ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Markov Chain", "Collar Strategy"]
             simulation_type = st.radio("Simulation Type", options=simulation_options,
                 index=simulation_options.index(default_simulation_type),
                 help=simulation_help_text)
