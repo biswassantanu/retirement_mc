@@ -1496,7 +1496,7 @@ def display_percentile_tabs(processed_results):
     """Display tabs with detailed cash flow analysis for each percentile"""
     # Create tabs for the cash flow summaries
     tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
-        ":material/ac_unit: Far Below Hist. Avg. Returns", 
+        ":material/thunderstorm: Far Below Hist. Avg. Returns", 
         ":material/rainy: Below Average Historical Returns", 
         ":material/partly_cloudy_day: Average Historical Returns", 
         ":material/sunny: Above Historical Average Returns"
@@ -1506,7 +1506,7 @@ def display_percentile_tabs(processed_results):
     with tab_10th:
         create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
                            processed_results["10th"]["df_values"], 
-                           ":material/ac_unit: With Significantly Below Historical Average Returns",
+                           ":material/thunderstorm: With Significantly Below Historical Average Returns",
                            "download_key_10th")
     
     with tab_25th:
