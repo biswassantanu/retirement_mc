@@ -28,6 +28,6 @@ archive/
 docs/
 
 # document files 
-*.pdf 
+# *.pdf 
 *.doc
 
