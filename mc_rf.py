@@ -32,6 +32,7 @@ from helpers.help_texts import (simulation_help_text, smile_help_text,
                                 market_returns_note, 
                                 stress_test_text, enable_sequence_risk_help,
                                 seq_risk_years_help, seq_risk_returns_help, 
+                                interpretation_guide_md,
                                 disclaimer_text, help_document)
 
 # Import simulation module with our new refactored function
@@ -1228,7 +1229,7 @@ def display_result_guide_pdf(file_path):
                     base64_pdf = base64.b64encode(f.read()).decode('utf-8')
                 
                 # Set width to 100% to fill the expander (which is already at 80% of page width)
-                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
+                # pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
 
                 # pdf_display = f"""
                 # <embed 
@@ -1238,6 +1239,8 @@ def display_result_guide_pdf(file_path):
                 #     height="600px"
                 # />
                 # """
+
+                pdf_display = interpretation_guide_md
 
                 st.markdown(pdf_display, unsafe_allow_html=True)
             except FileNotFoundError:

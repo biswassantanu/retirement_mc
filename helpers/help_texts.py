@@ -318,3 +318,145 @@ Results are shown for different market return scenarios:
 
 Use the "Save Parameters" button to download your inputs as a CSV file. You can reload this file later using the upload feature.
 """
+
+
+interpretation_guide_md_old = """
+
+##### Core Metrics & Success Rate Thresholds - use them to evaluate your plan
+
+| Metric | What it means | Robust Plan | Adequate Plan | Fragile Plan |
+|--------|---------------|-------------|--------------|--------------|
+| **Success Rate** | Plan viability. Target value depends on the simulation type used. | Normal ≥85%<br>Student's T ≥80-85%<br>Collar ≥ 90%<br>Markov ≥75-80% | Normal 80-84%<br>Student's T 75-79%<br>Markov 70-74%<br>Collar ≥ 85-89% | Normal < 80%<br>Student's T <75%<br>Markov < 70%<br>Collar < 85% |
+| **End of Plan Cushion** | Years of expenses left - use values from below historical return scenario | ≥5 yrs | 3-4 yrs | ≤2 yrs |
+| **Withdrawal Rates** | Spending stress on portfolio (portfolio draw + starting balance - use values from below historical return scenario) | Avg ≤5%, Max ≤9% | Avg 6-7%, Max ≤12% | Avg > 7%, Max >12% |
+| **Market Assumptions** | Equity, bond, inflation, COLA (all nominal values i.e. not adjusted for inflation) | Conservative<br>· Equity 6.5%<br>· Bonds 3.4%<br>· CPI 2.5-3.5%<br>· COLA 1.5% | Moderate<br>· Equity 7.5%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2% | Rosy<br>Equity ≥9%<br>· CPI ≤2%<br>· COLA = CPI |
+
+##### Tolerance Rules (Trade-offs)
+
+| Rule | When It's Acceptable | When It's Not |
+|------|---------------------|--------------|
+| **One weak link allowed** | At most ONE metric may be "Fragile" if other three are "Good" | Two (or more) metrics in "Fragile" at once |
+| **High Success <> Thin Cushion** | If Success ≥90% (per sim type), Cushion can be 2-3 yrs | If Success < thresholds, Cushion must be ≥5 yrs |
+| **Strong Cushion <> Higher Withdrawals** | If Cushion ≥5 yrs, avg withdrawals up to 6-7% tolerable | If Cushion ≤2 yrs, withdrawals should be ≤5% |
+| **Conservative Assumptions <> Other Stress** | If assumptions are conservative, allow one other Adequate | If assumptions are rosy, Success + Cushion must be "Good" |
+| **High Withdrawals <> Safety Backstops** | Avg 7-8% only if Success ≥90% + Cushion ≥4 yrs + conservative assumptions | Avg > 7% with low Success or thin Cushion |
+"""
+
+interpretation_guide_md = """
+<style>
+body {
+  font-family: Arial, sans-serif; /* Optional: sets the font family */
+  font-size: 14px; /* Base font size for the document */
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 14px; /* Default font size for all table content */
+}
+th, td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #ddd;
+  vertical-align: top;
+}
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  font-size: 15px; /* Slightly larger font for headers */
+}
+h1 {
+  font-size: 24px;
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+h5 {
+  font-size: 16px;
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+/* You can also target specific elements or classes */
+.small-text {
+  font-size: 10px;
+}
+.large-text {
+  font-size: 18px;
+}
+</style>
+
+<h5>Core Metrics & Success Rate Thresholds - use them to evaluate your plan</h2>
+<table>
+  <tr>
+    <th style="width:15%">Metric</th>
+    <th style="width:20%">What it means</th>
+    <th style="width:20%">Robust Plan</th>
+    <th style="width:20%">Adequate Plan</th>
+    <th style="width:20%">Fragile Plan</th>
+  </tr>
+  <tr>
+    <td><b>Success Rate</b></td>
+    <td>Plan viability. Target value depends on the simulation type used.</td>
+    <td>Normal Dist ≥85%<br>Student's T ≥80-85%<br>Collar ≥ 90%<br>Markov ≥75-80%</td>
+    <td>Normal Dist 80-84%<br>Student's T 75-79%<br>Markov 70-74%<br>Collar ≥ 85-89%</td>
+    <td>Normal Dist< 80%<br>Student's T <75%<br>Markov < 70%<br>Collar < 85%</td>
+  </tr>
+  <tr>
+    <td><b>End of Plan Cushion</b></td>
+    <td>Years of expenses left - use values from below historical return scenario</td>
+    <td>≥5 yrs</td>
+    <td>3-4 yrs</td>
+    <td>≤2 yrs</td>
+  </tr>
+  <tr>
+    <td><b>Withdrawal Rates</b></td>
+    <td>Spending stress on portfolio (portfolio draw + starting balance - use values from below historical return scenario)</td>
+    <td>Avg ≤5%, Max ≤9%</td>
+    <td>Avg 6-7%, Max ≤12%</td>
+    <td>Avg > 7%, Max >12%</td>
+  </tr>
+  <tr>
+    <td><b>Market Assumptions</b></td>
+    <td>Equity, bond, inflation, COLA (all nominal values i.e. not adjusted for inflation)</td>
+    <td>Conservative<br>· Equity 6.5%<br>· Bonds 3.4%<br>· CPI 2.5-3.5%<br>· COLA 1.5%</td>
+    <td>Moderate<br>· Equity 7.5%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2%</td>
+    <td>Rosy<br>Equity ≥9%<br>· CPI ≤2%<br>· COLA = CPI</td>
+  </tr>
+</table>
+
+<h5>Tolerance Rules (Trade-offs)</h2>
+<table>
+  <tr>
+    <th style="width:25%">Rule</th>
+    <th style="width:37%">When It's Acceptable</th>
+    <th style="width:37%">When It's Not</th>
+  </tr>
+  <tr>
+    <td><b>One weak link allowed</b></td>
+    <td>At most ONE metric may be "Fragile" if other three are "Good"</td>
+    <td>Two (or more) metrics in "Fragile" at once</td>
+  </tr>
+  <tr>
+    <td><b>High Success &lt;&gt; Thin Cushion</b></td>
+    <td>If Success ≥90% (per sim type), Cushion can be 2-3 yrs</td>
+    <td>If Success < thresholds, Cushion must be ≥5 yrs</td>
+  </tr>
+  <tr>
+    <td><b>Strong Cushion &lt;&gt; Higher Withdrawals</b></td>
+    <td>If Cushion ≥5 yrs, avg withdrawals up to 6-7% tolerable</td>
+    <td>If Cushion ≤2 yrs, withdrawals should be ≤5%</td>
+  </tr>
+  <tr>
+    <td><b>Conservative Assumptions &lt;&gt; Other Stress</b></td>
+    <td>If assumptions are conservative, allow one other Adequate</td>
+    <td>If assumptions are rosy, Success + Cushion must be "Good"</td>
+  </tr>
+  <tr>
+    <td><b>High Withdrawals &lt;&gt; Safety Backstops</b></td>
+    <td>Avg 7-8% only if Success ≥90% + Cushion ≥4 yrs + conservative assumptions</td>
+    <td>Avg > 7% with low Success or thin Cushion</td>
+  </tr>
+</table>
+<br>
+"""
