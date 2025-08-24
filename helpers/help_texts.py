@@ -420,8 +420,8 @@ h5 {
     <td><b>Market Assumptions</b></td>
     <td>Equity, bond, inflation, COLA (all nominal values i.e. not adjusted for inflation)</td>
     <td><b>Conservative</b><br>· Equity 6.5%<br>· Bonds 3.4%<br>· CPI 2.5-3.5%<br>· COLA 1.5%</td>
-    <td><b>Moderate</b><br>· Equity 8%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2%</td>
-    <td><b>Rosy</b><br>· Equity ≥9%<br>· CPI ≤2%<br>· COLA = CPI</td>
+    <td><b>Moderate</b><br>· Equity 7.5%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2%</td>
+    <td><b>Rosy</b><br>· Equity ≥8.5%<br>· CPI ≤2%<br>· COLA = CPI</td>
   </tr>
 </table>
 
