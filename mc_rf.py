@@ -1228,16 +1228,16 @@ def display_result_guide_pdf(file_path):
                     base64_pdf = base64.b64encode(f.read()).decode('utf-8')
                 
                 # Set width to 100% to fill the expander (which is already at 80% of page width)
-                # pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
+                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
 
-                pdf_display = f"""
-                <embed 
-                    src="data:application/pdf;base64,{base64_pdf}#toolbar=0&navpanes=0&scrollbar=0" 
-                    type="application/pdf"
-                    width="100%" 
-                    height="600px"
-                />
-                """
+                # pdf_display = f"""
+                # <embed 
+                #     src="data:application/pdf;base64,{base64_pdf}#toolbar=0&navpanes=0&scrollbar=0" 
+                #     type="application/pdf"
+                #     width="100%" 
+                #     height="600px"
+                # />
+                # """
 
                 st.markdown(pdf_display, unsafe_allow_html=True)
             except FileNotFoundError:
