@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 import altair as alt
 import time 
 from typing import Dict, List, Tuple, Union, Any
+import base64
 
 # Import helpers
 from helpers.linear_indicator import create_linear_indicator
@@ -1206,9 +1207,41 @@ def run_simulation(config):
         'failure_count': failure_count,
         'sorted_simulation_results': sorted_simulation_results
     }
+
+    # Persist config so we can show parameter banner in results
+    st.session_state.simulation_config = config
     
     # Mark as initialized
     st.session_state.simulation_initialized = True
+
+# Display PDF directly in the app
+def display_result_guide_pdf(file_path):
+
+    # Create columns with 90%-10% width distribution
+    center_col, right_spacer = st.columns([76, 24])
+    
+    # Place the expander in the center column (80% width)
+    with center_col:
+        with st.expander(":material/help: How to interpret simulation results?"):
+            try:
+                with open("./assets/Interpret_simulation_results.pdf", "rb") as f:
+                    base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+                
+                # Set width to 100% to fill the expander (which is already at 80% of page width)
+                # pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
+
+                pdf_display = f"""
+                <embed 
+                    src="data:application/pdf;base64,{base64_pdf}#toolbar=0&navpanes=0&scrollbar=0" 
+                    type="application/pdf"
+                    width="100%" 
+                    height="600px"
+                />
+                """
+
+                st.markdown(pdf_display, unsafe_allow_html=True)
+            except FileNotFoundError:
+                st.error("PDF file not found. Please make sure the file exists in the assets folder.")
 
 
 def display_results():
@@ -1226,6 +1259,9 @@ def display_results():
     total_simulations = success_count + failure_count
     success_rate = (success_count / total_simulations) * 100 if total_simulations > 0 else 0
     
+    # Store in session for use elsewhere (e.g., parameter banner)
+    st.session_state['success_rate'] = success_rate
+
     # Display success rate indicator
     st.markdown(create_linear_indicator(math.floor(success_rate), "Success Rate: "), unsafe_allow_html=True)
     
@@ -1233,7 +1269,13 @@ def display_results():
     processed_results = process_percentile_scenarios(sorted_simulation_results)
     
     # Display ending balance summary
-    display_ending_balance_summary(processed_results)
+    display_ending_balance_summary(processed_results, st.session_state.get('simulation_config'))
+    
+    # Call the function where you want to display the PDF
+        # Display detailed scenario analysis
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.write("##### Learn how to interpret simulation results :material/pan_tool: ")
+    display_result_guide_pdf("./assets/Interpret_simulation_results.pdf")
     
     # Display detailed scenario analysis
     st.markdown("<br>", unsafe_allow_html=True)
@@ -1278,7 +1320,7 @@ def process_percentile_scenarios(sorted_simulation_results):
             df_values = reorder_columns(df_values)
 
             # Calculate year of depletion
-            year_of_depletion = "Lasts lifetime"
+            year_of_depletion = "Surplus at plan end"
             if not df_values.empty and 'ending_balance' in df_values.columns:
                 negative_years = df_values[df_values['ending_balance'] < 0]
                 if not negative_years.empty:
@@ -1343,9 +1385,45 @@ def format_cashflow_dataframe(df):
     
     return df
 
+def generate_parameter_summary(config):
+    """Generate a summary of simulation parameters for display"""
+
+    success_rate = (st.session_state.get("success_rate", None))
+    # Success Rate
+    if success_rate is not None:
+        summary = (
+            f"<span style='font-size:16px; font-weight:700;'>"
+            f"Success Rate: {math.floor(success_rate):.0f}%  |  </span>"
+        )
 
 
-def display_ending_balance_summary(processed_results):
+    # Basic simulation details
+    summary += f"<b>Simulation Type:</b> {config.simulation_type} ({config.simulations:,} runs), "
+    
+    # Add return assumptions
+    summary += f"<b>Assumed Returns:</b> Equity {config.stock_return_mean*100:.1f}% (±{config.stock_return_std*100:.1f}%), " \
+               f"Bonds {config.bond_return_mean*100:.1f}% (±{config.bond_return_std*100:.1f}%), "
+    
+    # Add allocation
+    summary += f"<b>Allocation:</b> {config.stock_percentage:.0f}/{config.bond_percentage:.0f}, "
+    
+    # Add collar details if applicable
+    if config.simulation_type == "Collar Strategy":
+        summary += f"<b>Collar:</b> Min {config.collar_min_return*100:.1f}%, Max {config.collar_max_return*100:.1f}% " \
+                   f"({config.collar_start_year}-{config.collar_end_year}), "
+    
+    # Add sequence risk details
+    if config.enable_sequence_risk:
+        summary += f"<b>Sequence Risk:</b> {config.seq_risk_years} years @ {config.seq_risk_returns*100:.1f}%, "
+    
+    # Add inflation/COLA
+    summary += f"<b>Inflation:</b> {config.inflation_mean*100:.1f}%, <b>COLA:</b> {config.cola_rate*100:.1f}%"
+
+    
+    return summary
+
+
+def display_ending_balance_summary(processed_results, config):
     """Display a summary of ending balances for each percentile"""
     # Calculate inflation adjustment for ending balances
     years = st.session_state.get('years_in_simulation', 30)
@@ -1364,7 +1442,7 @@ def display_ending_balance_summary(processed_results):
             std_dev = df['return_rate'].std()            
 
             # Calculate geometric mean using the provided formula
-            geometric_mean = arithmetic_mean - (arithmetic_mean ** 2) /2
+            geometric_mean = arithmetic_mean - (arithmetic_mean ** 2) / 2
             processed_results[percentile]['geometric_mean'] = f"{geometric_mean * 100:.2f}%"
 
             # Count years with positive and negative returns
@@ -1372,13 +1450,9 @@ def display_ending_balance_summary(processed_results):
             negative_years = (df['return_rate'] <= 0).sum()
             total_years = positive_years + negative_years
 
-
             processed_results[percentile]['positive_return_years'] = positive_years
             processed_results[percentile]['negative_return_years'] = negative_years
-
             processed_results[percentile]['negative_return_formatted'] = f"{negative_years} out of {total_years} years"
-
-
         else:
             # Default values if return_rate isn't available
             processed_results[percentile]['median_return_rate'] = "N/A"
@@ -1386,47 +1460,99 @@ def display_ending_balance_summary(processed_results):
             processed_results[percentile]['positive_return_years'] = 0
             processed_results[percentile]['negative_return_years'] = 0
             processed_results[percentile]['negative_return_formatted'] = "N/A"
-  
-    # Prepare the data for the grid
+
+    # Compute Cushion Years and Withdrawal Rate stats (min/max/mean/median) per percentile
+    def _last_year_total_expense_incl_tax(df_):
+        if df_ is None or df_.empty:
+            return float('nan')
+        last = df_.iloc[-1]
+        components = [
+            'expenses_basic',
+            'expenses_mortgage',
+            'expenses_self_healthcare',
+            'expenses_partner_healthcare',
+            'expenses_one_time',
+            'tax'
+        ]
+        total = 0.0
+        for c in components:
+            if c in df_.columns and pd.notnull(last[c]):
+                total += float(last[c])
+        return total
+
+    def _withdrawal_rate_stats(df_):
+        if df_ is None or df_.empty or 'withdrawal_rate' not in df_.columns:
+            return "N/A"
+        wr = df_['withdrawal_rate']
+        wr = wr[pd.notnull(wr)]
+        # Exclude non-draw years (optional, keeps numbers meaningful)
+        wr = wr[wr > 0]
+        if wr.empty:
+            return "N/A"
+        # return f"[ {wr.min()*100:.1f}% - {wr.max()*100:.1f}% ]   {wr.mean()*100:.1f}%"
+        #return f"{wr.mean()*100:.1f}%"
+        return f"{wr.mean()*100:.1f}% | {wr.max()*100:.1f}%"
+
+    cushion_years = {}
+    wr_stats = {}
+    for p in ['10th', '25th', '50th', '75th']:
+        dfp = processed_results[p]['df_values']
+        end_bal = processed_results[p]['ending_balance']
+        total_last_exp = _last_year_total_expense_incl_tax(dfp)
+        cushion = (end_bal / total_last_exp) if (total_last_exp and total_last_exp > 0) else float('nan')
+        cushion_years[p] = "N/A" if (pd.isna(cushion) or cushion <= 0) else f"{cushion:.1f} yrs of expense"
+        wr_stats[p] = _withdrawal_rate_stats(dfp)
+
+    # Prepare the data for the grid (added Cushion Years and Withdrawal Rate rows)
     data = {
         "Scenarios": [
             "Ending Balance", 
             "At Today's $", 
+            "End-Plan Cushion",
             "Year of Depletion",
             "Effective Rate of Return",
-            "Negative Returns", 
+            "Withdrawal (Avg | Max)",
+            # "Negative Returns", 
             "Simulation Percentile"
         ],
         "Far Below Hist. Avg. Returns": [
             f"{processed_results['10th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['10th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M", 
+            cushion_years['10th'],
             processed_results['10th']['year_of_depletion'],
             processed_results['10th']['geometric_mean'],
-            processed_results['10th']['negative_return_formatted'],
+            wr_stats['10th'],
+            # processed_results['10th']['negative_return_formatted'],
             "Top 90% Scenarios"
         ],
         "Below Historical Average Returns": [
             f"{processed_results['25th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['25th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
+            cushion_years['25th'],
             processed_results['25th']['year_of_depletion'],
             processed_results['25th']['geometric_mean'],
-            processed_results['25th']['negative_return_formatted'],
+            wr_stats['25th'],
+            # processed_results['25th']['negative_return_formatted'],
             "Top 75% Scenarios"
         ],
         "Historical Average Returns": [
             f"{processed_results['50th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['50th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
+            cushion_years['50th'],
             processed_results['50th']['year_of_depletion'],
             processed_results['50th']['geometric_mean'],
-            processed_results['50th']['negative_return_formatted'],
+            wr_stats['50th'],
+            # processed_results['50th']['negative_return_formatted'],
             "Top 50% Scenarios"
         ],
         "Above Historical Average Returns": [
             f"{processed_results['75th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['75th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
+            cushion_years['75th'],
             processed_results['75th']['year_of_depletion'],
             processed_results['75th']['geometric_mean'],
-            processed_results['75th']['negative_return_formatted'],
+            wr_stats['75th'],
+            # processed_results['75th']['negative_return_formatted'],
             "Top 25% Scenarios"
         ]
     }
@@ -1450,8 +1576,8 @@ def display_ending_balance_summary(processed_results):
                 continue
                 
             # For Year of Depletion (row index 2)
-            if i == 2:
-                if value == "Lasts lifetime":
+            if i == 3:
+                if value == "Surplus at plan end":
                     styles.iloc[i, j] = 'color: green; font-weight: bold;'
                 else:
                     styles.iloc[i, j] = 'color: red; font-weight: bold;'
@@ -1464,8 +1590,8 @@ def display_ending_balance_summary(processed_results):
                         styles.iloc[i, j] = f'color: {color}; font-weight: bold;'
                 except:
                     pass
-            # For Median Return Rate (row index 3)
-            elif i == 3 or i == 4:
+            # For Rate rows with % (row index 3 remains effective return)
+            elif i == 4:
                 try:
                     if isinstance(value, str) and '%' in value:
                         numeric_value = float(value.replace('%', ''))
@@ -1473,7 +1599,8 @@ def display_ending_balance_summary(processed_results):
                         styles.iloc[i, j] = f'color: {color}; font-weight: bold;'
                 except:
                     pass
-    
+            # Leave Cushion Years and Withdrawal Rate rows unstyled by default
+
     # Apply the styles
     styled_df = df.style.apply(lambda _: styles, axis=None)
     # Set the header background color to light grey
@@ -1482,53 +1609,95 @@ def display_ending_balance_summary(processed_results):
     ])
     styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
     
-    
     # Hide the index
     styled_df = styled_df.hide(axis="index")
 
-    # Display the modified table
+    # Convert to HTML
     table_html = styled_df.to_html(index=False, escape=False)
 
-    st.markdown(table_html, unsafe_allow_html=True)
+    # Inject a single parameter banner row spanning all 4 scenario columns (minimal change: HTML insert)
+    try:
+        param_banner = generate_parameter_summary(config) if config is not None else ""
+        if param_banner:
+            # Option A: full-width banner across all 5 columns (no label cell)
+            banner_label = None  # set to "Parameters" to use Option B below
 
+            if banner_label is None:
+                banner_row = (
+                    "<tr>"
+                    "<td colspan='5' "
+                    "style='background-color:#ffffff; color:#0d4c73; font-size:13px; padding:6px;'>"
+                    f"{param_banner}"
+                    "</td>"
+                    "</tr>"
+                )
+            else:
+                # Option B: labeled first column + banner spanning the remaining 4 columns
+                banner_row = (
+                    "<tr>"
+                    "<td style='background-color:#ffffff; color:#0d4c73; font-size:13px; "
+                    "padding:6px; font-weight:600; white-space:nowrap;'>"
+                    f"{banner_label}"
+                    "</td>"
+                    "<td colspan='4' "
+                    "style='background-color:#ffffff; color:#0d4c73; font-size:13px; padding:6px;'>"
+                    f"{param_banner}"
+                    "</td>"
+                    "</tr>"
+                )
+
+            # display the parameter summary as the first row
+            # table_html = table_html.replace("<tbody>", f"<tbody>{banner_row}", 1)
+
+            # display the parameter summary as the last row
+            table_html = table_html.replace("</tbody>", f"{banner_row}</tbody>", 1)
+    except Exception:
+        pass
+
+    # Display the modified table
+    st.markdown(table_html, unsafe_allow_html=True)
 
 def display_percentile_tabs(processed_results):
     """Display tabs with detailed cash flow analysis for each percentile"""
-    # Create tabs for the cash flow summaries
-    tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
-        ":material/thunderstorm: Far Below Hist. Avg. Returns", 
-        ":material/rainy: Below Average Historical Returns", 
-        ":material/partly_cloudy_day: Average Historical Returns", 
-        ":material/sunny: Above Historical Average Returns"
-    ])
-    
-    # Display each percentile in its tab
-    with tab_10th:
-        create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
-                           processed_results["10th"]["df_values"], 
-                           ":material/thunderstorm: With Significantly Below Historical Average Returns",
-                           "download_key_10th")
-    
-    with tab_25th:
-        create_cash_flow_tab(processed_results["25th"]["df_formatted"], 
-                           processed_results["25th"]["df_values"], 
-                           ":material/rainy: With Below Historical Average Returns",
-                           "download_key_25th"
-                           )
-    
-    with tab_50th:
-        create_cash_flow_tab(processed_results["50th"]["df_formatted"], 
-                           processed_results["50th"]["df_values"], 
-                           ":material/partly_cloudy_day: With Average Historical Returns",
-                           "download_key_50th"
-                           )
-    
-    with tab_75th:
-        create_cash_flow_tab(processed_results["75th"]["df_formatted"], 
-                           processed_results["75th"]["df_values"], 
-                           ":material/sunny: With Above Historical Average Returns", 
-                           "download_key_75th"
-                           )
+
+    content_area, right_spacer = st.columns([9, 2])
+
+    with content_area: 
+        # Create tabs for the cash flow summaries
+        tab_10th, tab_25th, tab_50th, tab_75th = st.tabs([
+            ":material/thunderstorm: Far Below Hist. Avg. Returns", 
+            ":material/rainy: Below Average Historical Returns", 
+            ":material/partly_cloudy_day: Average Historical Returns", 
+            ":material/sunny: Above Historical Average Returns"
+        ])
+        
+        # Display each percentile in its tab
+        with tab_10th:
+            create_cash_flow_tab(processed_results["10th"]["df_formatted"], 
+                            processed_results["10th"]["df_values"], 
+                            ":material/thunderstorm: With Significantly Below Historical Average Returns",
+                            "download_key_10th")
+        
+        with tab_25th:
+            create_cash_flow_tab(processed_results["25th"]["df_formatted"], 
+                            processed_results["25th"]["df_values"], 
+                            ":material/rainy: With Below Historical Average Returns",
+                            "download_key_25th"
+                            )
+        
+        with tab_50th:
+            create_cash_flow_tab(processed_results["50th"]["df_formatted"], 
+                            processed_results["50th"]["df_values"], 
+                            ":material/partly_cloudy_day: With Average Historical Returns",
+                            "download_key_50th"
+                            )
+        
+        with tab_75th:
+            create_cash_flow_tab(processed_results["75th"]["df_formatted"], 
+                            processed_results["75th"]["df_values"], 
+                            ":material/sunny: With Above Historical Average Returns", 
+                            "download_key_75th"
+                            )
 
 def create_cash_flow_tab(df_cashflow, df_cashflow_value, title, download_button_key):
     """Create a tab with cash flow details and visualizations"""
@@ -1536,71 +1705,71 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title, download_button_
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("##### " + title + " details")
 
-    # Create columns with 10% padding on each side (10% - 80% - 10%)
-    content_area, right_spacer = st.columns([9, 1])
-    with content_area:
+    # # Create columns with 10% padding on each side (10% - 80% - 10%)
+    # content_area, right_spacer = st.columns([10, 0])
+    # with content_area:
 
-        # Apply styling to columns that exist
-        columns_to_style = []
-        target_columns = ['beginning_balance', 'ending_balance', 'investment_return_total', 'return_rate']
+    # Apply styling to columns that exist
+    columns_to_style = []
+    target_columns = ['beginning_balance', 'ending_balance', 'investment_return_total', 'return_rate']
 
-        # Only add columns that actually exist in the dataframe
-        for col in target_columns:
-            if col in df_cashflow.columns:
-                columns_to_style.append(col)
+    # Only add columns that actually exist in the dataframe
+    for col in target_columns:
+        if col in df_cashflow.columns:
+            columns_to_style.append(col)
 
-        
-        # Apply styling
-        if columns_to_style:
-            styled_df = df_cashflow.style.apply(highlight_columns, subset=columns_to_style)
-        else:
-            styled_df = df_cashflow.style
-        
-        # Create tabs for visualizations
-        tab1, tab2, tab3, tab4 = st.tabs([
-            ":material/attach_money: Portfolio Balance", 
-            ":material/bar_chart: Market Returns", 
-            ":material/mintmark: Withdrawal Rate", 
-            ":material/table_view: Cash Flow Details"
-        ])
-        
-        positive_color = "#55AA55"
-        negative_color = "#DD5050"
-        
-        with tab1: 
+    
+    # Apply styling
+    if columns_to_style:
+        styled_df = df_cashflow.style.apply(highlight_columns, subset=columns_to_style)
+    else:
+        styled_df = df_cashflow.style
+    
+    # Create tabs for visualizations
+    tab1, tab2, tab3, tab4 = st.tabs([
+        ":material/attach_money: Portfolio Balance", 
+        ":material/bar_chart: Market Returns", 
+        ":material/mintmark: Withdrawal Rate", 
+        ":material/table_view: Cash Flow Details"
+    ])
+    
+    positive_color = "#55AA55"
+    negative_color = "#DD5050"
+    
+    with tab1: 
 
-            # Create portfolio balance chart
-            chart = create_balance_chart(df_cashflow_value, positive_color, negative_color)
-            if chart:
-                st.altair_chart(chart, use_container_width=True)
-        
-        with tab2: 
-            # Create return chart with actual column names
-            chart = create_return_chart(df_cashflow_value, positive_color, negative_color)
-            if chart:
-                st.altair_chart(chart, use_container_width=True)
-        
-        with tab3: 
-            # Create withdrawal chart with actual column names
-            chart = create_withdrawal_chart(df_cashflow_value, positive_color, negative_color)
-            if chart:
-                st.altair_chart(chart, use_container_width=True)
-        
-        with tab4: 
-            # Display the dataframe
-            st.markdown("###### Cashflow ")   
-            st.dataframe(styled_df, hide_index=True, use_container_width=True)
+        # Create portfolio balance chart
+        chart = create_balance_chart(df_cashflow_value, positive_color, negative_color)
+        if chart:
+            st.altair_chart(chart, use_container_width=True)
+    
+    with tab2: 
+        # Create return chart with actual column names
+        chart = create_return_chart(df_cashflow_value, positive_color, negative_color)
+        if chart:
+            st.altair_chart(chart, use_container_width=True)
+    
+    with tab3: 
+        # Create withdrawal chart with actual column names
+        chart = create_withdrawal_chart(df_cashflow_value, positive_color, negative_color)
+        if chart:
+            st.altair_chart(chart, use_container_width=True)
+    
+    with tab4: 
+        # Display the dataframe
+        st.markdown("###### Cashflow ")   
+        st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
-            csv1 = df_cashflow_value.to_csv(index=False)
-            st.download_button(
-                label="Download Cashflow Data",
-                key=download_button_key, #key need to be different for each tab
-                data=csv1,
-                file_name="retirement_cashflow.csv",
-                mime="text/csv",
-                type="primary",
-                icon=":material/download:"
-            )           
+        csv1 = df_cashflow_value.to_csv(index=False)
+        st.download_button(
+            label="Download Cashflow Data",
+            key=download_button_key, #key need to be different for each tab
+            data=csv1,
+            file_name="retirement_cashflow.csv",
+            mime="text/csv",
+            type="primary",
+            icon=":material/download:"
+        )           
 
 def flatten_nested_dataframe(df):
     """
