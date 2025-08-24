@@ -1514,7 +1514,7 @@ def display_ending_balance_summary(processed_results, config):
             "End-Plan Cushion",
             "Year of Depletion",
             "Effective Rate of Return",
-            "Withdrawal (Avg | Max)",
+            "Withdrawal Rate (Avg | Max)",
             # "Negative Returns", 
             "Simulation Percentile"
         ],

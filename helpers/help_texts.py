@@ -398,20 +398,20 @@ h5 {
   <tr>
     <td><b>Success Rate</b></td>
     <td>Plan viability. Target value depends on the simulation type used.</td>
-    <td>Normal Dist ≥85%<br>Student's T ≥80-85%<br>Collar ≥ 90%<br>Markov ≥75-80%</td>
-    <td>Normal Dist 80-84%<br>Student's T 75-79%<br>Markov 70-74%<br>Collar ≥ 85-89%</td>
-    <td>Normal Dist< 80%<br>Student's T <75%<br>Markov < 70%<br>Collar < 85%</td>
+    <td>· Normal Dist ≥85%<br>· Student's T ≥80-85%<br>· Collar ≥ 90%<br>· Markov ≥75-80%</td>
+    <td>· Normal Dist 80-84%<br>· Student's T 75-79%<br>· Collar ≥ 85-89%<br>· Markov 70-74%</td>
+    <td>· Normal Dist< 80%<br>· Student's T <75%<br>· Collar < 85%<br>· Markov < 70%</td>
   </tr>
   <tr>
     <td><b>End of Plan Cushion</b></td>
-    <td>Years of expenses left - use values from below historical return scenario</td>
+    <td>Years of expenses left - use values from <b>below historical return scenario</b></td>
     <td>≥5 yrs</td>
     <td>3-4 yrs</td>
     <td>≤2 yrs</td>
   </tr>
   <tr>
     <td><b>Withdrawal Rates</b></td>
-    <td>Spending stress on portfolio (portfolio draw + starting balance - use values from below historical return scenario)</td>
+    <td>Spending stress on portfolio (portfolio draw + starting balance - use values from <b>below historical return scenario</b>)</td>
     <td>Avg ≤5%, Max ≤9%</td>
     <td>Avg 6-7%, Max ≤12%</td>
     <td>Avg > 7%, Max >12%</td>
@@ -419,9 +419,9 @@ h5 {
   <tr>
     <td><b>Market Assumptions</b></td>
     <td>Equity, bond, inflation, COLA (all nominal values i.e. not adjusted for inflation)</td>
-    <td>Conservative<br>· Equity 6.5%<br>· Bonds 3.4%<br>· CPI 2.5-3.5%<br>· COLA 1.5%</td>
-    <td>Moderate<br>· Equity 7.5%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2%</td>
-    <td>Rosy<br>Equity ≥9%<br>· CPI ≤2%<br>· COLA = CPI</td>
+    <td><b>Conservative</b><br>· Equity 6.5%<br>· Bonds 3.4%<br>· CPI 2.5-3.5%<br>· COLA 1.5%</td>
+    <td><b>Moderate</b><br>· Equity 8%<br>· Bonds 3.4%<br>· CPI 2.25%<br>· COLA 2%</td>
+    <td><b>Rosy</b><br>· Equity ≥9%<br>· CPI ≤2%<br>· COLA = CPI</td>
   </tr>
 </table>
 
