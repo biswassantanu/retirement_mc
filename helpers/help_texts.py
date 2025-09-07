@@ -449,12 +449,12 @@ h5 {
   </tr>
   <tr>
     <td><b>Conservative Assumptions &lt;&gt; Other Stress</b></td>
-    <td>If assumptions are conservative, allow one other Adequate</td>
-    <td>If assumptions are rosy, Success + Cushion must be "Good"</td>
+    <td>If assumptions are <b>Conservative</b>, allow one other Adequate</td>
+    <td>If assumptions are <b>Rosy</b>, Success + Cushion must be "Good"</td>
   </tr>
   <tr>
     <td><b>High Withdrawals &lt;&gt; Safety Backstops</b></td>
-    <td>Avg 7-8% only if Success ≥90% + Cushion ≥4 yrs + conservative assumptions</td>
+    <td>Avg 7-8% only if Success ≥90% + Cushion ≥4 yrs + <b>Conservative</b> assumptions</td>
     <td>Avg > 7% with low Success or thin Cushion</td>
   </tr>
 </table>

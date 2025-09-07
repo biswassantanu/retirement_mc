@@ -475,9 +475,9 @@ def setup_markov_chain():
 
     # Conservative transition matrix
     transition_matrix = np.array([
-        [0.45, 0.30, 0.25],  # From Bear: 25% stay Bear, 65% to Normal, 10% to Bull
-        [0.20, 0.45, 0.35],  # From Normal: 20% to Bear, 65% stay Normal, 15% to Bull
-        [0.10, 0.18, 0.72],  # From Bull: 20% to Bear, 60% to Normal, 20% stay Bull
+        [0.35, 0.50, 0.15],  # From Bear: 35% stay Bear, 50% to Normal, 15% to Bull
+        [0.15, 0.70, 0.15],  # From Normal: 15% to Bear, 70% stay Normal, 15% to Bull
+        [0.10, 0.50, 0.40],  # From Bull: 10% to Bear, 50% to Normal, 40% stay Bull
     ]) 
 
     # Conservative return characteristics
@@ -489,9 +489,9 @@ def setup_markov_chain():
 
     # Conservative return characteristics
     state_returns = {
-        0: {"mean": -0.15, "std": 0.20},  # Bear market: -20% average return
-        1: {"mean": 0.07, "std": 0.10},   # Normal market: 8% average return
-        2: {"mean": 0.15, "std": 0.18}    # Bull market: 18% average return
+        0: {"mean": -0.18, "std": 0.20},  # Bear market: -18% average return
+        1: {"mean": 0.07, "std": 0.10},   # Normal market: 7% average return
+        2: {"mean": 0.20, "std": 0.18}    # Bull market: 20% average return
     }
     
     # Bond adjustment factors by state
