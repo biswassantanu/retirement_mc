@@ -1513,9 +1513,9 @@ def display_ending_balance_summary(processed_results, config):
             "Ending Balance", 
             "At Today's $", 
             "End-Plan Cushion",
+            "Withdrawal Rate (Avg | Max)",
             "Year of Depletion",
             "Effective Rate of Return",
-            "Withdrawal Rate (Avg | Max)",
             # "Negative Returns", 
             "Simulation Percentile"
         ],
@@ -1523,9 +1523,9 @@ def display_ending_balance_summary(processed_results, config):
             f"{processed_results['10th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['10th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M", 
             cushion_years['10th'],
+            wr_stats['10th'],
             processed_results['10th']['year_of_depletion'],
             processed_results['10th']['geometric_mean'],
-            wr_stats['10th'],
             # processed_results['10th']['negative_return_formatted'],
             "Top 90% Scenarios"
         ],
@@ -1533,9 +1533,9 @@ def display_ending_balance_summary(processed_results, config):
             f"{processed_results['25th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['25th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             cushion_years['25th'],
+            wr_stats['25th'],
             processed_results['25th']['year_of_depletion'],
             processed_results['25th']['geometric_mean'],
-            wr_stats['25th'],
             # processed_results['25th']['negative_return_formatted'],
             "Top 75% Scenarios"
         ],
@@ -1543,9 +1543,9 @@ def display_ending_balance_summary(processed_results, config):
             f"{processed_results['50th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['50th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             cushion_years['50th'],
+            wr_stats['50th'],
             processed_results['50th']['year_of_depletion'],
             processed_results['50th']['geometric_mean'],
-            wr_stats['50th'],
             # processed_results['50th']['negative_return_formatted'],
             "Top 50% Scenarios"
         ],
@@ -1553,9 +1553,9 @@ def display_ending_balance_summary(processed_results, config):
             f"{processed_results['75th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['75th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M",
             cushion_years['75th'],
+            wr_stats['75th'],
             processed_results['75th']['year_of_depletion'],
             processed_results['75th']['geometric_mean'],
-            wr_stats['75th'],
             # processed_results['75th']['negative_return_formatted'],
             "Top 25% Scenarios"
         ]
@@ -1580,7 +1580,7 @@ def display_ending_balance_summary(processed_results, config):
                 continue
                 
             # For Year of Depletion (row index 2)
-            if i == 3:
+            if i == 4:
                 if value == "Surplus at plan end":
                     styles.iloc[i, j] = 'color: green; font-weight: bold;'
                 else:
@@ -1595,7 +1595,7 @@ def display_ending_balance_summary(processed_results, config):
                 except:
                     pass
             # For Rate rows with % (row index 3 remains effective return)
-            elif i == 4:
+            elif i == 5:
                 try:
                     if isinstance(value, str) and '%' in value:
                         numeric_value = float(value.replace('%', ''))
