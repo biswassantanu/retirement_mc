@@ -46,7 +46,8 @@ def main():
     # Setup app configuration
     setup_app()
 
-    st.write("###### Enter your financial information in the tabs below or upload a previously saved parameter file")
+    st.write("###### Enter your financial information in the tabs below or upload a previously saved parameter file. Once uploaded, click <b><u>Run Simulation</u><b> to proceed.",
+    unsafe_allow_html=True)
 
     # Load parameters from uploaded file if available
     parameters = load_parameters_from_upload()

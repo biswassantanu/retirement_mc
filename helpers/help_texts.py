@@ -149,6 +149,10 @@ disclaimer_text = """
             For personalized financial advice, please consult a certified professional advisor. 
             No liability accepted for decisions based on these simulations.
         </p>
+        <p style="font-size:0.8em; margin-bottom:0px; color:#0d4c73;">
+            <strong>Data Privacy:</strong> This app <b><u>does not store any user input data</u></b>. All inputs are lost when the session ends. 
+            Use <b>'Save Parameters'</b> button below to download all inputs, re-upload them later and re-run simulation.
+        </p>
     </div>
     """
 
