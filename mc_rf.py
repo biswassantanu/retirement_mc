@@ -1494,8 +1494,8 @@ def display_ending_balance_summary(processed_results, config):
         if wr.empty:
             return "N/A"
         # return f"[ {wr.min()*100:.1f}% - {wr.max()*100:.1f}% ]   {wr.mean()*100:.1f}%"
-        #return f"{wr.mean()*100:.1f}%"
-        return f"{wr.mean()*100:.1f}% | {wr.max()*100:.1f}%"
+        return f"{wr.mean()*100:.1f}%"
+        #return f"{wr.mean()*100:.1f}% | {wr.max()*100:.1f}%"
 
     cushion_years = {}
     wr_stats = {}
@@ -1513,13 +1513,13 @@ def display_ending_balance_summary(processed_results, config):
             "Ending Balance", 
             "At Today's $", 
             "End-Plan Cushion",
-            "Withdrawal Rate (Avg | Max)",
+            "Avg Withdrawal Rate",
             "Year of Depletion",
             "Effective Rate of Return",
             # "Negative Returns", 
             "Simulation Percentile"
         ],
-        "Far Below Hist. Avg. Returns": [
+        "Significantly Below Historical Avg. Returns": [
             f"{processed_results['10th']['ending_balance'] / 1_000_000:,.2f}M",
             f"{processed_results['10th']['ending_balance'] / ((1 + inflation_mean) ** years) / 1_000_000:,.2f}M", 
             cushion_years['10th'],
@@ -1607,12 +1607,40 @@ def display_ending_balance_summary(processed_results, config):
 
     # Apply the styles
     styled_df = df.style.apply(lambda _: styles, axis=None)
-    # Set the header background color to light grey
-    styled_df = styled_df.set_table_styles([
-        {'selector': 'thead th', 'props': [('background-color', '#F0F2F6'), ('color', '#333'), ('font-weight', 'bold')]}
-    ])
-    styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
     
+    
+    # Set the header background color to light grey
+    # styled_df = styled_df.set_table_styles([
+    #     {'selector': 'thead th', 'props': [('background-color', '#F0F2F6'), ('color', '#333'), ('font-weight', 'bold')]}
+    # ])
+    # styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
+    
+    # set column width 
+    # Define column widths (adjust percentages as needed)
+    col_widths = {
+        "Scenarios": 24,  # First column wider for descriptive text
+        "Significantly Below Historical Avg. Returns": 19,
+        "Below Historical Average Returns": 19,
+        "Historical Average Returns": 19,
+        "Above Historical Average Returns":19
+    }
+
+    # Apply header styling and column widths
+    column_styles = [{'selector': 'thead th', 'props': [('background-color', '#F0F2F6'), 
+                                                    ('color', '#333'), 
+                                                    ('font-weight', 'bold')]}]
+
+    # Add width specifications for each column
+    for i, (col, width) in enumerate(col_widths.items()):
+        column_styles.append({
+            'selector': f'td:nth-child({i+1}), th:nth-child({i+1})', 
+            'props': [('width', f'{width}%')]
+        })
+
+    styled_df = styled_df.set_table_styles(column_styles)
+    styled_df.set_table_attributes('style="font-size: 14px; width: 75%;"')
+
+
     # Hide the index
     styled_df = styled_df.hide(axis="index")
 
