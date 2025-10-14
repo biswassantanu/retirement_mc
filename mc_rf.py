@@ -869,7 +869,7 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
         # Defaults and back-compat for old CSVs that had "Collar Strategy"
         default_sim_type = "Normal Distribution"
         default_apply_collar = False
-        default_collar_equity_pct = 0.0
+        default_collar_equity_pct = 0.5
         collar_min_return = -0.05
         collar_max_return = 0.15
         collar_start_year = years_range[0] if years_range else current_year
@@ -921,7 +921,7 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
                 help="Apply a capped/floored equity return overlay on top of the base model."
             )
 
-            collar_equity_pct = 0.0
+            collar_equity_pct = 0.5
             if apply_collar:
                 collar_equity_pct = st.slider(
                     "Collar applied to % of equity",
