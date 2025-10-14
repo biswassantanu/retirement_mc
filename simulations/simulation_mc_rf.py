@@ -116,6 +116,9 @@ class SimulationConfig:
     collar_start_year: int 
     collar_end_year: int 
 
+    # NEW: collar overlay controls
+    apply_collar: bool               # whether to apply collar overlay
+    collar_equity_pct: float         # fraction (0.0–1.0) of equity sleeve under collar
 
 @dataclass
 class AccountBalances:
@@ -268,16 +271,25 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
         year_of_depletion = None
         
         # Preselect return values for all years in this simulation
+        # returns = preselect_investment_returns(
+        #     config.simulation_type,
+        #     years_in_simulation,
+        #     config.stock_return_mean, config.stock_return_std,
+        #     config.bond_return_mean, config.bond_return_std,
+        #     equity_return_min, equity_return_max, 
+        #     bond_return_min, bond_return_max, 
+        #     config.collar_min_return, config.collar_max_return
+        # )
+        
         returns = preselect_investment_returns(
             config.simulation_type,
             years_in_simulation,
             config.stock_return_mean, config.stock_return_std,
-            config.bond_return_mean, config.bond_return_std,
-            equity_return_min, equity_return_max, 
-            bond_return_min, bond_return_max, 
-            config.collar_min_return, config.collar_max_return
+            config.bond_return_mean,  config.bond_return_std,
+            equity_return_min, equity_return_max,
+            bond_return_min,   bond_return_max
         )
-        
+
         for year in range(years_in_simulation):
 
             # set the initial value to 0 if balance becomes negative
@@ -504,99 +516,188 @@ def setup_markov_chain():
     return transition_matrix, state_returns, bond_adjustment
 
 
+# def preselect_investment_returns_old (simulation_type, years, 
+#                                 stock_mean, stock_std, bond_mean, bond_std,
+#                                 equity_min, equity_max, bond_min, bond_max, 
+#                                 collar_min_return=None, collar_max_return=None
+#                                 ):
+#     """Preselect investment returns for the entire simulation"""
+    
+#     # For empirical distribution - get historical data
+#     replace_option = True if simulation_type == "Empirical Distribution" else False
+#     selected_years = np.random.choice(list(historical_equity_returns.keys()), 
+#                                     size=years, replace=replace_option)
+    
+#     empirical_equity_returns = [historical_equity_returns[int(year)] / 100 for year in selected_years]
+#     empirical_bond_returns = [historical_bond_returns[int(year)] / 100 for year in selected_years]
+    
+#     # Shuffle the empirical returns
+#     np.random.shuffle(empirical_equity_returns)
+#     np.random.shuffle(empirical_bond_returns)
+    
+#     # Normal distribution returns
+#     normal_stock_returns = np.random.normal(stock_mean, stock_std, years)
+#     normal_bond_returns = np.random.normal(bond_mean, bond_std, years)
+    
+#     # Clip values to reasonable bounds (based on past actual min and max)
+#     normal_stock_returns = np.clip(normal_stock_returns, equity_min, equity_max)
+#     normal_bond_returns = np.clip(normal_bond_returns, bond_min, bond_max)
+
+#     # Collar strategy returns - clipped normal distribution
+#     if simulation_type == "Collar Strategy" and collar_min_return is not None and collar_max_return is not None:
+#         collar_stock_returns = np.clip(normal_stock_returns, collar_min_return, collar_max_return)
+#     else:
+#         collar_stock_returns = normal_stock_returns.copy()
+    
+#     # Student-t distribution returns
+#     df = 5  # degrees of freedom
+#     t_stock_returns = t.rvs(df, loc=stock_mean, scale=stock_std, size=years)
+#     t_bond_returns = t.rvs(df, loc=bond_mean, scale=bond_std, size=years)
+    
+#     # Lognormal returns (not currently used but included for completeness)
+#     lognormal_stock_returns = np.random.lognormal(mean=np.log(stock_mean), 
+#                                                 sigma=stock_std, size=years)
+#     lognormal_bond_returns = np.random.lognormal(mean=np.log(bond_mean), 
+#                                                 sigma=bond_std, size=years)
+    
+#     # Markov Chain returns
+#     if simulation_type == "Markov Chain":
+#         transition_matrix, state_returns, bond_adjustment = setup_markov_chain()
+        
+#         # Start in random state weighted by equilibrium distribution 
+#         # 20% Bear MArket, 60% Normal Market and 20% Bill Market Probability weightage
+#         initial_state = np.random.choice([0, 1, 2], p=[0.2, 0.6, 0.2])
+        
+#         # Initialize arrays for storing returns and states
+#         markov_stock_returns = np.zeros(years)
+#         markov_bond_returns = np.zeros(years)
+#         states = np.zeros(years, dtype=int)
+#         current_state = initial_state
+        
+#         # Generate returns using Markov process
+#         for i in range(years):
+#             states[i] = current_state
+            
+#             # Generate returns based on current state
+#             state_mean = state_returns[current_state]["mean"]
+#             state_std = state_returns[current_state]["std"]
+#             markov_stock_returns[i] = np.random.normal(state_mean, state_std)
+            
+#             # Adjust bond returns based on state
+#             bond_adj_mean = bond_adjustment[current_state]["mean"]
+#             bond_adj_std = bond_adjustment[current_state]["std"]
+#             adjusted_bond_mean = bond_mean + bond_adj_mean
+#             adjusted_bond_std = bond_std * bond_adj_std
+#             markov_bond_returns[i] = np.random.normal(adjusted_bond_mean, adjusted_bond_std)
+            
+#             # Transition to next state based on current state
+#             current_state = np.random.choice([0, 1, 2], p=transition_matrix[current_state])
+        
+#         # Clip to reasonable bounds
+#         markov_stock_returns = np.clip(markov_stock_returns, equity_min, equity_max)
+#         markov_bond_returns = np.clip(markov_bond_returns, bond_min, bond_max)
+#     else:
+#         # Initialize with empty arrays if not using Markov Chain
+#         markov_stock_returns = np.zeros(years)
+#         markov_bond_returns = np.zeros(years)
+    
+#     return {
+#         "empirical": (empirical_equity_returns, empirical_bond_returns),
+#         "normal": (normal_stock_returns, normal_bond_returns),
+#         "t": (t_stock_returns, t_bond_returns),
+#         "lognormal": (lognormal_stock_returns, lognormal_bond_returns),
+#         "collar": (collar_stock_returns, normal_bond_returns), # Collared stock returns, normal bond returns
+#         "markov": (markov_stock_returns, markov_bond_returns)
+#     }
+
+
 def preselect_investment_returns(simulation_type, years, 
                                 stock_mean, stock_std, bond_mean, bond_std,
-                                equity_min, equity_max, bond_min, bond_max, 
-                                collar_min_return=None, collar_max_return=None
-                                ):
-    """Preselect investment returns for the entire simulation"""
-    
-    # For empirical distribution - get historical data
+                                equity_min, equity_max, bond_min, bond_max):
+    """Preselect investment returns for the entire simulation (base models only)"""
+    # Empirical
     replace_option = True if simulation_type == "Empirical Distribution" else False
-    selected_years = np.random.choice(list(historical_equity_returns.keys()), 
-                                    size=years, replace=replace_option)
-    
+    selected_years = np.random.choice(list(historical_equity_returns.keys()), size=years, replace=replace_option)
     empirical_equity_returns = [historical_equity_returns[int(year)] / 100 for year in selected_years]
-    empirical_bond_returns = [historical_bond_returns[int(year)] / 100 for year in selected_years]
-    
-    # Shuffle the empirical returns
+    empirical_bond_returns   = [historical_bond_returns[int(year)] / 100 for year in selected_years]
     np.random.shuffle(empirical_equity_returns)
     np.random.shuffle(empirical_bond_returns)
     
-    # Normal distribution returns
-    normal_stock_returns = np.random.normal(stock_mean, stock_std, years)
-    normal_bond_returns = np.random.normal(bond_mean, bond_std, years)
-    
-    # Clip values to reasonable bounds (based on past actual min and max)
-    normal_stock_returns = np.clip(normal_stock_returns, equity_min, equity_max)
-    normal_bond_returns = np.clip(normal_bond_returns, bond_min, bond_max)
+    # Normal (clipped to historical bounds)
+    normal_stock_returns = np.clip(np.random.normal(stock_mean, stock_std, years), equity_min, equity_max)
+    normal_bond_returns  = np.clip(np.random.normal(bond_mean,  bond_std,  years), bond_min,  bond_max)
 
-    # Collar strategy returns - clipped normal distribution
-    if simulation_type == "Collar Strategy" and collar_min_return is not None and collar_max_return is not None:
-        collar_stock_returns = np.clip(normal_stock_returns, collar_min_return, collar_max_return)
-    else:
-        collar_stock_returns = normal_stock_returns.copy()
-    
-    # Student-t distribution returns
-    df = 5  # degrees of freedom
+    # Student-t
+    df = 5
     t_stock_returns = t.rvs(df, loc=stock_mean, scale=stock_std, size=years)
-    t_bond_returns = t.rvs(df, loc=bond_mean, scale=bond_std, size=years)
-    
-    # Lognormal returns (not currently used but included for completeness)
-    lognormal_stock_returns = np.random.lognormal(mean=np.log(stock_mean), 
-                                                sigma=stock_std, size=years)
-    lognormal_bond_returns = np.random.lognormal(mean=np.log(bond_mean), 
-                                                sigma=bond_std, size=years)
-    
-    # Markov Chain returns
+    t_bond_returns  = t.rvs(df, loc=bond_mean,  scale=bond_std,  size=years)
+
+    # Lognormal (kept for completeness; not used in selection)
+    lognormal_stock_returns = np.random.lognormal(mean=np.log(stock_mean), sigma=stock_std, size=years)
+    lognormal_bond_returns  = np.random.lognormal(mean=np.log(bond_mean),  sigma=bond_std,  size=years)
+
+    # Markov
     if simulation_type == "Markov Chain":
         transition_matrix, state_returns, bond_adjustment = setup_markov_chain()
-        
-        # Start in random state weighted by equilibrium distribution 
-        # 20% Bear MArket, 60% Normal Market and 20% Bill Market Probability weightage
         initial_state = np.random.choice([0, 1, 2], p=[0.2, 0.6, 0.2])
-        
-        # Initialize arrays for storing returns and states
         markov_stock_returns = np.zeros(years)
-        markov_bond_returns = np.zeros(years)
-        states = np.zeros(years, dtype=int)
+        markov_bond_returns  = np.zeros(years)
         current_state = initial_state
-        
-        # Generate returns using Markov process
         for i in range(years):
-            states[i] = current_state
-            
-            # Generate returns based on current state
             state_mean = state_returns[current_state]["mean"]
-            state_std = state_returns[current_state]["std"]
+            state_std  = state_returns[current_state]["std"]
             markov_stock_returns[i] = np.random.normal(state_mean, state_std)
-            
-            # Adjust bond returns based on state
             bond_adj_mean = bond_adjustment[current_state]["mean"]
-            bond_adj_std = bond_adjustment[current_state]["std"]
+            bond_adj_std  = bond_adjustment[current_state]["std"]
             adjusted_bond_mean = bond_mean + bond_adj_mean
-            adjusted_bond_std = bond_std * bond_adj_std
+            adjusted_bond_std  = bond_std * bond_adj_std
             markov_bond_returns[i] = np.random.normal(adjusted_bond_mean, adjusted_bond_std)
-            
-            # Transition to next state based on current state
-            current_state = np.random.choice([0, 1, 2], p=transition_matrix[current_state])
-        
-        # Clip to reasonable bounds
+            current_state = np.random.choice([0,1,2], p=transition_matrix[current_state])
         markov_stock_returns = np.clip(markov_stock_returns, equity_min, equity_max)
-        markov_bond_returns = np.clip(markov_bond_returns, bond_min, bond_max)
+        markov_bond_returns  = np.clip(markov_bond_returns,  bond_min,  bond_max)
     else:
-        # Initialize with empty arrays if not using Markov Chain
         markov_stock_returns = np.zeros(years)
-        markov_bond_returns = np.zeros(years)
-    
+        markov_bond_returns  = np.zeros(years)
+
     return {
         "empirical": (empirical_equity_returns, empirical_bond_returns),
-        "normal": (normal_stock_returns, normal_bond_returns),
-        "t": (t_stock_returns, t_bond_returns),
+        "normal":    (normal_stock_returns,    normal_bond_returns),
+        "t":         (t_stock_returns,         t_bond_returns),
         "lognormal": (lognormal_stock_returns, lognormal_bond_returns),
-        "collar": (collar_stock_returns, normal_bond_returns), # Collared stock returns, normal bond returns
-        "markov": (markov_stock_returns, markov_bond_returns)
+        "markov":    (markov_stock_returns,    markov_bond_returns)
     }
+
+def pick_base_returns(simulation_type: str, returns: Dict[str, tuple], y: int) -> Tuple[float, float]:
+    """Select base model stock/bond returns for year y."""
+    if simulation_type == "Normal Distribution":
+        return returns["normal"][0][y], returns["normal"][1][y]
+    elif simulation_type == "Students-T Distribution":
+        return returns["t"][0][y], returns["t"][1][y]
+    elif simulation_type == "Empirical Distribution":
+        return returns["empirical"][0][y], returns["empirical"][1][y]
+    elif simulation_type == "Markov Chain":
+        return returns["markov"][0][y], returns["markov"][1][y]
+    else:
+        raise ValueError(f"Unknown simulation type: {simulation_type}")
+
+
+def apply_collar_overlay(stock_return_rate: float, config: SimulationConfig, current_calendar_year: int) -> float:
+    """
+    Apply collar overlay to a fraction of the equity sleeve.
+    effective_equity = p*clip(r, min, max) + (1-p)*r
+    """
+    if not getattr(config, "apply_collar", False):
+        return stock_return_rate
+    # Only within collar window
+    if not (config.collar_start_year <= current_calendar_year <= config.collar_end_year):
+        return stock_return_rate
+
+    p = max(0.0, min(1.0, getattr(config, "collar_equity_pct", 0.0)))
+    if p == 0.0:
+        return stock_return_rate
+
+    clipped = np.clip(stock_return_rate, config.collar_min_return, config.collar_max_return)
+    return p * clipped + (1.0 - p) * stock_return_rate
 
 
 def calculate_yearly_income(config, self_age, partner_age, year, current_year):
@@ -680,53 +781,87 @@ def calculate_yearly_expenses(config, self_age, partner_age, year, current_year,
     )
 
 
+# def calculate_investment_return_old(config, balances, savings, returns, year):
+#     """Calculate investment returns across all account types"""
+
+#     # Get current simulation year
+#     current_year = datetime.now().year + year
+    
+#     # Select the appropriate return rates based on simulation type
+#     if config.simulation_type == "Normal Distribution":
+#         stock_return_rate, bond_return_rate = returns["normal"][0][year], returns["normal"][1][year]
+#     elif config.simulation_type == "Students-T Distribution":
+#         stock_return_rate, bond_return_rate = returns["t"][0][year], returns["t"][1][year]
+#     elif config.simulation_type == "Empirical Distribution":
+#         stock_return_rate, bond_return_rate = returns["empirical"][0][year], returns["empirical"][1][year]
+#     elif config.simulation_type == "Markov Chain":
+#         # Use the Markov chain generated returns
+#         stock_return_rate, bond_return_rate = returns["markov"][0][year], returns["markov"][1][year]
+#     elif config.simulation_type == "Collar Strategy":
+#         # Check if current year is within the collar period
+#         if config.collar_start_year <= current_year <= config.collar_end_year:
+#             # Apply collar constraints during specified period
+#             stock_return_rate = returns["collar"][0][year]
+#         else:
+#             # Use normal returns outside the collar period
+#             stock_return_rate = returns["normal"][0][year]   
+#         # Always use normal bond returns
+#         bond_return_rate = returns["normal"][1][year]
+
+#     else:
+#         raise ValueError(f"Unknown simulation type: {config.simulation_type}")
+    
+#     # Calculate portfolio weighted return rate
+#     weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
+#                        bond_return_rate * (config.bond_percentage / 100))
+    
+#     # Calculate returns for each account type
+#     self_401k_return = balances.self_401k * weighted_return
+#     partner_401k_return = balances.partner_401k * weighted_return
+#     roth_ira_return = balances.roth_ira * weighted_return
+#     brokerage_return = balances.brokerage * weighted_return
+#     cash_return = balances.cash * CASH_ACCOUNT_RETURN_RATE
+    
+#     # Calculate total portfolio return
+#     total_return = (
+#         savings * (stock_return_rate * (config.stock_percentage / 100) + 
+#                   bond_return_rate * (config.bond_percentage / 100))
+#     )
+    
+#     return YearlyReturns(
+#         self_401k=self_401k_return,
+#         partner_401k=partner_401k_return,
+#         roth_ira=roth_ira_return,
+#         brokerage=brokerage_return,
+#         cash=cash_return,
+#         total=total_return
+#     )
+
 def calculate_investment_return(config, balances, savings, returns, year):
-    """Calculate investment returns across all account types"""
+    """Calculate investment returns across all account types (no SoR override)"""
+    current_calendar_year = datetime.now().year + year
 
-    # Get current simulation year
-    current_year = datetime.now().year + year
-    
-    # Select the appropriate return rates based on simulation type
-    if config.simulation_type == "Normal Distribution":
-        stock_return_rate, bond_return_rate = returns["normal"][0][year], returns["normal"][1][year]
-    elif config.simulation_type == "Students-T Distribution":
-        stock_return_rate, bond_return_rate = returns["t"][0][year], returns["t"][1][year]
-    elif config.simulation_type == "Empirical Distribution":
-        stock_return_rate, bond_return_rate = returns["empirical"][0][year], returns["empirical"][1][year]
-    elif config.simulation_type == "Markov Chain":
-        # Use the Markov chain generated returns
-        stock_return_rate, bond_return_rate = returns["markov"][0][year], returns["markov"][1][year]
-    elif config.simulation_type == "Collar Strategy":
-        # Check if current year is within the collar period
-        if config.collar_start_year <= current_year <= config.collar_end_year:
-            # Apply collar constraints during specified period
-            stock_return_rate = returns["collar"][0][year]
-        else:
-            # Use normal returns outside the collar period
-            stock_return_rate = returns["normal"][0][year]   
-        # Always use normal bond returns
-        bond_return_rate = returns["normal"][1][year]
+    # 1) Base model
+    stock_return_rate, bond_return_rate = pick_base_returns(config.simulation_type, returns, year)
 
-    else:
-        raise ValueError(f"Unknown simulation type: {config.simulation_type}")
-    
-    # Calculate portfolio weighted return rate
-    weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
-                       bond_return_rate * (config.bond_percentage / 100))
-    
-    # Calculate returns for each account type
-    self_401k_return = balances.self_401k * weighted_return
-    partner_401k_return = balances.partner_401k * weighted_return
-    roth_ira_return = balances.roth_ira * weighted_return
-    brokerage_return = balances.brokerage * weighted_return
-    cash_return = balances.cash * CASH_ACCOUNT_RETURN_RATE
-    
-    # Calculate total portfolio return
-    total_return = (
-        savings * (stock_return_rate * (config.stock_percentage / 100) + 
-                  bond_return_rate * (config.bond_percentage / 100))
+    # 2) Collar overlay (if enabled & within window)
+    stock_return_rate = apply_collar_overlay(stock_return_rate, config, current_calendar_year)
+
+    # 3) Portfolio weighting
+    weighted_return = (
+        stock_return_rate * (config.stock_percentage / 100.0) +
+        bond_return_rate  * (config.bond_percentage  / 100.0)
     )
-    
+
+    # 4) Account-level returns
+    self_401k_return     = balances.self_401k     * weighted_return
+    partner_401k_return  = balances.partner_401k  * weighted_return
+    roth_ira_return      = balances.roth_ira      * weighted_return
+    brokerage_return     = balances.brokerage     * weighted_return
+    cash_return          = balances.cash          * CASH_ACCOUNT_RETURN_RATE
+
+    total_return = savings * weighted_return
+
     return YearlyReturns(
         self_401k=self_401k_return,
         partner_401k=partner_401k_return,
@@ -736,55 +871,97 @@ def calculate_investment_return(config, balances, savings, returns, year):
         total=total_return
     )
 
+
+# def calculate_investment_return_with_override_old(config, balances, savings, returns, year, override_return):
+#     """Calculate investment returns with an overridden return rate - used for Stress Test"""
+    
+#     # Apply the overridden return rate to stocks
+#     # Bond returns are often less volatile in downturns
+#     stock_return_rate = override_return
+
+#     # Check if we should apply collar this year based on start and end years
+#     current_year = datetime.now().year + year
+#     apply_collar = False
+#     if config.simulation_type == "Collar Strategy":
+#         if config.collar_start_year <= current_year <= config.collar_end_year:
+#             apply_collar = True
+    
+#     # bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
+#         # Select the appropriate bond return rate based on simulation type
+#     if config.simulation_type == "Normal Distribution" or config.simulation_type == "Collar Strategy":
+#         bond_return_rate = returns["normal"][1][year]
+#     elif config.simulation_type == "Students-T Distribution":
+#         bond_return_rate = returns["t"][1][year]
+#     elif config.simulation_type == "Empirical Distribution":
+#         bond_return_rate = returns["empirical"][1][year]
+#     elif config.simulation_type == "Markov Chain":
+#         bond_return_rate = returns["markov"][1][year]
+#     elif config.simulation_type == "Collar Strategy":
+#         bond_return_rate = returns["collar"][1][year]
+#     else:
+#         # Fallback to mean bond return if unknown simulation type
+#         bond_return_rate = config.bond_return_mean
+
+#     # Apply collar limits to stock returns if using collar strategy AND within collar period
+#     if apply_collar:
+#         stock_return_rate = np.clip(stock_return_rate, config.collar_min_return, config.collar_max_return)
+       
+#     # Calculate weighted return using the same allocation as normal returns
+#     weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
+#                        bond_return_rate * (config.bond_percentage / 100))
+    
+#     # Calculate returns for each account type using the override
+#     self_401k_return = balances.self_401k * weighted_return
+#     partner_401k_return = balances.partner_401k * weighted_return
+#     roth_ira_return = balances.roth_ira * weighted_return
+#     brokerage_return = balances.brokerage * weighted_return
+#     cash_return = balances.cash * CASH_ACCOUNT_RETURN_RATE  # Cash accounts are less affected
+    
+#     # Calculate total portfolio return
+#     total_return = savings * weighted_return
+    
+#     return YearlyReturns(
+#         self_401k=self_401k_return,
+#         partner_401k=partner_401k_return,
+#         roth_ira=roth_ira_return,
+#         brokerage=brokerage_return,
+#         cash=cash_return,
+#         total=total_return
+#     )
 
 def calculate_investment_return_with_override(config, balances, savings, returns, year, override_return):
-    """Calculate investment returns with an overridden return rate - used for Stress Test"""
-    
-    # Apply the overridden return rate to stocks
-    # Bond returns are often less volatile in downturns
+    """
+    Calculate investment returns when Sequence-of-Returns override is active.
+    - Stock: use override_return as the base equity return for this year
+    - Bond: still taken from selected model for this year
+    - Collar: applied AFTER the override to stock, on the specified fraction
+    """
+    current_calendar_year = datetime.now().year + year
+
+    # 1) Bonds from the base model
+    _, bond_return_rate = pick_base_returns(config.simulation_type, returns, year)
+
+    # 2) Stock from SoR override
     stock_return_rate = override_return
 
-    # Check if we should apply collar this year based on start and end years
-    current_year = datetime.now().year + year
-    apply_collar = False
-    if config.simulation_type == "Collar Strategy":
-        if config.collar_start_year <= current_year <= config.collar_end_year:
-            apply_collar = True
-    
-    # bond_return_rate = max(override_return / 2, -0.05)  # Bonds typically lose less
-        # Select the appropriate bond return rate based on simulation type
-    if config.simulation_type == "Normal Distribution" or config.simulation_type == "Collar Strategy":
-        bond_return_rate = returns["normal"][1][year]
-    elif config.simulation_type == "Students-T Distribution":
-        bond_return_rate = returns["t"][1][year]
-    elif config.simulation_type == "Empirical Distribution":
-        bond_return_rate = returns["empirical"][1][year]
-    elif config.simulation_type == "Markov Chain":
-        bond_return_rate = returns["markov"][1][year]
-    elif config.simulation_type == "Collar Strategy":
-        bond_return_rate = returns["collar"][1][year]
-    else:
-        # Fallback to mean bond return if unknown simulation type
-        bond_return_rate = config.bond_return_mean
+    # 3) Collar overlay (if enabled & within window)
+    stock_return_rate = apply_collar_overlay(stock_return_rate, config, current_calendar_year)
 
-    # Apply collar limits to stock returns if using collar strategy AND within collar period
-    if apply_collar:
-        stock_return_rate = np.clip(stock_return_rate, config.collar_min_return, config.collar_max_return)
-       
-    # Calculate weighted return using the same allocation as normal returns
-    weighted_return = (stock_return_rate * (config.stock_percentage / 100) + 
-                       bond_return_rate * (config.bond_percentage / 100))
-    
-    # Calculate returns for each account type using the override
-    self_401k_return = balances.self_401k * weighted_return
-    partner_401k_return = balances.partner_401k * weighted_return
-    roth_ira_return = balances.roth_ira * weighted_return
-    brokerage_return = balances.brokerage * weighted_return
-    cash_return = balances.cash * CASH_ACCOUNT_RETURN_RATE  # Cash accounts are less affected
-    
-    # Calculate total portfolio return
+    # 4) Portfolio weighting
+    weighted_return = (
+        stock_return_rate * (config.stock_percentage / 100.0) +
+        bond_return_rate  * (config.bond_percentage  / 100.0)
+    )
+
+    # 5) Account-level returns
+    self_401k_return     = balances.self_401k     * weighted_return
+    partner_401k_return  = balances.partner_401k  * weighted_return
+    roth_ira_return      = balances.roth_ira      * weighted_return
+    brokerage_return     = balances.brokerage     * weighted_return
+    cash_return          = balances.cash          * CASH_ACCOUNT_RETURN_RATE
+
     total_return = savings * weighted_return
-    
+
     return YearlyReturns(
         self_401k=self_401k_return,
         partner_401k=partner_401k_return,
@@ -793,6 +970,8 @@ def calculate_investment_return_with_override(config, balances, savings, returns
         cash=cash_return,
         total=total_return
     )
+
+
 
 def update_account_balances(balances, returns, draws, self_contribution, partner_contribution, income, expenses, tax):
     """Update all account balances based on contributions, returns, and withdrawals"""

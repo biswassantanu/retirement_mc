@@ -1,6 +1,6 @@
 matplotlib
 streamlit
-python.dotenv
+python-dotenv
 tabulate
 fuzzywuzzy[speedup]
 numpy 

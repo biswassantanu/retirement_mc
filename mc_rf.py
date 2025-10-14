@@ -172,7 +172,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
     
     # Set up the tabbed container
-    with st.container(height=310, border=None):
+    with st.container(height=320, border=None):
         # Set the tab styles 
         st.markdown(tab_style_css, unsafe_allow_html=True)
         
@@ -252,7 +252,9 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Tab 13
         simulation_params = create_simulation_parameters_tab(tabs[13], parameters, years_range)
-        (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)= simulation_params
+        # (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)= simulation_params
+        # Collar is an overlap now 
+        (simulations, simulation_type, apply_collar, collar_equity_pct, collar_min_return, collar_max_return, collar_start_year, collar_end_year) = simulation_params
 
         # Tab 15: Stress Tests
         stress_test_params = create_stress_tests_tab(tabs[14], parameters, years_range)
@@ -355,7 +357,10 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         collar_min_return=collar_min_return,
         collar_max_return=collar_max_return, 
         collar_start_year=collar_start_year, 
-        collar_end_year=collar_end_year 
+        collar_end_year=collar_end_year,
+        # NEW - Collar is an overlay - and can be applied to a % of total equity
+        apply_collar=apply_collar,
+        collar_equity_pct=collar_equity_pct
 
     )
 
@@ -854,127 +859,118 @@ def create_windfall_tab(tab, parameters, years_range):
     return (windfall_year_1, windfall_amount_1, windfall_year_2, 
             windfall_amount_2, windfall_year_3, windfall_amount_3)
 
-
+# Now collar strategy is an overlay - not a separate simulation model 
 def create_simulation_parameters_tab(tab, parameters, years_range):
     """Create the Simulation Parameters tab inputs"""
     with tab:
-        col1, col2, col3, col4 = st.columns([3,3,5,6])
-    
-        # Initialize collar strategy variables with defaults
+        col1, col2, col3, col4 = st.columns([4,3,4,6])
         current_year = datetime.now().year
-        collar_min_return = parameters.get("collar_min_return", -0.05) if parameters else -0.05
-        collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
-        collar_start_year = parameters.get("collar_start_year", current_year) if parameters else current_year
-        collar_end_year = parameters.get("collar_end_year", current_year + 32) if parameters else current_year + 32         
-                
+
+        # Defaults and back-compat for old CSVs that had "Collar Strategy"
+        default_sim_type = "Normal Distribution"
+        default_apply_collar = False
+        default_collar_equity_pct = 0.0
+        collar_min_return = -0.05
+        collar_max_return = 0.15
+        collar_start_year = years_range[0] if years_range else current_year
+        collar_end_year   = years_range[-1] if years_range else (current_year + 30)
+
+        if parameters:
+            # If old files had "Collar Strategy", map to Normal + overlay=100%
+            prior_sim = parameters.get("simulation_type", default_sim_type)
+            if prior_sim == "Collar Strategy":
+                default_sim_type = "Normal Distribution"
+                default_apply_collar = True
+                default_collar_equity_pct = 1.0
+            else:
+                default_sim_type = prior_sim
+
+            collar_min_return = parameters.get("collar_min_return", collar_min_return)
+            collar_max_return = parameters.get("collar_max_return", collar_max_return)
+            collar_start_year = parameters.get("collar_start_year", collar_start_year)
+            collar_end_year   = parameters.get("collar_end_year", collar_end_year)
+
+            # New fields may be missing in older CSVs — tolerate that
+            default_apply_collar = parameters.get("apply_collar", default_apply_collar)
+            default_collar_equity_pct = parameters.get("collar_equity_pct", default_collar_equity_pct)
+
         with col1:
             simulations = st.number_input("Number of Simulations", 
                 value=parameters["simulations"] if parameters else 1000, step=1000)
-                
-        with col2:
-            # Determine the default simulation type
-            if parameters is None:
-                default_simulation_type = "Normal Distribution"
-            else:
-                default_simulation_type = parameters.get("simulation_type", "Normal Distribution")
-                if default_simulation_type not in ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Markov Chain", "Collar Strategy"]:
-                    default_simulation_type = "Normal Distribution"
-
-            # Create the radio button group
-            simulation_options = ["Normal Distribution", "Students-T Distribution", "Empirical Distribution", "Markov Chain", "Collar Strategy"]
-            simulation_type = st.radio("Simulation Type", options=simulation_options,
-                index=simulation_options.index(default_simulation_type),
-                help=simulation_help_text)
             
-            # These will only be shown and adjustable in the UI when Collar Strategy is selected
-            collar_min_return = parameters.get("collar_min_return", -0.05) if parameters else -0.05
-            collar_max_return = parameters.get("collar_max_return", 0.15) if parameters else 0.15
+            # Radio WITHOUT "Collar Strategy"
+            simulation_options = [
+                "Normal Distribution", 
+                "Students-T Distribution", 
+                "Empirical Distribution", 
+                "Markov Chain"
+            ]
+            simulation_type = st.radio(
+                "Simulation Type", 
+                options=simulation_options,
+                index=simulation_options.index(default_sim_type) if default_sim_type in simulation_options else 0,
+                help=simulation_help_text
+            )
+            
+        with col2:
+
+            # NEW: independent collar toggle + % of equity
+            apply_collar = st.toggle(
+                "Apply option collar (overlay)",
+                value=default_apply_collar,
+                help="Apply a capped/floored equity return overlay on top of the base model."
+            )
+
+            collar_equity_pct = 0.0
+            if apply_collar:
+                collar_equity_pct = st.slider(
+                    "Collar applied to % of equity",
+                    min_value=0, max_value=100,
+                    value=int(round(default_collar_equity_pct * 100)),
+                    help="Only this fraction of your equity allocation will be collared."
+                ) / 100.0
 
         with col3:
-
-            def get_year_index(year_value, default_index=0):
-                if parameters and years_range and year_value in years_range:
-                    return years_range.index(year_value)
-                return default_index
-            
-            # Determine the default simulation type
-            # Only show collar strategy controls if that option is selected
-            if simulation_type == "Collar Strategy":
-
-                # # Get the range of years for the simulation
-                # life_expectancy = parameters.get("life_expectancy", 92) if parameters else 92
-                # current_age = parameters.get("current_age", 50) if parameters else 50
-                # years_in_simulation = life_expectancy - current_age + 1
-
-                # Add collar strategy year selectors
-                st.markdown("###### Collar Strategy Details")
+            # Show collar parameters only if enabled
+            if apply_collar:
+                st.markdown("###### Collar Details")
                 cols = st.columns(2)
                 with cols[0]:
                     collar_min_return = st.number_input(
-                        "Min Equity Return (%)",
-                        min_value=-30.0,
-                        max_value=0.0,
-                        value=collar_min_return * 100,  # Convert to percentage for display
-                        step=1.0
-                    ) / 100  # Convert back to decimal
-
-
-                    # Get saved start year or default to first year in range
-                    saved_start_year = parameters.get("collar_start_year", years_range[0]) if parameters else years_range[0]
-                    
-                    # Find the index for the start year
-                    start_index = get_year_index(saved_start_year, 0)
-                    
+                        "Min equity return (%)",
+                        min_value=-30.0, max_value=0.0,
+                        value=collar_min_return * 100, step=1.0
+                    ) / 100
+                    # Start year
+                    start_idx = years_range.index(collar_start_year) if (years_range and collar_start_year in years_range) else 0
                     collar_start_year = st.selectbox(
-                        "Start Year",
-                        options=years_range,
-                        index=start_index,
-                        key="collar_start",
-                        format_func=lambda x: str(x),
-                        help="Year when collar strategy begins"
+                        "Start Year", options=years_range, index=start_idx, key="collar_start_year"
                     )
-                
                 with cols[1]:
                     collar_max_return = st.number_input(
-                        "Max Equity Return (%)",
-                        min_value=0.0,
-                        max_value=30.0,
-                        value=collar_max_return * 100,  # Convert to percentage for display
-                        step=1.0
-                    ) / 100  # Convert back to decimal
-
-                    # Get saved end year or default to LAST year in range (end of life expectancy)
-                    saved_end_year = parameters.get("collar_end_year", years_range[-1]) if parameters else years_range[-1]
-                    
-                    # Find the index for the end year, defaulting to last year in range
-                    end_index = get_year_index(saved_end_year, len(years_range)-1)
-                    
+                        "Max equity return (%)",
+                        min_value=0.0, max_value=30.0,
+                        value=collar_max_return * 100, step=1.0
+                    ) / 100
+                    # End year
+                    end_idx = years_range.index(collar_end_year) if (years_range and collar_end_year in years_range) else (len(years_range)-1 if years_range else 0)
                     collar_end_year = st.selectbox(
-                        "End Year",
-                        options=years_range,
-                        index=end_index,
-                        key="collar_end",
-                        format_func=lambda x: str(x),
-                        help="Year when collar strategy ends"
+                        "End Year", options=years_range, index=end_idx, key="collar_end_year"
                     )
 
-                # Display the duration
-                if collar_end_year >= collar_start_year:
-                    collar_duration_years = collar_end_year - collar_start_year + 1
-                    st.write(f"The collar will be active for {collar_duration_years} years ({collar_start_year} to {collar_end_year}).")
-                else:
-                    st.error("End year must be after start year.")
+                if collar_end_year < collar_start_year:
+                    st.error("End year must be on or after Start year.")
 
-            else:
-                # Default values when collar strategy isn't selected
-                collar_start_year = years_range[0] if years_range else current_year
-                collar_end_year = years_range[-1] if years_range else current_year + 30
-
-                
         with col4:
             st.markdown(parameter_text, unsafe_allow_html=True)
 
-    return (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)
+    # NOTE: now we return two extra fields (apply_collar, collar_equity_pct)
+    return (
+        simulations, simulation_type, 
+        apply_collar, collar_equity_pct, 
+        collar_min_return, collar_max_return, 
+        collar_start_year, collar_end_year
+    )
 
 
 def create_stress_tests_tab(tab, parameters, years_range=None):
@@ -1412,10 +1408,21 @@ def generate_parameter_summary(config):
     summary += f"<b>Allocation:</b> {config.stock_percentage:.0f}/{config.bond_percentage:.0f}, "
     
     # Add collar details if applicable
-    if config.simulation_type == "Collar Strategy":
-        summary += f"<b>Collar:</b> Min {config.collar_min_return*100:.1f}%, Max {config.collar_max_return*100:.1f}% " \
-                   f"({config.collar_start_year}-{config.collar_end_year}), "
+    #
+    # if config.simulation_type == "Collar Strategy":
+    #     summary += f"<b>Collar:</b> Min {config.collar_min_return*100:.1f}%, Max {config.collar_max_return*100:.1f}% " \
+    #                f"({config.collar_start_year}-{config.collar_end_year}), "
+ 
     
+    if getattr(config, "apply_collar", False):
+        pct = getattr(config, "collar_equity_pct", 0.0) * 100
+        summary += (
+            f"<b>Collar:</b> {pct:.0f}% of equity, "
+            f"Min {config.collar_min_return*100:.1f}%, "
+            f"Max {config.collar_max_return*100:.1f}% "
+            f"({config.collar_start_year}-{config.collar_end_year}), "
+        )
+
     # Add sequence risk details
     if config.enable_sequence_risk:
         summary += f"<b>Sequence Risk:</b> {config.seq_risk_years} years @ {config.seq_risk_returns*100:.1f}%, "
