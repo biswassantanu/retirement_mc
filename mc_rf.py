@@ -172,7 +172,7 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
     
     # Set up the tabbed container
-    with st.container(height=320, border=None):
+    with st.container(height=315, border=None):
         # Set the tab styles 
         st.markdown(tab_style_css, unsafe_allow_html=True)
         
@@ -863,15 +863,15 @@ def create_windfall_tab(tab, parameters, years_range):
 def create_simulation_parameters_tab(tab, parameters, years_range):
     """Create the Simulation Parameters tab inputs"""
     with tab:
-        col1, col2, col3, col4 = st.columns([4,3,4,6])
+        col1, col2, col3, col4 = st.columns([35,35,40,60])
         current_year = datetime.now().year
 
         # Defaults and back-compat for old CSVs that had "Collar Strategy"
         default_sim_type = "Normal Distribution"
         default_apply_collar = False
         default_collar_equity_pct = 0.5
-        collar_min_return = -0.05
-        collar_max_return = 0.15
+        collar_min_return = -0.01
+        collar_max_return = 0.09
         collar_start_year = years_range[0] if years_range else current_year
         collar_end_year   = years_range[-1] if years_range else (current_year + 30)
 
@@ -916,7 +916,7 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
 
             # NEW: independent collar toggle + % of equity
             apply_collar = st.toggle(
-                "Apply option collar (overlay)",
+                "Overlay option collar",
                 value=default_apply_collar,
                 help="Apply a capped/floored equity return overlay on top of the base model."
             )
@@ -924,7 +924,7 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
             collar_equity_pct = 0.5
             if apply_collar:
                 collar_equity_pct = st.slider(
-                    "Collar applied to % of equity",
+                    "Apply to % of equity",
                     min_value=0, max_value=100,
                     value=int(round(default_collar_equity_pct * 100)),
                     help="Only this fraction of your equity allocation will be collared."
