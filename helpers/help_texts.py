@@ -117,17 +117,18 @@ downsize_text = """
 """
 
 parameter_text = """
-<div style="background-color:#e8f4f8; padding:6px; border-radius:4px; font-size:0.75em;">
-    <span style="color:#0d4c73;">
-        <span style="margin-right:4px; vertical-align:middle;">ℹ️</span>
-        <strong>Simulation Parameters:</strong><br>        
-        Parameters control how your retirement simulation behaves. The distribution type affects how market volatility is modeled:<br>       
-        • <strong>Normal:</strong> Standard bell curve. May underestimate crashes.<br>         
-        • <strong>Students' T:</strong> Better captures market crashes with fatter tails.<br>          
-        • <strong>Empirical:</strong> Based on actual historical returns.<br>
-        • <strong>Markov Chain:</strong> Models market regimes and their transitions.<br>
-        • <strong>Collar Strategy:</strong> Limits stock returns between min/max values, providing downside protection with capped upside.<br><br>      
-    </span>
+<div style="background-color:#e8f4f8; padding:8px; border-radius:4px;
+            font-size:0.78em; color:#0d4c73; line-height:1.55;">
+    <strong>Simulation Parameters</strong><br><br>
+    <strong>Normal Distribution</strong> — Bell curve returns. Simple; may underestimate tail risk.<br>
+    <strong>Students-T</strong> — Fatter tails, better at capturing rare market crashes.<br>
+    <strong>Empirical</strong> — Randomly samples from actual historical annual returns.<br>
+    <strong>Markov Chain</strong> — Models Bear / Normal / Bull regime transitions year by year.<br>
+    <hr style="margin:5px 0; border-color:#b0cfe0;">
+    <strong>Collar Overlay</strong> — Caps equity returns between a floor and ceiling
+    for a chosen % of the equity sleeve. Layers a protective collar on any base model.<br>
+    <strong>Historical Backtest</strong> — Anchors the plan to actual market returns
+    and CPI inflation from a chosen crisis year. Stochastic model fills remaining gap years.
 </div>
 """
 

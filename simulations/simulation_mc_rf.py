@@ -8,6 +8,7 @@ from typing import List, Dict, Tuple, Optional, Any
 import copy
 
 from simulations.historical_returns import historical_equity_returns, historical_bond_returns
+from simulations.historical_inflation import historical_inflation_rates
 from simulations.tax_master_data import contribution_limits, catchup_age_401k
 
 
@@ -120,6 +121,10 @@ class SimulationConfig:
     apply_collar: bool               # whether to apply collar overlay
     collar_equity_pct: float         # fraction (0.0–1.0) of equity sleeve under collar
 
+    # Historical Backtest
+    enable_backtest: bool            # anchor early years to actual historical returns
+    backtest_start_year: int         # e.g. 1973, 1987, 2000, 2008
+
 @dataclass
 class AccountBalances:
     """Tracks current balances across different account types"""
@@ -228,7 +233,10 @@ class YearlyCashFlow:
     downsize_proceeds: float
     windfall_amount: float
     expense_adjustment: float
-    
+
+    # Raw inflation rate used this year (before smile adjustment)
+    inflation_rate: float = 0.0
+
     simulation_id: Optional[int] = None
 
 
@@ -287,8 +295,13 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             config.stock_return_mean, config.stock_return_std,
             config.bond_return_mean,  config.bond_return_std,
             equity_return_min, equity_return_max,
-            bond_return_min,   bond_return_max
+            bond_return_min,   bond_return_max,
+            enable_backtest=config.enable_backtest,
+            backtest_start_year=config.backtest_start_year
         )
+
+        # When backtest is active, route pick_base_returns into the historical sequence
+        effective_sim_type = "Historical Backtest" if config.enable_backtest else config.simulation_type
 
         for year in range(years_in_simulation):
 
@@ -344,10 +357,13 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             )
                     
             # Adjust for inflation and update annual expense
-            current_annual_expense = adjust_expenses(
+            current_annual_expense, yearly_inflation_rate = adjust_expenses(
                 current_annual_expense, config.inflation_mean, config.inflation_std,
                 config.annual_expense_decrease, year, self_age, config.retirement_age,
-                partner_age, config.partner_retirement_age
+                partner_age, config.partner_retirement_age,
+                enable_backtest=config.enable_backtest,
+                backtest_start_year=config.backtest_start_year,
+                calendar_year=current_year + year
             )
 
 
@@ -379,12 +395,14 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
             if apply_sequence_risk:
                 # Override returns with stress test values
                 investment_return = calculate_investment_return_with_override(
-                    config, balances, savings, returns, year, config.seq_risk_returns
+                    config, balances, savings, returns, year, config.seq_risk_returns,
+                    effective_sim_type=effective_sim_type
                 )
             else:
                 # Normal return calculation
                 investment_return = calculate_investment_return(
-                    config, balances, savings, returns, year
+                    config, balances, savings, returns, year,
+                    effective_sim_type=effective_sim_type
                 )
 
             # Calculate investment returns using the selected simulation method
@@ -429,6 +447,7 @@ def monte_carlo_simulation(config: SimulationConfig) -> Tuple[int, int, List[Dic
                 downsize_proceeds=downsize_proceeds,
                 windfall_amount=windfall_amount,
                 expense_adjustment=expense_adjustment,
+                inflation_rate=yearly_inflation_rate,
                 simulation_id=sim
             )
             
@@ -611,10 +630,16 @@ def setup_markov_chain():
 #     }
 
 
-def preselect_investment_returns(simulation_type, years, 
+def preselect_investment_returns(simulation_type, years,
                                 stock_mean, stock_std, bond_mean, bond_std,
-                                equity_min, equity_max, bond_min, bond_max):
-    """Preselect investment returns for the entire simulation (base models only)"""
+                                equity_min, equity_max, bond_min, bond_max,
+                                enable_backtest=False, backtest_start_year=2000):
+    """Preselect investment returns for the entire simulation (base models only).
+
+    When enable_backtest=True, a 'historical' key is added to the returned dict
+    that contains actual equity/bond returns from backtest_start_year forward,
+    with the stochastic model filling any gap years beyond available data.
+    """
     # Empirical
     replace_option = True if simulation_type == "Empirical Distribution" else False
     selected_years = np.random.choice(list(historical_equity_returns.keys()), size=years, replace=replace_option)
@@ -622,7 +647,7 @@ def preselect_investment_returns(simulation_type, years,
     empirical_bond_returns   = [historical_bond_returns[int(year)] / 100 for year in selected_years]
     np.random.shuffle(empirical_equity_returns)
     np.random.shuffle(empirical_bond_returns)
-    
+
     # Normal (clipped to historical bounds)
     normal_stock_returns = np.clip(np.random.normal(stock_mean, stock_std, years), equity_min, equity_max)
     normal_bond_returns  = np.clip(np.random.normal(bond_mean,  bond_std,  years), bond_min,  bond_max)
@@ -652,19 +677,54 @@ def preselect_investment_returns(simulation_type, years,
             adjusted_bond_mean = bond_mean + bond_adj_mean
             adjusted_bond_std  = bond_std * bond_adj_std
             markov_bond_returns[i] = np.random.normal(adjusted_bond_mean, adjusted_bond_std)
-            current_state = np.random.choice([0,1,2], p=transition_matrix[current_state])
+            current_state = np.random.choice([0, 1, 2], p=transition_matrix[current_state])
         markov_stock_returns = np.clip(markov_stock_returns, equity_min, equity_max)
         markov_bond_returns  = np.clip(markov_bond_returns,  bond_min,  bond_max)
     else:
         markov_stock_returns = np.zeros(years)
         markov_bond_returns  = np.zeros(years)
 
+    # Historical Backtest sequence
+    # Pull actual year-by-year returns from the anchor year; fill gap with stochastic tail.
+    historical_stock = []
+    historical_bond  = []
+
+    if enable_backtest:
+        for offset in range(years):
+            hist_yr = backtest_start_year + offset
+            if hist_yr in historical_equity_returns and hist_yr in historical_bond_returns:
+                historical_stock.append(historical_equity_returns[hist_yr] / 100.0)
+                historical_bond.append(historical_bond_returns[hist_yr]    / 100.0)
+            else:
+                break  # ran out of historical data — gap starts here
+
+        hist_len = len(historical_stock)
+        gap_len  = years - hist_len
+
+        if gap_len > 0:
+            if simulation_type == "Students-T Distribution":
+                gap_stock = list(t_stock_returns[-gap_len:])
+                gap_bond  = list(t_bond_returns[-gap_len:])
+            elif simulation_type == "Empirical Distribution":
+                gap_stock = list(empirical_equity_returns[-gap_len:])
+                gap_bond  = list(empirical_bond_returns[-gap_len:])
+            elif simulation_type == "Markov Chain":
+                gap_stock = list(markov_stock_returns[-gap_len:])
+                gap_bond  = list(markov_bond_returns[-gap_len:])
+            else:  # Normal Distribution (default)
+                gap_stock = list(normal_stock_returns[-gap_len:])
+                gap_bond  = list(normal_bond_returns[-gap_len:])
+
+            historical_stock = historical_stock + gap_stock
+            historical_bond  = historical_bond  + gap_bond
+
     return {
-        "empirical": (empirical_equity_returns, empirical_bond_returns),
-        "normal":    (normal_stock_returns,    normal_bond_returns),
-        "t":         (t_stock_returns,         t_bond_returns),
-        "lognormal": (lognormal_stock_returns, lognormal_bond_returns),
-        "markov":    (markov_stock_returns,    markov_bond_returns)
+        "empirical":  (empirical_equity_returns, empirical_bond_returns),
+        "normal":     (normal_stock_returns,     normal_bond_returns),
+        "t":          (t_stock_returns,          t_bond_returns),
+        "lognormal":  (lognormal_stock_returns,  lognormal_bond_returns),
+        "markov":     (markov_stock_returns,     markov_bond_returns),
+        "historical": (historical_stock,         historical_bond),   # backtest sequence
     }
 
 def pick_base_returns(simulation_type: str, returns: Dict[str, tuple], y: int) -> Tuple[float, float]:
@@ -677,6 +737,8 @@ def pick_base_returns(simulation_type: str, returns: Dict[str, tuple], y: int) -
         return returns["empirical"][0][y], returns["empirical"][1][y]
     elif simulation_type == "Markov Chain":
         return returns["markov"][0][y], returns["markov"][1][y]
+    elif simulation_type == "Historical Backtest":
+        return returns["historical"][0][y], returns["historical"][1][y]
     else:
         raise ValueError(f"Unknown simulation type: {simulation_type}")
 
@@ -837,12 +899,17 @@ def calculate_yearly_expenses(config, self_age, partner_age, year, current_year,
 #         total=total_return
 #     )
 
-def calculate_investment_return(config, balances, savings, returns, year):
-    """Calculate investment returns across all account types (no SoR override)"""
+def calculate_investment_return(config, balances, savings, returns, year, effective_sim_type=None):
+    """Calculate investment returns across all account types (no SoR override).
+
+    effective_sim_type overrides config.simulation_type when supplied — used by
+    Historical Backtest mode to route into the 'historical' return sequence.
+    """
     current_calendar_year = datetime.now().year + year
+    sim_type = effective_sim_type if effective_sim_type is not None else config.simulation_type
 
     # 1) Base model
-    stock_return_rate, bond_return_rate = pick_base_returns(config.simulation_type, returns, year)
+    stock_return_rate, bond_return_rate = pick_base_returns(sim_type, returns, year)
 
     # 2) Collar overlay (if enabled & within window)
     stock_return_rate = apply_collar_overlay(stock_return_rate, config, current_calendar_year)
@@ -929,17 +996,21 @@ def calculate_investment_return(config, balances, savings, returns, year):
 #         total=total_return
 #     )
 
-def calculate_investment_return_with_override(config, balances, savings, returns, year, override_return):
+def calculate_investment_return_with_override(config, balances, savings, returns, year, override_return, effective_sim_type=None):
     """
     Calculate investment returns when Sequence-of-Returns override is active.
     - Stock: use override_return as the base equity return for this year
     - Bond: still taken from selected model for this year
     - Collar: applied AFTER the override to stock, on the specified fraction
+
+    effective_sim_type overrides config.simulation_type when supplied — used by
+    Historical Backtest mode to route bond returns into the 'historical' sequence.
     """
     current_calendar_year = datetime.now().year + year
+    sim_type = effective_sim_type if effective_sim_type is not None else config.simulation_type
 
-    # 1) Bonds from the base model
-    _, bond_return_rate = pick_base_returns(config.simulation_type, returns, year)
+    # 1) Bonds from the base model (or historical sequence)
+    _, bond_return_rate = pick_base_returns(sim_type, returns, year)
 
     # 2) Stock from SoR override
     stock_return_rate = override_return
@@ -1075,20 +1146,38 @@ def calculate_healthcare_costs(current_age, self_healthcare_cost, self_healthcar
     return total_cost, self_cost, partner_cost
 
 
-def adjust_expenses(current_expense, inflation_mean, inflation_std, annual_expense_decrease, 
-                    year, current_age, retirement_age, partner_current_age, partner_retirement_age):
-    """Adjust expenses for inflation and retirement status"""
+def adjust_expenses(current_expense, inflation_mean, inflation_std, annual_expense_decrease,
+                    year, current_age, retirement_age, partner_current_age, partner_retirement_age,
+                    enable_backtest=False, backtest_start_year=2000, calendar_year=None):
+    """Adjust expenses for inflation and retirement status.
+
+    Returns a tuple (adjusted_expense, raw_inflation_rate) where raw_inflation_rate
+    is the CPI rate used this year BEFORE any smile (expense decrease) adjustment.
+
+    When enable_backtest=True and we are still within the historical data window,
+    actual CPI inflation is used instead of a stochastic draw.
+    """
     if year > 0:  # Skip the first year
-        inflation_rate = np.random.normal(inflation_mean, inflation_std)
-        
+        # Determine raw inflation rate: historical CPI or stochastic
+        if enable_backtest and calendar_year is not None:
+            hist_yr = backtest_start_year + year
+            if hist_yr in historical_inflation_rates:
+                inflation_rate = historical_inflation_rates[hist_yr] / 100.0
+            else:
+                inflation_rate = np.random.normal(inflation_mean, inflation_std)
+        else:
+            inflation_rate = np.random.normal(inflation_mean, inflation_std)
+
         if current_age >= retirement_age or partner_current_age >= partner_retirement_age:
             # If one partner retired - apply expense reduction (Retirement Smile)
-            return current_expense * (1 + inflation_rate - annual_expense_decrease)
+            adjusted = current_expense * (1 + inflation_rate - annual_expense_decrease)
         else:
             # At least one still working - only apply inflation
-            return current_expense * (1 + inflation_rate)
-    
-    return current_expense
+            adjusted = current_expense * (1 + inflation_rate)
+
+        return adjusted, inflation_rate
+
+    return current_expense, 0.0
 
 
 def calculate_portfolio_draw(total_expense, gross_income, 

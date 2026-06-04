@@ -122,7 +122,32 @@ def load_parameters_from_upload() -> Dict[str, Any]:
             return None
             
         # Convert DataFrame to dictionary
-        return params_df.iloc[0].to_dict()
+        params = params_df.iloc[0].to_dict()
+
+        # ── Back-compat defaults for columns added after the original CSV format ──
+        # Any column missing from an older file gets a safe default here so the
+        # rest of the app never sees a KeyError.
+        optional_defaults = {
+            "enable_backtest":              False,
+            "backtest_start_year":          2008,
+            "apply_collar":                 False,
+            "collar_equity_pct":            0.5,
+            "collar_min_return":            -0.01,
+            "collar_max_return":            0.09,
+            "collar_start_year":            2026,
+            "collar_end_year":              2060,
+            "tax_rate_both_working":        params.get("tax_rate", 0.15),
+            "tax_rate_one_retired":         0.12,
+            "tax_rate_both_retired":        0.10,
+            "enable_sequence_risk":         False,
+            "seq_risk_years":               3,
+            "seq_risk_returns":             -0.15,
+        }
+        for col, default in optional_defaults.items():
+            if col not in params:
+                params[col] = default
+
+        return params
         
     except Exception as e:
         st.error(f"Error loading parameters: {e}")
@@ -161,8 +186,12 @@ def get_required_columns() -> List[str]:
         "one_time_year_3", "one_time_amount_3",
         "windfall_year_1", "windfall_amount_1",
         "windfall_year_2", "windfall_amount_2",
-        "windfall_year_3", "windfall_amount_3", 
+        "windfall_year_3", "windfall_amount_3",
         "simulation_type"
+        # NOTE: newer optional columns (enable_backtest, backtest_start_year, apply_collar,
+        # collar_equity_pct, tax_rate_both_working, etc.) are NOT required here so that
+        # older saved CSV files continue to load correctly. Defaults are applied in
+        # load_parameters_from_upload().
     ]
 
 
@@ -252,9 +281,10 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
 
         # Tab 13
         simulation_params = create_simulation_parameters_tab(tabs[13], parameters, years_range)
-        # (simulations, simulation_type, collar_min_return, collar_max_return, collar_start_year, collar_end_year)= simulation_params
-        # Collar is an overlap now 
-        (simulations, simulation_type, apply_collar, collar_equity_pct, collar_min_return, collar_max_return, collar_start_year, collar_end_year) = simulation_params
+        (simulations, simulation_type,
+         apply_collar, collar_equity_pct,
+         collar_min_return, collar_max_return, collar_start_year, collar_end_year,
+         enable_backtest, backtest_start_year) = simulation_params
 
         # Tab 15: Stress Tests
         stress_test_params = create_stress_tests_tab(tabs[14], parameters, years_range)
@@ -358,10 +388,13 @@ def create_input_form(parameters: Dict[str, Any]) -> SimulationConfig:
         collar_max_return=collar_max_return, 
         collar_start_year=collar_start_year, 
         collar_end_year=collar_end_year,
-        # NEW - Collar is an overlay - and can be applied to a % of total equity
+        # Collar overlay
         apply_collar=apply_collar,
-        collar_equity_pct=collar_equity_pct
+        collar_equity_pct=collar_equity_pct,
 
+        # Historical Backtest
+        enable_backtest=enable_backtest,
+        backtest_start_year=int(backtest_start_year)
     )
 
 
@@ -861,115 +894,183 @@ def create_windfall_tab(tab, parameters, years_range):
 
 # Now collar strategy is an overlay - not a separate simulation model 
 def create_simulation_parameters_tab(tab, parameters, years_range):
-    """Create the Simulation Parameters tab inputs"""
+    """Create the Simulation Parameters tab inputs.
+
+    3-column layout:
+      col1 — sim count + sim type radio
+      col2 — Historical Backtest toggle + anchor year controls
+      col3 — Collar Overlay toggle + collar details
+    """
     with tab:
-        col1, col2, col3, col4 = st.columns([35,35,40,60])
+        col1, _g1, col2, _g2, col3 = st.columns([18, 1, 21, 3, 34])
         current_year = datetime.now().year
 
-        # Defaults and back-compat for old CSVs that had "Collar Strategy"
-        default_sim_type = "Normal Distribution"
-        default_apply_collar = False
+        # ── Defaults and back-compat for old CSVs ────────────────────────────
+        default_sim_type          = "Normal Distribution"
+        default_apply_collar      = False
         default_collar_equity_pct = 0.5
-        collar_min_return = -0.01
-        collar_max_return = 0.09
-        collar_start_year = years_range[0] if years_range else current_year
-        collar_end_year   = years_range[-1] if years_range else (current_year + 30)
+        collar_min_return         = -0.01
+        collar_max_return         =  0.09
+        collar_start_year         = years_range[0]  if years_range else current_year
+        collar_end_year           = years_range[-1] if years_range else (current_year + 30)
+
+        default_enable_backtest     = False
+        default_backtest_start_year = 2008
 
         if parameters:
-            # If old files had "Collar Strategy", map to Normal + overlay=100%
             prior_sim = parameters.get("simulation_type", default_sim_type)
             if prior_sim == "Collar Strategy":
-                default_sim_type = "Normal Distribution"
-                default_apply_collar = True
+                default_sim_type          = "Normal Distribution"
+                default_apply_collar      = True
                 default_collar_equity_pct = 1.0
             else:
                 default_sim_type = prior_sim
 
-            collar_min_return = parameters.get("collar_min_return", collar_min_return)
-            collar_max_return = parameters.get("collar_max_return", collar_max_return)
-            collar_start_year = parameters.get("collar_start_year", collar_start_year)
-            collar_end_year   = parameters.get("collar_end_year", collar_end_year)
+            collar_min_return         = parameters.get("collar_min_return",     collar_min_return)
+            collar_max_return         = parameters.get("collar_max_return",     collar_max_return)
+            collar_start_year         = parameters.get("collar_start_year",     collar_start_year)
+            collar_end_year           = parameters.get("collar_end_year",       collar_end_year)
+            default_apply_collar      = parameters.get("apply_collar",          default_apply_collar)
+            default_collar_equity_pct = parameters.get("collar_equity_pct",     default_collar_equity_pct)
+            default_enable_backtest     = parameters.get("enable_backtest",      default_enable_backtest)
+            default_backtest_start_year = parameters.get("backtest_start_year",  default_backtest_start_year)
 
-            # New fields may be missing in older CSVs — tolerate that
-            default_apply_collar = parameters.get("apply_collar", default_apply_collar)
-            default_collar_equity_pct = parameters.get("collar_equity_pct", default_collar_equity_pct)
-
+        # ── col1: sim count + sim type ────────────────────────────────────────
         with col1:
-            simulations = st.number_input("Number of Simulations", 
-                value=parameters["simulations"] if parameters else 1000, step=1000)
-            
-            # Radio WITHOUT "Collar Strategy"
+            sim_col, _ = st.columns([3, 2])
+            with sim_col:
+                simulations = st.number_input(
+                    "No. of Simulations",
+                    value=parameters["simulations"] if parameters else 1000,
+                    min_value=100, step=500, format="%d"
+                )
             simulation_options = [
-                "Normal Distribution", 
-                "Students-T Distribution", 
-                "Empirical Distribution", 
+                "Normal Distribution",
+                "Students-T Distribution",
+                "Empirical Distribution",
                 "Markov Chain"
             ]
             simulation_type = st.radio(
-                "Simulation Type", 
+                "Simulation Type",
                 options=simulation_options,
                 index=simulation_options.index(default_sim_type) if default_sim_type in simulation_options else 0,
                 help=simulation_help_text
             )
-            
-        with col2:
 
-            # NEW: independent collar toggle + % of equity
+        # ── col2: Backtest toggle as header + anchor year controls ────────────
+        with col2:
+            enable_backtest = st.toggle(
+                "Historical Backtest",
+                value=default_enable_backtest,
+                help=(
+                    "Anchor the simulation to actual market returns and CPI inflation "
+                    "from a chosen historical year. Stochastic model fills gap years."
+                )
+            )
+
+            backtest_start_year = default_backtest_start_year
+
+            if enable_backtest:
+                preset_map = {
+                    "1929 · Grt Depression": 1929,
+                    "1973 · Oil Shock":  1973,
+                    "2000 · Dot-com":    2000,
+                    "2008 · GFC":        2008,
+                }
+                preset_labels = list(preset_map.keys())
+                default_label = next(
+                    (lbl for lbl, yr in preset_map.items() if yr == default_backtest_start_year),
+                    preset_labels[-1]
+                )
+                # Radio left | Custom year right — same row
+                r_col, yr_col = st.columns([3, 2])
+                with r_col:
+                    chosen_label = st.radio(
+                        "Anchor Year",
+                        options=preset_labels,
+                        index=preset_labels.index(default_label),
+                        horizontal=False,
+                        label_visibility="collapsed"
+                    )
+                with yr_col:
+                    backtest_start_year = st.number_input(
+                        "Custom year",
+                        min_value=1927, max_value=2008,
+                        value=preset_map[chosen_label],
+                        step=1
+                    )
+
+                # Status caption spans full col2 width below both sub-columns
+                years_in_simulation = (
+                    (years_range[-1] - years_range[0] + 1) if years_range else 30
+                )
+                hist_end  = min(backtest_start_year + years_in_simulation - 1, 2024)
+                hist_len  = hist_end - backtest_start_year + 1
+                gap_len   = max(years_in_simulation - hist_len, 0)
+                tail_label = simulation_type if gap_len > 0 else "none"
+                st.caption(
+                    f":material/calendar_month: **{backtest_start_year} → {hist_end}** "
+                    f"· {hist_len} yrs actual · {gap_len} yr gap via {tail_label}"
+                )
+
+        # ── col3: Collar toggle + collar details ──────────────────────────────
+        with col3:
             apply_collar = st.toggle(
                 "Overlay option collar",
                 value=default_apply_collar,
                 help="Apply a capped/floored equity return overlay on top of the base model."
             )
 
+        with col3:
             collar_equity_pct = 0.5
+
             if apply_collar:
                 collar_equity_pct = st.slider(
-                    "Apply to % of equity",
+                    "% of equity under collar",
                     min_value=0, max_value=100,
                     value=int(round(default_collar_equity_pct * 100)),
                     help="Only this fraction of your equity allocation will be collared."
                 ) / 100.0
-
-        with col3:
-            # Show collar parameters only if enabled
-            if apply_collar:
-                st.markdown("###### Collar Details")
-                cols = st.columns(2)
-                with cols[0]:
+                # All 4 fields on one row
+                cc1, cc2, cc3, cc4 = st.columns(4)
+                with cc1:
                     collar_min_return = st.number_input(
-                        "Min equity return (%)",
+                        "Floor (%)",
                         min_value=-30.0, max_value=0.0,
                         value=collar_min_return * 100, step=1.0
                     ) / 100
-                    # Start year
-                    start_idx = years_range.index(collar_start_year) if (years_range and collar_start_year in years_range) else 0
-                    collar_start_year = st.selectbox(
-                        "Start Year", options=years_range, index=start_idx, key="collar_start_year"
-                    )
-                with cols[1]:
+                with cc2:
                     collar_max_return = st.number_input(
-                        "Max equity return (%)",
+                        "Cap (%)",
                         min_value=0.0, max_value=30.0,
                         value=collar_max_return * 100, step=1.0
                     ) / 100
-                    # End year
-                    end_idx = years_range.index(collar_end_year) if (years_range and collar_end_year in years_range) else (len(years_range)-1 if years_range else 0)
-                    collar_end_year = st.selectbox(
-                        "End Year", options=years_range, index=end_idx, key="collar_end_year"
+                with cc3:
+                    start_idx = (
+                        years_range.index(collar_start_year)
+                        if years_range and collar_start_year in years_range else 0
                     )
-
+                    collar_start_year = st.selectbox(
+                        "From", options=years_range, index=start_idx, key="collar_start_year"
+                    )
+                with cc4:
+                    end_idx = (
+                        years_range.index(collar_end_year)
+                        if years_range and collar_end_year in years_range
+                        else (len(years_range) - 1 if years_range else 0)
+                    )
+                    collar_end_year = st.selectbox(
+                        "To", options=years_range, index=end_idx, key="collar_end_year"
+                    )
                 if collar_end_year < collar_start_year:
-                    st.error("End year must be on or after Start year.")
+                    st.error("End year must be ≥ Start year.")
 
-        with col4:
-            st.markdown(parameter_text, unsafe_allow_html=True)
-
-    # NOTE: now we return two extra fields (apply_collar, collar_equity_pct)
     return (
-        simulations, simulation_type, 
-        apply_collar, collar_equity_pct, 
-        collar_min_return, collar_max_return, 
-        collar_start_year, collar_end_year
+        simulations, simulation_type,
+        apply_collar, collar_equity_pct,
+        collar_min_return, collar_max_return,
+        collar_start_year, collar_end_year,
+        enable_backtest, backtest_start_year
     )
 
 
@@ -1136,7 +1237,10 @@ def create_parameters_dataframe_from_config(config):
         "windfall_year_2": windfall_year_2,
         "windfall_amount_2": windfall_amount_2,
         "windfall_year_3": windfall_year_3,
-        "windfall_amount_3": windfall_amount_3
+        "windfall_amount_3": windfall_amount_3,
+        # Historical Backtest
+        "enable_backtest":     config.enable_backtest,
+        "backtest_start_year": config.backtest_start_year
     }
     
     # Return as DataFrame with one row
@@ -1378,7 +1482,7 @@ def format_cashflow_dataframe(df):
             df[col] = df[col].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else "")
     
     # Format percentage columns
-    percentage_columns = ['return_rate', 'withdrawal_rate']
+    percentage_columns = ['return_rate', 'withdrawal_rate', 'inflation_rate']
     for col in percentage_columns:
         if col in df.columns:
             df[col] = df[col].apply(lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "")
@@ -1894,6 +1998,7 @@ def reorder_columns(df):
         'expenses_partner_healthcare',
         'return_rate',
         'withdrawal_rate',
+        'inflation_rate',
         'end_value_constant_currency',
         'downsize_proceeds',
         'windfall_amount',
@@ -2032,43 +2137,63 @@ def create_return_chart(df, positive_color, negative_color):
     return chart + textAbove + textBelow
 
 def create_withdrawal_chart(df, positive_color, negative_color):
-    """Create a chart showing withdrawal rates"""
+    """Create a chart showing withdrawal rates with inflation rate overlay."""
     if 'year' not in df.columns or 'withdrawal_rate' not in df.columns:
         st.error(f"Cannot create withdrawal chart: Missing required columns.")
         return None
-    
-    chart = alt.Chart(df).mark_bar().encode(
-        x='year:O',
-        y=alt.Y('withdrawal_rate:Q', title='Withdrawal Rate %', axis=alt.Axis(format='%')),
+
+    base = alt.Chart(df)
+
+    # ── Bars: withdrawal rate ─────────────────────────────────────────────────
+    bars = base.mark_bar().encode(
+        x=alt.X('year:O', title='Year'),
+        y=alt.Y('withdrawal_rate:Q', title='Rate %', axis=alt.Axis(format='%')),
         color=alt.condition(
             'datum.withdrawal_rate < 0',
             alt.value(negative_color),
             alt.value(positive_color)
-        )
+        ),
+        tooltip=[
+            alt.Tooltip('year:O', title='Year'),
+            alt.Tooltip('withdrawal_rate:Q', title='Withdrawal Rate', format='.2%'),
+        ]
     ).properties(
-        title='Withdrawal Rate % by Year'
+        title='Withdrawal Rate % by Year  (dashed line = Inflation Rate)'
     ).transform_calculate(
         ScaledValue='datum.withdrawal_rate * 100'
     )
-    
-    # Create text labels
-    text = chart.mark_text(align='center', baseline='middle').encode(
+
+    # Bar value labels
+    text_base = bars.mark_text(align='center', baseline='middle').encode(
         text=alt.Text('ScaledValue:Q', format='.1f')
     )
-    
-    textAbove = text.transform_filter(
-        'datum.withdrawal_rate >= 0'
-    ).mark_text(
+    textAbove = text_base.transform_filter('datum.withdrawal_rate >= 0').mark_text(
         align='center', baseline='middle', fontSize=10, dy=-10
     )
-    
-    textBelow = text.transform_filter(
-        'datum.withdrawal_rate < 0'
-    ).mark_text(
+    textBelow = text_base.transform_filter('datum.withdrawal_rate < 0').mark_text(
         align='center', baseline='middle', fontSize=10, dy=10
     )
-    
-    return chart + textAbove + textBelow
+
+    chart = bars + textAbove + textBelow
+
+    # ── Dashed line: inflation rate overlay ───────────────────────────────────
+    if 'inflation_rate' in df.columns:
+        inflation_line = base.mark_line(
+            color='#E07B00',
+            strokeDash=[6, 3],
+            strokeWidth=2,
+            point=alt.OverlayMarkDef(color='#E07B00', size=40)
+        ).encode(
+            x=alt.X('year:O'),
+            y=alt.Y('inflation_rate:Q'),
+            tooltip=[
+                alt.Tooltip('year:O', title='Year'),
+                alt.Tooltip('inflation_rate:Q', title='Inflation Rate', format='.2%'),
+            ]
+        )
+        chart = chart + inflation_line
+
+    return chart
 
 def highlight_columns(s):
     """Apply conditional styling to specific columns"""
