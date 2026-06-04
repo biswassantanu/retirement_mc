@@ -902,7 +902,7 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
       col3 — Collar Overlay toggle + collar details
     """
     with tab:
-        col1, _g1, col2, _g2, col3 = st.columns([18, 1, 21, 3, 34])
+        col1, _g1, col2, _g2, col3 = st.columns([18, 0.5, 26, 2, 33])
         current_year = datetime.now().year
 
         # ── Defaults and back-compat for old CSVs ────────────────────────────
@@ -973,16 +973,20 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
             if enable_backtest:
                 preset_map = {
                     "1929 · Grt Depression": 1929,
-                    "1973 · Oil Shock":  1973,
-                    "2000 · Dot-com":    2000,
-                    "2008 · GFC":        2008,
+                    "1973 · Oil Shock":      1973,
+                    "2000 · Dot-com":        2000,
+                    "2008 · GFC":            2008,
+                    "Custom":                None,   # year entered via number input
                 }
                 preset_labels = list(preset_map.keys())
+
+                # Determine default radio selection:
+                # if saved year matches a preset use that; otherwise select "Custom"
                 default_label = next(
                     (lbl for lbl, yr in preset_map.items() if yr == default_backtest_start_year),
-                    preset_labels[-1]
+                    "Custom"
                 )
-                # Radio left | Custom year right — same row
+
                 r_col, yr_col = st.columns([3, 2])
                 with r_col:
                     chosen_label = st.radio(
@@ -993,12 +997,22 @@ def create_simulation_parameters_tab(tab, parameters, years_range):
                         label_visibility="collapsed"
                     )
                 with yr_col:
-                    backtest_start_year = st.number_input(
-                        "Custom year",
-                        min_value=1927, max_value=2008,
-                        value=preset_map[chosen_label],
-                        step=1
-                    )
+                    if chosen_label == "Custom":
+                        # Only show the number input when Custom is selected —
+                        # avoids Streamlit widget-state conflicts with presets
+                        custom_default = (
+                            default_backtest_start_year
+                            if preset_map.get(default_label) is None
+                            else 1990
+                        )
+                        backtest_start_year = st.number_input(
+                            "Starting Year",
+                            min_value=1927, max_value=2022,
+                            value=custom_default,
+                            step=1
+                        )
+                    else:
+                        backtest_start_year = preset_map[chosen_label]
 
                 # Status caption spans full col2 width below both sub-columns
                 years_in_simulation = (
@@ -1892,8 +1906,7 @@ def create_cash_flow_tab(df_cashflow, df_cashflow_value, title, download_button_
         if chart:
             st.altair_chart(chart, use_container_width=True)
     
-    with tab3: 
-        # Create withdrawal chart with actual column names
+    with tab3:
         chart = create_withdrawal_chart(df_cashflow_value, positive_color, negative_color)
         if chart:
             st.altair_chart(chart, use_container_width=True)
@@ -2098,43 +2111,61 @@ def create_balance_chart(df, positive_color, negative_color):
 
 
 def create_return_chart(df, positive_color, negative_color):
-    """Create a chart showing portfolio returns"""
+    """Create a chart showing portfolio returns with inflation overlay."""
     if 'year' not in df.columns or 'return_rate' not in df.columns:
         st.error(f"Cannot create return chart: Missing required columns.")
         return None
-    
-    chart = alt.Chart(df).mark_bar().encode(
+
+    base = alt.Chart(df)
+
+    bars = base.mark_bar().encode(
         x='year:O',
-        y=alt.Y('return_rate:Q', title='Portfolio Return %', axis=alt.Axis(format='%')),
+        y=alt.Y('return_rate:Q', title='Return %', axis=alt.Axis(format='%')),
         color=alt.condition(
             'datum.return_rate < 0',
             alt.value(negative_color),
             alt.value(positive_color)
-        )
+        ),
+        tooltip=[
+            alt.Tooltip('year:O', title='Year'),
+            alt.Tooltip('return_rate:Q', title='Portfolio Return', format='.2%'),
+        ]
     ).properties(
-        title='Portfolio Return % by Year'
+        title='Portfolio Return % by Year  (dashed line = Inflation Rate)'
     ).transform_calculate(
         ScaledValue='datum.return_rate * 100'
     )
-    
-    # Create text labels
-    text = chart.mark_text(align='center', baseline='middle').encode(
+
+    text = bars.mark_text(align='center', baseline='middle').encode(
         text=alt.Text('ScaledValue:Q', format='.1f')
     )
-    
     textAbove = text.transform_filter(
         'datum.return_rate >= 0'
-    ).mark_text(
-        align='center', baseline='middle', fontSize=10, dy=-10
-    )
-    
+    ).mark_text(align='center', baseline='middle', fontSize=10, dy=-10)
     textBelow = text.transform_filter(
         'datum.return_rate < 0'
-    ).mark_text(
-        align='center', baseline='middle', fontSize=10, dy=10
-    )
-    
-    return chart + textAbove + textBelow
+    ).mark_text(align='center', baseline='middle', fontSize=10, dy=10)
+
+    chart = bars + textAbove + textBelow
+
+    # ── Dashed line: inflation rate overlay ───────────────────────────────────
+    if 'inflation_rate' in df.columns:
+        inflation_line = base.mark_line(
+            color='#8B0000',
+            strokeDash=[6, 3],
+            strokeWidth=2,
+            point=alt.OverlayMarkDef(color='#8B0000', size=40)
+        ).encode(
+            x=alt.X('year:O'),
+            y=alt.Y('inflation_rate:Q'),
+            tooltip=[
+                alt.Tooltip('year:O', title='Year'),
+                alt.Tooltip('inflation_rate:Q', title='Inflation Rate', format='.2%'),
+            ]
+        )
+        chart = chart + inflation_line
+
+    return chart
 
 def create_withdrawal_chart(df, positive_color, negative_color):
     """Create a chart showing withdrawal rates with inflation rate overlay."""
@@ -2158,7 +2189,7 @@ def create_withdrawal_chart(df, positive_color, negative_color):
             alt.Tooltip('withdrawal_rate:Q', title='Withdrawal Rate', format='.2%'),
         ]
     ).properties(
-        title='Withdrawal Rate % by Year  (dashed line = Inflation Rate)'
+        title='Withdrawal Rate % by Year'
     ).transform_calculate(
         ScaledValue='datum.withdrawal_rate * 100'
     )
@@ -2174,26 +2205,7 @@ def create_withdrawal_chart(df, positive_color, negative_color):
         align='center', baseline='middle', fontSize=10, dy=10
     )
 
-    chart = bars + textAbove + textBelow
-
-    # ── Dashed line: inflation rate overlay ───────────────────────────────────
-    if 'inflation_rate' in df.columns:
-        inflation_line = base.mark_line(
-            color='#E07B00',
-            strokeDash=[6, 3],
-            strokeWidth=2,
-            point=alt.OverlayMarkDef(color='#E07B00', size=40)
-        ).encode(
-            x=alt.X('year:O'),
-            y=alt.Y('inflation_rate:Q'),
-            tooltip=[
-                alt.Tooltip('year:O', title='Year'),
-                alt.Tooltip('inflation_rate:Q', title='Inflation Rate', format='.2%'),
-            ]
-        )
-        chart = chart + inflation_line
-
-    return chart
+    return bars + textAbove + textBelow
 
 def highlight_columns(s):
     """Apply conditional styling to specific columns"""
